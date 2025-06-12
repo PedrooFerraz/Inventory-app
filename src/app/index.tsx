@@ -1,149 +1,266 @@
-import { View, StyleSheet, Text, Image, TouchableOpacity, ScrollView, Button } from "react-native"
-import * as DocumentPicker from 'expo-document-picker';
-import { readDocument } from "@/services/fileService";
-import { useEffect, useState } from "react";
-import { getData } from "@/services/fileService";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import HowToUse from "@/components/how-to-use";
-import FileInfoBefore from "@/components/file-info-before";
-import FileInfoAfter from "@/components/file-info-after";
-import DataPreview from "@/components/data-preview";
-import StartButton from "@/components/start-button";
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  StatusBar,
+  SafeAreaView,
+  ScrollView
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import MasterLoginModal from '@/components/home/master-login-modal';
+import { masterPassword } from '@/password';
+import Card from '@/components/home/card';
+import { router } from 'expo-router';
 
-export default function ImportScreen() {
 
-  const [selectedFile, setSelectedFile] = useState<string>();
+export default function GMIHomeScreen() {
+  const [showMasterLogin, setShowMasterLogin] = useState(false);
+  const [password, setPassword] = useState('');
 
-  useEffect(() => {
+  const handleMasterAccess = () => {
+    setShowMasterLogin(true);
+  };
 
-    getData("fileInfo")
-      .then(data => setSelectedFile(data.name))
+  const handleMasterLogin = () => {
+    router.navigate("/")
+  };
 
-  }, [])
+  const handleInventoryAccess = () => {
+    router.navigate("/user-select-screen")
+  };
 
-  const pickDocuments = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "text/comma-separated-values"
-      });
-
-      if (result.canceled) {
-        console.log("Seleção do Documento Cancelada");
-      }
-      const successResult = result as DocumentPicker.DocumentPickerSuccessResult;
-
-      if (successResult.assets) {
-        readDocument(successResult.assets[0])
-      }
-    } catch (error) {
-      console.log("Erro ao selecionar um documento:", error);
-    }
+  const handleCloseMasterLogin = () => {
+    setShowMasterLogin(false);
+    setPassword('');
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
-      <View style={styles.header} >
-        <Text style={styles.headerTitle}>Inventário Industrial</Text>
-        <Text style={styles.headerSubTitle}>Sistema de Contagem</Text>
-      </View>
+      <LinearGradient
+        colors={['#182234', '#121A2D']}
+        style={styles.background}
+      >
+        <View style={styles.backgroundElements}>
+          <View style={[styles.circle, styles.circle1]} />
+          <View style={[styles.circle, styles.circle2]} />
+          <View style={[styles.circle, styles.circle3]} />
+          <View style={[styles.circle, styles.circle4]} />
+        </View>
 
-      <ScrollView>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <LinearGradient
+              colors={['#3B82F6', '#2563EB']}
+              style={styles.logoContainer}
+            >
+              <Ionicons name="cube-outline" size={48} color="#FFFFFF" />
+            </LinearGradient>
 
-        <View style={styles.content}>
-
-          <View style={styles.fileContainer}>
-
-            <View style={styles.selectFileIconArea}>
-              <Ionicons name="document-text-outline" size={32} color={"#94A3B8"} />
-            </View>
-
-            <View style={styles.selectFile}>
-
-              <Text style={styles.selectFileTitle}>
-                Importar Dados do Inventário
-              </Text>
-              <Text style={styles.selectFileSubTitle}>
-                Selecione o arquivo CSV com os dados atuais do estoque
-              </Text>
-            </View>
-
-            {/* <FileInfoBefore></FileInfoBefore> */}
-            
-            <FileInfoAfter></FileInfoAfter>
+            <Text style={styles.title}>Inventário GMI</Text>
+            <Text style={styles.subtitle}>
+              Sistema Profissional de Gestão de Inventário Industrial
+            </Text>
           </View>
 
-          <DataPreview></DataPreview>
+          <View style={styles.mainContent}>
 
-          <StartButton route={"/inventory-screen"}></StartButton>
+            <Card icon={"shield-outline"} onPress={handleMasterAccess} title='Acesso Master' description='Administração do sistema' colors={['#EF4444', '#DC2626']}></Card>
+            <Card icon={"cube-outline"} onPress={handleInventoryAccess} title='Realizar Inventário' description='Executar contagem de itens' colors={['#10B981', '#059669']}></Card>
 
-          <HowToUse></HowToUse>
+            <View style={styles.infoCard}>
+              <Text style={styles.versionText}>Versão 1.0.0</Text>
+              <Text style={styles.copyrightText}>
+                © 2025 GMI Consultoria • Todos os direitos reservados
+              </Text>
+            </View>
 
-        </View>
-      </ScrollView>
-    </View>
-  )
+          </View>
+        </ScrollView>
+        <MasterLoginModal visible={showMasterLogin} handleCloseMasterLogin={handleCloseMasterLogin} handleMasterLogin={handleMasterLogin}></MasterLoginModal>
+      </LinearGradient>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121A2D"
+  },
+  background: {
+    flex: 1,
+  },
+  backgroundElements: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  circle: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 1000,
+  },
+  circle1: {
+    width: 128,
+    height: 128,
+    top: 80,
+    left: 40,
+  },
+  circle2: {
+    width: 96,
+    height: 96,
+    top: 160,
+    right: 80,
+  },
+  circle3: {
+    width: 160,
+    height: 160,
+    bottom: 128,
+    left: 80,
+  },
+  circle4: {
+    width: 64,
+    height: 64,
+    bottom: 80,
+    right: 40,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
   },
   header: {
-    height: 90,
-    width: "100%",
-    flexDirection: "column",
-    backgroundColor: "#182234",
-    justifyContent: "center",
-    alignItems: "center",
-    color: "white"
+    alignItems: 'center',
+    paddingTop: 64,
+    paddingBottom: 32,
   },
-  headerTitle: {
-    fontSize: 24,
-    color: "white",
-    fontWeight: "bold"
+  logoContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  headerSubTitle: {
-    fontSize: 14,
-    color: "#94A3B8",
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  content: {
+  subtitle: {
+    fontSize: 16,
+    color: '#CBD5E1',
+    textAlign: 'center',
+    maxWidth: 280,
+    lineHeight: 22,
+  },
+  mainContent: {
     flex: 1,
+    maxWidth: 400,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  accessCard: {
+    backgroundColor: "#1c263d",
+    borderWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderRadius: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardContent: {
     padding: 24,
-    gap: 28
   },
-  fileContainer: {
-    borderColor: "#475569",
-    borderWidth: 2,
-    borderRadius: 15,
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 20,
-    padding: 30
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  selectFile: {
-    gap: 8
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  selectFileIconArea: {
-    backgroundColor: "#263246",
-    borderRadius: "50%",
-    justifyContent: "center",
-    alignItems: "center",
-    height: 60,
-    width: 60,
+  cardText: {
+    flex: 1,
   },
-  selectFileTitle: {
-    color: "white",
+  cardTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    textAlign: "center"
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
-  selectFileSubTitle: {
-    color: "#94A3B8",
+  cardDescription: {
     fontSize: 14,
-    textAlign: "center"
+    color: '#94A3B8',
+  },
+  featuresContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  feature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  featureText: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  statusContainer: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  infoCard: {
+    backgroundColor: 'rgba(30, 41, 59, 0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.3)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  versionText: {
+    fontSize: 14,
+    color: '#94A3B8',
+    marginBottom: 8,
+  },
+  copyrightText: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
   }
-
-})
+});

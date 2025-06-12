@@ -1,0 +1,1 @@
+export const masterPassword = "12345"
