@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Text, View, StyleSheet, DimensionValue } from "react-native";
-import ProgressCard from "./progressCard";
+import ProgressCard from "./progress-card";
 import ProgressBar from "./progress-bar";
 
 export default function InventoryProgress() {

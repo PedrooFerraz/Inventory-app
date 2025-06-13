@@ -7,13 +7,15 @@ export default function MasterLoginModal(
     {
         visible,
         handleCloseMasterLogin,
-        handleMasterLogin
+        handleMasterLogin,
+        error
     }
         :
         {
             visible: boolean,
             handleCloseMasterLogin: any,
-            handleMasterLogin: any
+            handleMasterLogin: any,
+            error: boolean
         }
 ) {
 
@@ -63,6 +65,15 @@ export default function MasterLoginModal(
                                 />
                             </TouchableOpacity>
                         </View>
+                        {
+                            error &&
+                            <View>
+                                <Text style={{ color: "#EF4444", fontWeight: "400" }}>
+                                    Senha Incorreta
+                                </Text>
+                            </View>
+
+                        }
 
                         <View style={styles.buttonContainer}>
                             <TouchableOpacity
@@ -74,10 +85,10 @@ export default function MasterLoginModal(
 
                             <TouchableOpacity
                                 style={styles.loginButton}
-                                onPress={handleMasterLogin}
+                                onPress={() => handleMasterLogin(masterPassword)}
                             >
                                 <LinearGradient
-                                    colors={['#64748B', '#64748B']}
+                                    colors={['#10B981', '#059669']}
                                     style={styles.loginButtonGradient}
                                 >
 

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Alert,
   StatusBar,
   SafeAreaView,
   ScrollView
@@ -18,24 +17,32 @@ import { router } from 'expo-router';
 
 export default function GMIHomeScreen() {
   const [showMasterLogin, setShowMasterLogin] = useState(false);
-  const [password, setPassword] = useState('');
+  const [wrongPasswod, setWrongPassword] = useState(false);
 
   const handleMasterAccess = () => {
     setShowMasterLogin(true);
   };
 
-  const handleMasterLogin = () => {
-    router.navigate("/")
+  const handleCloseMasterLogin = () => {
+    setShowMasterLogin(false);
+
+  };
+
+  const handleMasterLogin = (password : string) => {
+    if (password == masterPassword) {
+      router.navigate("/master-acess-screen")
+    }
+    setWrongPassword(true)
+    setTimeout(() => {
+      setWrongPassword(false)
+    }, 4000)
+
   };
 
   const handleInventoryAccess = () => {
     router.navigate("/user-select-screen")
   };
 
-  const handleCloseMasterLogin = () => {
-    setShowMasterLogin(false);
-    setPassword('');
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,7 +88,7 @@ export default function GMIHomeScreen() {
 
           </View>
         </ScrollView>
-        <MasterLoginModal visible={showMasterLogin} handleCloseMasterLogin={handleCloseMasterLogin} handleMasterLogin={handleMasterLogin}></MasterLoginModal>
+        <MasterLoginModal error={wrongPasswod} visible={showMasterLogin} handleCloseMasterLogin={handleCloseMasterLogin} handleMasterLogin={handleMasterLogin}></MasterLoginModal>
       </LinearGradient>
     </SafeAreaView>
   );
@@ -172,77 +179,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignSelf: 'center',
     width: '100%',
-  },
-  accessCard: {
-    backgroundColor: "#1c263d",
-    borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
-    borderRadius: 16,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  cardContent: {
-    padding: 24,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardText: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: '#94A3B8',
-  },
-  featuresContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  featureText: {
-    fontSize: 12,
-    color: '#64748B',
-  },
-  statusContainer: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.2)',
-    borderRadius: 8,
-    padding: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    color: '#10B981',
-    fontWeight: '500',
   },
   infoCard: {
     backgroundColor: 'rgba(30, 41, 59, 0.3)',

@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 
-export default function StartButton({route} : {route: string}) {
+export default function ButtonWithIcon({route, icon, label} : {route: string, icon: any, label: string}) {
 
     const goToInventory = ()=>{
         router.navigate(route as any)
@@ -11,8 +11,8 @@ export default function StartButton({route} : {route: string}) {
 
     return (
         <TouchableOpacity style={styles.button} activeOpacity={0.5} onPress={goToInventory}>
-            <Ionicons name="arrow-forward" size={20} color={"white"}/>
-            <Text style={styles.name}>Iniciar Contagem</Text>
+            <Ionicons name={icon} size={20} color={"white"}/>
+            <Text style={styles.name}>{label}</Text>
         </TouchableOpacity>
     )
 }

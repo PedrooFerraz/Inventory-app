@@ -5,8 +5,7 @@ export default function HowToUse() {
     const data = [
         { id: 1, title: "Selecione o arquivo CSV com os dados atuais do estoque" },
         { id: 2, title: "Confirme se os dados foram lidos corretamente" },
-        { id: 3, title: "Confirme se os dados foram lidos corretamente" },
-        { id: 4, title: "Ao final, exporte o arquivo CSV atualizado" }
+        { id: 3, title: "Importe o Inventário" },
     ]
 
     return (

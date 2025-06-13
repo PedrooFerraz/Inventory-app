@@ -20,7 +20,6 @@ export default function DataPreview() {
 
             <Card info="300" label="Total de Itens" color="#60A5FA"></Card>
             <Card info="60" label="Localizações" color="#FBBF24"></Card>
-            <Card info="~45 min" label="Tempo Estimado" color="#34D399"></Card>
 
             <View style={styles.detectedStructure}>
                 <Text style={styles.detectedStructureTitle}>Estrutura detectada:</Text>

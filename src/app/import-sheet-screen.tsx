@@ -8,7 +8,8 @@ import HowToUse from "@/components/how-to-use";
 import FileInfoBefore from "@/components/file-info-before";
 import FileInfoAfter from "@/components/file-info-after";
 import DataPreview from "@/components/data-preview";
-import StartButton from "@/components/start-button";
+import { router } from "expo-router";
+import ButtonWithIcon from "@/components/button-with-icon";
 
 export default function ImportScreen() {
 
@@ -44,8 +45,8 @@ export default function ImportScreen() {
     <View style={styles.container}>
 
       <View style={styles.header} >
-        <Text style={styles.headerTitle}>Inventário Industrial</Text>
-        <Text style={styles.headerSubTitle}>Sistema de Contagem</Text>
+         <Ionicons onPress={() => router.back()} name="arrow-back" size={26} color={"white"} />
+        <Text style={styles.headerTitle}>Importar Inventário</Text>
       </View>
 
       <ScrollView>
@@ -75,7 +76,7 @@ export default function ImportScreen() {
 
           <DataPreview></DataPreview>
 
-          <StartButton route={"/inventory-screen"}></StartButton>
+          <ButtonWithIcon route={"/inventory-screen"} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon>
 
           <HowToUse></HowToUse>
 
@@ -93,16 +94,17 @@ const styles = StyleSheet.create({
   header: {
     height: 90,
     width: "100%",
-    flexDirection: "column",
+    flexDirection: "row",
     backgroundColor: "#182234",
-    justifyContent: "center",
     alignItems: "center",
-    color: "white"
+    color: "white",
+    gap: 16,
+    paddingHorizontal: 20
   },
   headerTitle: {
     fontSize: 24,
     color: "white",
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   headerSubTitle: {
     fontSize: 14,

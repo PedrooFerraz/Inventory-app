@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 6,
     },
     iconContainer: {
         width: 56,

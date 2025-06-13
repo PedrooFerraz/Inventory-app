@@ -6,7 +6,7 @@ export default function UserCard({ username, id, onPress }: { username: string, 
     return (
         <TouchableOpacity
             style={styles.operatorCard}
-            onPress={() => onPress}
+            onPress={onPress}
             activeOpacity={0.7}
         >
             <View style={styles.cardContent}>
