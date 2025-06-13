@@ -4,37 +4,46 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 export default function UserCard({ username, id, onPress }: { username: string, id: string, onPress: any}) {
 
     return (
-        <TouchableOpacity style={styles.button} activeOpacity={0.5} onPress={onPress}>
-            <View style={{flexDirection: "row", gap: 8}}>
-                <Ionicons name="people-outline" size={20} color={"white"} />
-                <Text style={styles.name}>{username}</Text>
+        <TouchableOpacity
+            style={styles.operatorCard}
+            onPress={() => onPress}
+            activeOpacity={0.7}
+        >
+            <View style={styles.cardContent}>
+                <Ionicons name="person" size={20} color="#94A3B8"/>
+                <Text style={styles.operatorName}>{username}</Text>
             </View>
-            <Text style={styles.name}>{id}</Text>
-
+            <Text style={styles.operatorName}>{id}</Text>
         </TouchableOpacity>
     )
 }
 
 
 const styles = StyleSheet.create({
-    button: {
-        backgroundColor: "#1c263d",
-        borderWidth: 1,
-        borderColor: 'rgba(51, 65, 85, 0.5)',
-        borderRadius: 10,
-        marginBottom: 18,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        padding: 18,
+        cardContent: {
+        flex: 1,
         flexDirection: "row",
-        justifyContent: "space-between"
-
+        gap: 12
     },
-    name: {
+    operatorCard: {
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#263346',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        flexDirection: "row"
+    },
+    operatorName: {
         fontSize: 16,
-        fontWeight: "500",
-        color: "white",
+        fontWeight: 'bold',
+        color: '#FFF',
+        marginBottom: 4,
     }
 })

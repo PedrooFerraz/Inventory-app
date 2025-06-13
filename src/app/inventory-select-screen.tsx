@@ -149,8 +149,8 @@ const InventorySelectionScreen = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#1E293B" />
+        <View style={styles.container}>
+
 
             <View style={styles.header}>
                 <TouchableOpacity
@@ -174,7 +174,7 @@ const InventorySelectionScreen = () => {
                 />
             </View>
 
-        </SafeAreaView>
+        </View>
     );
 };
 

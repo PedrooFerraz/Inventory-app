@@ -1,32 +1,32 @@
+import UserCard from "@/components/user/user-card";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 
 const operadores = [
     {
-        id: 1,
+        id: "1",
         nome: 'João Silva',
         codigo: '001',
     },
     {
-        id: 2,
+        id: "2",
         nome: 'Maria Costa',
         codigo: '002',
     },
     {
-        id: 3,
+        id: "3",
         nome: 'Pedro Oliveira',
         codigo: '003',
     },
     {
-        id: 4,
+        id: "4",
         nome: 'Ana Santos',
         codigo: '004',
     },
     {
-        id: 5,
+        id: "5",
         nome: 'Carlos Ferreira',
         codigo: '005',
     },
@@ -41,36 +41,25 @@ export default function UserSelectScreen() {
     };
 
     type Operador = {
-        id: number;
+        id: string;
         nome: string;
         codigo: string;
     };
 
     const renderOperadorItem = ({ item }: { item: Operador}) => (
-        <TouchableOpacity
-            style={styles.operatorCard}
-            onPress={() => selectOperator()}
-            activeOpacity={0.7}
-        >
-            <View style={styles.cardContent}>
-                <Ionicons name="person" size={20} color="#94A3B8"/>
-                <Text style={styles.operatorName}>{item.nome}</Text>
-            </View>
-            <Text style={styles.operatorName}>{item.codigo}</Text>
-        </TouchableOpacity>
+        <UserCard username={item.nome} id={item.codigo} onPress={selectOperator} ></UserCard>
     );
 
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#1E293B" />
+        <View style={styles.container}>
 
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => router.back()}
                 >
-                    <Ionicons name="arrow-back" size={24} color="#FFF" />
+                    <Ionicons name="arrow-back" size={22} color="#FFF" />
                 </TouchableOpacity>
                 <View>
                     <Text style={styles.headerTitle}>Selecionar Operador</Text>
@@ -87,7 +76,7 @@ export default function UserSelectScreen() {
                 />
             </View>
 
-        </SafeAreaView>
+        </View>
     );
 };
 
@@ -121,30 +110,5 @@ const styles = StyleSheet.create({
     listContainer: {
         paddingVertical: 20,
     },
-    cardContent: {
-        flex: 1,
-        flexDirection: "row",
-        gap: 12
-    },
-    operatorCard: {
-        borderRadius: 12,
-        padding: 20,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#263346',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        flexDirection: "row"
-    },
-    operatorName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#FFF',
-        marginBottom: 4,
-    }
+
 });
