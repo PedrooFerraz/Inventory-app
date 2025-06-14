@@ -7,52 +7,70 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useDatabase } from "@/hooks/useDatabase";
+import { deleteOperator, fetchOperatorById, insertOperator, updateOperator } from "@/models/operators";
 
 export default function MasterAcessScreen() {
 
-    const [operators, setOperators] = useState([
-        { id: 1, name: 'João Silva', code: '12345678901' },
-        { id: 2, name: 'Maria Santos', code: '98765432102' },
-        { id: 3, name: 'Pedro Oliveira', code: '45678912303' },
-        { id: 4, name: 'Ana Costa', code: '78912345604' },
-        { id: 5, name: 'Carlos Ferreira', code: '32165498705' },
-        { id: 6, name: 'Lucia Almeida', code: '65432198706' },
-        { id: 7, name: 'Roberto Lima', code: '14725836907' },
-        { id: 8, name: 'Fernanda Rocha', code: '36925814708' }
-    ]);
+    const { operators, loading, error, refresh } = useDatabase();
 
     const [operatorsModalVisible, setOperatorsModalVisible] = useState(false);
     const [operatorFormModalVisible, setOperatorFormModalVisible] = useState(false);
     const [currentOperator, setCurrentOperator] = useState({
-        id: '',
+        id: 0,
         name: '',
         code: '',
     });
 
     const closeOperatorsModal = () => setOperatorsModalVisible(false);
     const openOperatorsModal = () => setOperatorsModalVisible(true);
-    
+
     const openOperatorFormModal = () => setOperatorFormModalVisible(true);
     const closeOperatorFormModal = () => setOperatorFormModalVisible(false);
-    
+
     const showAddOperatorForm = () => {
         setCurrentOperator({
-            id: '',
+            id: 0,
             name: '',
             code: '',
         });
         openOperatorFormModal();
     };
 
+    const handleDelete = async (id: number) => {
+        try {
+            await deleteOperator(id);
+            await refresh();
+        } catch (err: any) {
+            console.error('Erro ao excluir operário:', err);
+        }
+    };
+
+    const handleUpdate = async (id: number, name: string, code: string) => {
+        try {
+            let op = await fetchOperatorById(id)
+            if (op == null) {
+                await insertOperator(name, code)
+            }
+            else {
+                await updateOperator(id, name, code);
+            }
+            await refresh();
+            closeOperatorFormModal();
+        } catch (err: any) {
+            console.error('Erro ao atualizar operário:', err);
+        }
+    }
+
     const editOperator = (id: number) => {
         const operator = operators.find(op => op.id === id);
         if (operator) {
-            setCurrentOperator({ id: JSON.stringify(operator.id), name: operator.name, code: operator.code });
+            setCurrentOperator({ id: operator.id, name: operator.name, code: operator.code });
             openOperatorFormModal();
         }
     };
 
-    const deleteOperator = (id: number) => {
+    const deleteOp = (id: number) => {
         Alert.alert(
             'Confirmar Exclusão',
             'Tem certeza que deseja excluir este operário?',
@@ -64,7 +82,7 @@ export default function MasterAcessScreen() {
                 {
                     text: 'Excluir',
                     onPress: () => {
-                        setOperators(operators.filter(op => op.id !== id));
+                        handleDelete(id)
                         Alert.alert('Sucesso', 'Operário excluído com sucesso!');
                     },
                     style: 'destructive'
@@ -95,7 +113,7 @@ export default function MasterAcessScreen() {
             <View style={styles.mainContent}>
                 <Card colors={['#10B981', '#059669']} description="Adicionar, editar ou remover operários" title="Gerenciar Operários" icon={"people"} onPress={openOperatorsModal}></Card>
                 <Card colors={['#3B82F6', '#2563EB']} description="Importar dados via arquivo CSV" title="Importar Inventário" icon={"folder-open"} onPress={() => { router.navigate("/import-sheet-screen") }}></Card>
-                <Card colors={['#FBBF24', '#FFC121']} description="Exporte os invetários realizados" title="Histórico" icon={"folder-open"} onPress={()=> router.navigate("/inventory-history")}></Card>
+                <Card colors={['#FBBF24', '#FFC121']} description="Exporte os invetários realizados" title="Histórico" icon={"folder-open"} onPress={() => router.navigate("/inventory-history")}></Card>
 
                 <CustomModal onClose={closeOperatorsModal} title="Gerenciar Operários" visible={operatorsModalVisible} showCloseButton>
                     <TouchableOpacity
@@ -110,14 +128,16 @@ export default function MasterAcessScreen() {
                             + Adicionar Novo Operário
                         </Text>
                     </TouchableOpacity>
-                    <Text style={{
-                        marginBottom: 15,
-                        fontSize: 18,
-                        fontWeight: "500",
-                        color: 'white'
-                    }}>
-                        Lista de Operários
-                    </Text>
+                    {operators.length == 0 ? "" :
+                        <Text style={{
+                            marginBottom: 15,
+                            fontSize: 18,
+                            fontWeight: "500",
+                            color: 'white'
+                        }}>
+                            Lista de Operários
+                        </Text>
+                    }
 
                     {/* Lista de operários */}
                     <ScrollView style={{ maxHeight: 300 }}>
@@ -125,8 +145,8 @@ export default function MasterAcessScreen() {
                             <OperatorItem
                                 key={operator.id}
                                 name={operator.name}
-                                onEdit={()=> editOperator(operator.id)}
-                                onDelete={()=> deleteOperator(operator.id)}
+                                onEdit={() => editOperator(operator.id)}
+                                onDelete={() => deleteOp(operator.id)}
                             />
                         ))}
                     </ScrollView>
@@ -159,7 +179,7 @@ export default function MasterAcessScreen() {
                             styles.buttonPrimary,
                             { marginTop: 10 }
                         ]}
-                        onPress={() => { }}
+                        onPress={() => handleUpdate(currentOperator.id, currentOperator.name, currentOperator.code)}
                     >
                         <Text style={{ color: 'white', fontWeight: '600' }}>
                             {currentOperator.id ? 'Salvar Alterações' : 'Salvar Operário'}

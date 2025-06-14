@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,11 +13,17 @@ import MasterLoginModal from '@/components/home/master-login-modal';
 import { masterPassword } from '@/password';
 import Card from '@/components/home/card';
 import { router } from 'expo-router';
+import { initDB } from '@/services/database';
 
 
 export default function GMIHomeScreen() {
+  
   const [showMasterLogin, setShowMasterLogin] = useState(false);
   const [wrongPasswod, setWrongPassword] = useState(false);
+
+  useEffect(()=>{
+    initDB()
+  },[])
 
   const handleMasterAccess = () => {
     setShowMasterLogin(true);

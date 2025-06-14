@@ -1,16 +1,15 @@
 import ProgressBar from '@/components/progress-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import React from 'react';
 import {
     View,
     Text,
     StyleSheet,
     FlatList,
     TouchableOpacity,
-    SafeAreaView,
-    StatusBar
+
 } from 'react-native';
 
 interface Inventario {
@@ -25,6 +24,8 @@ interface Inventario {
 
 const InventorySelectionScreen = () => {
     
+    const operator = useLocalSearchParams();
+    console.log(operator)
 
     const inventarios: Inventario[] = [
 {   

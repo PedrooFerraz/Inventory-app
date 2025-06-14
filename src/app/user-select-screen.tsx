@@ -1,53 +1,22 @@
 import UserCard from "@/components/user/user-card";
+import { useDatabase } from "@/hooks/useDatabase";
+import { Operator } from "@/types/types";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 
-const operadores = [
-    {
-        id: "1",
-        nome: 'João Silva',
-        codigo: '001',
-    },
-    {
-        id: "2",
-        nome: 'Maria Costa',
-        codigo: '002',
-    },
-    {
-        id: "3",
-        nome: 'Pedro Oliveira',
-        codigo: '003',
-    },
-    {
-        id: "4",
-        nome: 'Ana Santos',
-        codigo: '004',
-    },
-    {
-        id: "5",
-        nome: 'Carlos Ferreira',
-        codigo: '005',
-    },
-
-];
-
 export default function UserSelectScreen() {
 
-    const selectOperator = () => {
+    const { operators } = useDatabase();
+    const selectOperator = (id: number) => {
 
-        router.navigate("/inventory-select-screen");
+
+        router.navigate(`/inventory-select-screen?operator=${id}` );
     };
 
-    type Operador = {
-        id: string;
-        nome: string;
-        codigo: string;
-    };
-
-    const renderOperadorItem = ({ item }: { item: Operador}) => (
-        <UserCard username={item.nome} id={item.codigo} onPress={selectOperator} ></UserCard>
+    const renderOperadorItem = ({ item }: { item: Operator }) => (
+        <UserCard username={item.name} id={item.code} onPress={() => selectOperator(item.id)} ></UserCard>
     );
 
 
@@ -68,7 +37,7 @@ export default function UserSelectScreen() {
 
             <View style={styles.content}>
                 <FlatList
-                    data={operadores}
+                    data={operators}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderOperadorItem}
                     showsVerticalScrollIndicator={false}
@@ -98,6 +67,9 @@ const styles = StyleSheet.create({
         padding: 8,
         marginRight: 12,
     },
+    headerContent: {
+        flex: 1,
+    },
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -109,6 +81,6 @@ const styles = StyleSheet.create({
     },
     listContainer: {
         paddingVertical: 20,
-    },
+    }
 
 });

@@ -1,10 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function FileInfoBefore() {
+export default function FileInfoBefore({onPress} : {onPress : any}) {
     return (
         <View style={styles.fileInfo}>
-            <TouchableOpacity style={styles.selectFileButton}>
+            <TouchableOpacity style={styles.selectFileButton} onPress={onPress}>
                 <Ionicons name="folder-outline" size={20} color={"white"} />
                 <Text style={styles.selectFileButtonText}>Selecionar Arquivo CSV</Text>
             </TouchableOpacity>

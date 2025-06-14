@@ -1,12 +1,12 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function FileInfoAfter() {
+export default function FileInfoAfter({name, size, date, otherDocument} : {name: string, size: string, date: string, otherDocument:any}) {
 
     const fileData = [
-        { label: "Name", data: "Individual_XXX317_Transactions_20250417-202359.csv" },
-        { label: "Tamanho", data: "2,4 MB" },
-        { label: "Modificado", data: "06/06/2024 - 18:03" }
+        { label: "Nome", data: name },
+        { label: "Tamanho", data: size },
+        { label: "Modificado", data: date }
     ]
 
     return (
@@ -28,7 +28,7 @@ export default function FileInfoAfter() {
                 }
 
             </View>
-            <TouchableOpacity style={styles.otherDocumentButton}>
+            <TouchableOpacity style={styles.otherDocumentButton} onPress={otherDocument}>
                 <Text style={{ color: "#94A3B8" }}>Selecionar outro documento</Text>
             </TouchableOpacity>
         </View>
@@ -45,11 +45,12 @@ const styles = StyleSheet.create({
         width: "100%",
         gap: 10,
         justifyContent: "space-between",
-        alignItems: "center"
+        
     },
     fileInfoTitleArea: {
         flexDirection: "row",
-        gap: 10
+        gap: 10,
+        justifyContent: "center"
     },
     fileInfoTitle: {
         fontSize: 16,
@@ -71,6 +72,8 @@ const styles = StyleSheet.create({
         fontWeight: "500"
     },
     otherDocumentButton: {
+        flexDirection: "row",
+        justifyContent: "center",
         marginTop: 8
     }
 

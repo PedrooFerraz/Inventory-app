@@ -1,32 +1,23 @@
 import ProgressBar from '@/components/progress-bar';
+import { useDatabase } from '@/hooks/useDatabase';
+import { Inventory } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
     View,
     Text,
     StyleSheet,
     FlatList,
-    TouchableOpacity,
-    SafeAreaView,
-    StatusBar
+    TouchableOpacity
 } from 'react-native';
-
-interface Inventario {
-    id: number;
-    nome: string;
-    descricao: string;
-    status: string;
-    startDate: string;
-    countedItems: number;
-    totalItems: number;
-}
 
 const InventorySelectionScreen = () => {
 
+    const { inventories, refresh } = useDatabase();
 
-    const inventarios: Inventario[] = [
+    const inventarios = [
         {
             id: 1,
             nome: 'Inventário Almoxarifado Central',
@@ -78,7 +69,7 @@ const InventorySelectionScreen = () => {
         //Alguma logica para começar o dowload do csv
     }
 
-    const renderInventarioItem = ({ item }: { item: Inventario }) => (
+    const renderInventarioItem = ({ item }: { item: Inventory }) => (
         <TouchableOpacity
             style={styles.inventarioCard}
             activeOpacity={0.7}
@@ -95,8 +86,7 @@ const InventorySelectionScreen = () => {
                     </LinearGradient>
                 </View>
                 <View style={styles.cardContent}>
-                    <Text style={styles.inventarioNome}>{item.nome}</Text>
-                    <Text style={styles.inventarioDescricao}>{item.descricao}</Text>
+                    <Text style={styles.inventarioNome}>{item.archiveName}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={24} color="#666" />
             </View>
@@ -112,7 +102,7 @@ const InventorySelectionScreen = () => {
                 <View style={styles.detailsRow}>
                     <View style={styles.detailItem}>
                         <Ionicons name="calendar" color="#888" size={12} />
-                        <Text style={styles.detailText}>Início: {item.startDate}</Text>
+                        <Text style={styles.detailText}>Data da Importação: {item.importDate}</Text>
                     </View>
                 </View>
 
@@ -120,12 +110,12 @@ const InventorySelectionScreen = () => {
                     <View style={styles.progressHeader}>
                         <Text style={styles.progressLabel}>Progresso</Text>
                         <Text style={styles.progressPercentage}>
-                            {`${Math.floor((item.countedItems / item.totalItems) * 100)}%`}
+                            {`${Math.floor((item.qtyCountedItems / item.qtyItems) * 100)}%`}
                         </Text>
                     </View>
-                    <ProgressBar color={"#334155"} percentage={`${(item.countedItems / item.totalItems) * 100}%`}></ProgressBar>
+                    <ProgressBar color={"#334155"} percentage={`${(item.qtyCountedItems / item.qtyItems) * 100}%`}></ProgressBar>
                     <Text style={styles.progressText}>
-                        {item.countedItems} de {item.totalItems} itens
+                        {item.qtyCountedItems} de {item.qtyItems} itens
                     </Text>
                 </View>
 
@@ -152,7 +142,7 @@ const InventorySelectionScreen = () => {
 
             <View style={styles.content}>
                 <FlatList
-                    data={inventarios}
+                    data={inventories}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderInventarioItem}
                     showsVerticalScrollIndicator={false}

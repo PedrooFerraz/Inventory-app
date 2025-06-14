@@ -1,51 +1,102 @@
-import { View, StyleSheet, Text, Image, TouchableOpacity, ScrollView, Button } from "react-native"
-import * as DocumentPicker from 'expo-document-picker';
-import { readDocument } from "@/services/fileService";
-import { useEffect, useState } from "react";
-import { getData } from "@/services/fileService";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import HowToUse from "@/components/how-to-use";
-import FileInfoBefore from "@/components/file-info-before";
-import FileInfoAfter from "@/components/file-info-after";
-import DataPreview from "@/components/data-preview";
 import { router } from "expo-router";
+import HowToUse from "@/components/import-sheet/how-to-use";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import DataPreview from "@/components/import-sheet/data-preview";
+import { formatSizeUnits, getData, readDocument } from "@/services/fileService";
+import * as DocumentPicker from 'expo-document-picker';
+import FileInfoAfter from "@/components/import-sheet/file-info-after";
 import ButtonWithIcon from "@/components/button-with-icon";
+import FileInfoBefore from "@/components/import-sheet/file-info-before";
+import { View, StyleSheet, Text, ScrollView } from "react-native"
+import { useState } from "react";
+import Loading from "@/components/import-sheet/loading-preview";
+
+interface fileInfo {
+  date: string,
+  name: string,
+  size: string,
+}
+
+interface dataPreview {
+  qty: number,
+  localizations: number
+}
 
 export default function ImportScreen() {
 
-  const [selectedFile, setSelectedFile] = useState<string>();
+  const [fileInfo, setFileInfo] = useState<fileInfo>()
+  const [showInfo, setShowInfo] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [dataPreview, setDataPreview] = useState<dataPreview>()
 
-  useEffect(() => {
-
-    getData("fileInfo")
-      .then(data => setSelectedFile(data.name))
-
-  }, [])
-
-  const pickDocuments = async () => {
+  const getDoc = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "text/comma-separated-values"
-      });
+      const doc = await DocumentPicker.getDocumentAsync({
+        type: 'text/comma-separated-values',
+        multiple: false,
+      })
 
-      if (result.canceled) {
-        console.log("Seleção do Documento Cancelada");
+      if (doc.canceled) {
+        return
       }
-      const successResult = result as DocumentPicker.DocumentPickerSuccessResult;
-
-      if (successResult.assets) {
-        readDocument(successResult.assets[0])
+      const selectedDoc = doc as DocumentPicker.DocumentPickerSuccessResult
+      if (selectedDoc.assets) {
+        handleSelectDocument(selectedDoc.assets[0])
+        readDocument(selectedDoc.assets[0])
       }
-    } catch (error) {
-      console.log("Erro ao selecionar um documento:", error);
+    } catch (err: any) {
+      console.log("Erro ao selecionar um documento:", err);
     }
-  };
+  }
+
+  const handleSelectDocument = (info: DocumentPicker.DocumentPickerAsset) => {
+    let date = new Date()
+    let MBSize: string
+    if (typeof info.size === "number") {
+      MBSize = formatSizeUnits(info.size)
+    } else {
+      MBSize = "0MB"
+    }
+
+    const fileInfo = {
+      name: info.name,
+      size: MBSize,
+      date: date.toLocaleDateString("Pt-br")
+    }
+    setShowInfo(true)
+    setFileInfo(fileInfo)
+    loadPreview()
+  }
+
+  const handleSelectOtherDocument = () => {
+    setShowInfo(false)
+    setFileInfo(undefined)
+    setShowPreview(false)
+  }
+
+  const loadPreview = async () => {
+    setIsLoading(true)
+    setShowPreview(true)
+    const res = await getData("fileData")
+
+    // const localizations = res.data.filter((d: { Material: string; }) => d.Material == "100-400")
+
+    const data : dataPreview = {
+      qty: res.data.length,
+      localizations: 1,
+    }
+    setIsLoading(false)
+    console.log(res.meta)
+    console.log("DATA: " + JSON.stringify(data))
+  }
+
 
   return (
     <View style={styles.container}>
 
       <View style={styles.header} >
-         <Ionicons onPress={() => router.back()} name="arrow-back" size={26} color={"white"} />
+        <Ionicons onPress={() => router.back()} name="arrow-back" size={26} color={"white"} />
         <Text style={styles.headerTitle}>Importar Inventário</Text>
       </View>
 
@@ -69,14 +120,23 @@ export default function ImportScreen() {
               </Text>
             </View>
 
-            {/* <FileInfoBefore></FileInfoBefore> */}
-            
-            <FileInfoAfter></FileInfoAfter>
+
+            {
+              showInfo && fileInfo ?
+                <FileInfoAfter date={fileInfo.date} name={fileInfo.name} size={fileInfo.size} otherDocument={handleSelectOtherDocument}></FileInfoAfter>
+                :
+                <FileInfoBefore onPress={getDoc}></FileInfoBefore>
+            }
           </View>
 
-          <DataPreview></DataPreview>
+          {
+            showPreview && (
+              isLoading ? <Loading /> : <DataPreview />
+            )
+          }
 
-          <ButtonWithIcon route={"/inventory-screen"} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon>
+
+          {/* <ButtonWithIcon route={"/inventory-screen"} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon> */}
 
           <HowToUse></HowToUse>
 
