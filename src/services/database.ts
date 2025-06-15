@@ -4,8 +4,8 @@ let db: SQLiteDatabase;
 
 export const getDatabase = async () => {
   if (!db) {
-    db = await openDatabaseAsync('inventory.db', {useNewConnection: true});
-    
+    db = await openDatabaseAsync('inventory.db', { useNewConnection: true });
+
     await initDB();
   }
   return db;
@@ -30,7 +30,7 @@ export const fetchAll = async <T>(
 
 export const initDB = async () => {
   const database = await getDatabase();
-  
+
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,12 +40,28 @@ export const initDB = async () => {
     
     CREATE TABLE IF NOT EXISTS inventories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      archiveName TEXT NOT NULL,
-      uriArchive TEXT NOT NULL UNIQUE,
+      fileName TEXT NOT NULL,
+      fileUri TEXT NOT NULL UNIQUE,
       importDate TEXT NOT NULL,
       status INTEGER NOT NULL DEFAULT 0,
-      qtyItems INTEGER NOT NULL,
-      qtyCountedItems INTEGER DEFAULT 0
+      totalItems INTEGER NOT NULL,
+      countedItems INTEGER DEFAULT 0
     );
+
+    CREATE TABLE IF NOT EXISTS inventory_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER NOT NULL,
+    code TEXT NOT NULL,
+    description TEXT NOT NULL,
+    expectedLocation TEXT,
+    reportedLocation TEXT,
+    expectedQuantity INTEGER NOT NULL,
+    reportedQuantity INTEGER,
+    status INTEGER DEFAULT 0,
+    observation TEXT,
+    operator TEXT,
+    countTime TEXT,
+    FOREIGN KEY (inventory_id) REFERENCES inventories (id)
+  );
   `);
 };

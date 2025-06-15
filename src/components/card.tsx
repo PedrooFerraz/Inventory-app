@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
-export default function Card({info, label, color} : {info: string, label : string, color: string}){
+export default function Card({info, label, color} : {info: number, label : string, color: string}){
     return (
             <View style={styles.card}>
                 <Text style={{fontSize: 20, fontWeight: "900", color: color}}>{info}</Text>

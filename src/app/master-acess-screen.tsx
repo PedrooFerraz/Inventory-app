@@ -113,7 +113,7 @@ export default function MasterAcessScreen() {
             <View style={styles.mainContent}>
                 <Card colors={['#10B981', '#059669']} description="Adicionar, editar ou remover operários" title="Gerenciar Operários" icon={"people"} onPress={openOperatorsModal}></Card>
                 <Card colors={['#3B82F6', '#2563EB']} description="Importar dados via arquivo CSV" title="Importar Inventário" icon={"folder-open"} onPress={() => { router.navigate("/import-sheet-screen") }}></Card>
-                <Card colors={['#FBBF24', '#FFC121']} description="Exporte os invetários realizados" title="Histórico" icon={"folder-open"} onPress={() => router.navigate("/inventory-history")}></Card>
+                <Card colors={['#FBBF24', '#FFC121']} description="Exporte os invetários realizados" title="Histórico" icon={"folder-open"} onPress={() => router.navigate("/inventory-history-screen")}></Card>
 
                 <CustomModal onClose={closeOperatorsModal} title="Gerenciar Operários" visible={operatorsModalVisible} showCloseButton>
                     <TouchableOpacity

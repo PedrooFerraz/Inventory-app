@@ -6,12 +6,12 @@ export type Operator = {
 
 export type Inventory = {
   id: number;
-  archiveName: string;
-  uriArchive: string;
+  fileName: string;
+  fileUri : string;
   importDate: string;
-  status: number;
-  qtyItems: number;
-  qtyCountedItems: number;
+  status: number; // 0-Aberto, 1-Em Andamento, 2-Finalizado
+  totalItems : number;
+  countedItems : number;
 };
 
 export type CSVParseResult = {
@@ -19,3 +19,18 @@ export type CSVParseResult = {
   errors: any[];
   meta: any;
 };
+
+export type Item = {
+  id: number,
+  inventory_id: number,
+  code: string,
+  description: string,
+  expectedLocation: string,
+  reportedLocation: string,
+  expectedQuantity: number,
+  reportedQuantity: number,
+  status: number,
+  observation: string,
+  operator: string,
+  countTime: string
+}

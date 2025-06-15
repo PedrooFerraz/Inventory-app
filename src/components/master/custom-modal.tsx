@@ -16,8 +16,6 @@ export const CustomModal = ({
         showCloseButton?: boolean
     }
 
-
-
 ) => {
     return (
         <Modal

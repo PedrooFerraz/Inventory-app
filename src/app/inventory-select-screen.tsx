@@ -1,6 +1,7 @@
-import ProgressBar from '@/components/progress-bar';
+import SelectInventoryCard from '@/components/inventory/select-inventory-card';
+import { useDatabase } from '@/hooks/useDatabase';
+import { Inventory } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import {
@@ -9,149 +10,24 @@ import {
     StyleSheet,
     FlatList,
     TouchableOpacity,
-
 } from 'react-native';
 
-interface Inventario {
-    id: number;
-    nome: string;
-    descricao: string;
-    status: string;
-    startDate: string;
-    countedItems: number;
-    totalItems: number;
-}
-
-const InventorySelectionScreen = () => {
+export default function InventorySelectionScreen(){
     
-    const operator = useLocalSearchParams();
-    console.log(operator)
+    const { inventories } = useDatabase()
+    const params = useLocalSearchParams();
 
-    const inventarios: Inventario[] = [
-{   
-              id: 1,
-              nome: 'Inventário Almoxarifado Central',
-              descricao: 'Contagem geral do estoque principal',
-              startDate: '12/06/2025',
-              status: 'Em andamento',
-              totalItems: 1250,
-              countedItems: 320,
-            },
-            {
-              id: 2,
-              nome: 'Inventário Depósito Norte',
-              descricao: 'Contagem do depósito filial norte',
-              startDate: '10/06/2025',
-              status: 'Pendente',
-              totalItems: 875,
-              countedItems: 0,
-            },
-            {
-              id: 3,
-              nome: 'Inventário Produtos Acabados',
-              descricao: 'Contagem linha de produção',
-              startDate: '08/06/2025',
-              status: 'Concluído',
-              totalItems: 450,
-              countedItems: 450,
-            },
-            {
-              id: 4,
-              nome: 'Inventário Matéria Prima',
-              descricao: 'Contagem de insumos e materiais',
-              startDate: '11/06/2025',
-              status: 'Em andamento',
-              totalItems: 680,
-              countedItems: 156,
-            },
-            {
-              id: 5,
-              nome: 'Inventário Ferramentas',
-              descricao: 'Contagem de equipamentos e ferramentas',
-              startDate: '09/06/2025',
-              status: 'Pendente',
-              totalItems: 290,
-              countedItems: 0,
-            },
-    ];
-
-    const renderInventarioItem = ({ item }: { item: Inventario }) => (
-        <TouchableOpacity
-            style={styles.inventarioCard}
-            activeOpacity={0.7}
-            onPress={() => router.navigate("/inventory-screen")}
-        >
-
-            <View style={styles.cardHeader}>
-                <View style={styles.iconContainer}>
-                    <LinearGradient
-                        colors={["#1A3266", "#1A3266"]}
-                        style={styles.iconContainer}
-                    >
-                        <Ionicons name="cube-outline" size={28} color="#FFFFFF" />
-                    </LinearGradient>
-                </View>
-                <View style={styles.cardContent}>
-                    <Text style={styles.inventarioNome}>{item.nome}</Text>
-                    <Text style={styles.inventarioDescricao}>{item.descricao}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={24} color="#666" />
-            </View>
+    const handleSelect = (id: number) =>{
+        router.navigate(`/inventory-screen?id=${id}&operator=${params.operator}`)
+    }
 
 
-
-
-
-            <View style={styles.cardDetails}>
-
-
-                <View style={styles.statusContainer}>
-                    <View style={[styles.statusDot, { backgroundColor: "#079C6D" }]} />
-                    <Text style={[styles.statusText,{ color: "#079C6D"}]}>{item.status}</Text>
-                </View>
-
-
-
-
-
-                <View style={styles.detailsRow}>
-                    <View style={styles.detailItem}>
-                        <Ionicons name="calendar" color="#888" size={12} />
-                        <Text style={styles.detailText}>Início: {item.startDate}</Text>
-                    </View>
-                </View>
-
-
-
-
-
-                <View style={styles.progressContainer}>
-                    <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Progresso</Text>
-                        <Text style={styles.progressPercentage}>
-                            {`${Math.floor((item.countedItems/item.totalItems) * 100)}%`}
-                        </Text>
-                    </View>
-                    <ProgressBar color={"#334155"} percentage={`${(item.countedItems/item.totalItems) * 100}%`}></ProgressBar>
-                    <Text style={styles.progressText}>
-                        {item.countedItems} de {item.totalItems} itens
-                    </Text>
-                </View>
-
-
-
-
-
-            </View>
-
-
-
-        </TouchableOpacity>
+    const renderInventarioItem = ({ item }: { item: Inventory }) => (
+        <SelectInventoryCard item={item} onPress={handleSelect}></SelectInventoryCard>
     );
 
     return (
         <View style={styles.container}>
-
 
             <View style={styles.header}>
                 <TouchableOpacity
@@ -167,7 +43,7 @@ const InventorySelectionScreen = () => {
 
             <View style={styles.content}>
                 <FlatList
-                    data={inventarios}
+                    data={inventories}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderInventarioItem}
                     showsVerticalScrollIndicator={false}
@@ -310,5 +186,3 @@ const styles = StyleSheet.create({
         color: '#64748B',
     },
 });
-
-export default InventorySelectionScreen;

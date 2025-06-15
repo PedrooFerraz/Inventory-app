@@ -1,15 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, Text, View } from "react-native";
 import Card from "@/components/card";
+import { dataPreview } from "@/app/import-sheet-screen";
 
-export default function DataPreview() {
-
-    const data = [
-        "Código do Material",
-        "Localização",
-        "Quantidade em Estoque",
-        "Descrição do Item"
-    ]
+export default function DataPreview({data} : {data : dataPreview}) {
 
     return (
         <View style={styles.container}>
@@ -18,28 +12,9 @@ export default function DataPreview() {
                 <Text style={styles.previewTitle}>Prévia dos Dados</Text>
             </View>
 
-            <Card info="300" label="Total de Itens" color="#60A5FA"></Card>
-            <Card info="60" label="Localizações" color="#FBBF24"></Card>
+            <Card info={data.qty} label="Total de Itens" color="#60A5FA"></Card>
+            <Card info={data.localizations} label="Localizações" color="#FBBF24"></Card>
 
-            <View style={styles.detectedStructure}>
-                <Text style={styles.detectedStructureTitle}>Estrutura detectada:</Text>
-
-
-                {
-                    data.map((item, index) => {
-                        return (
-                            <View style={styles.listItem} key={index}>
-                                <View>
-                                    <Ionicons name="checkmark" size={20} color={"#8998AC"} />
-                                </View>
-                                <Text style={styles.columnsName}>
-                                    {item}
-                                </Text>
-                            </View>
-                        )
-                    })
-                }
-            </View>
 
         </View>
     )

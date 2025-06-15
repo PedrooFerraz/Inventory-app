@@ -1,17 +1,11 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
-import { router } from "expo-router";
+import { ColorValue, StyleSheet, Text, TouchableOpacity } from "react-native";
 
-export default function ButtonWithIcon({route, icon, label} : {route: string, icon: any, label: string}) {
-
-    const goToInventory = ()=>{
-        router.navigate(route as any)
-    }
-
+export default function ButtonWithIcon({ icon, label, onPress, color }: { onPress: any, icon: any, label: string, color: ColorValue | undefined }) {
 
     return (
-        <TouchableOpacity style={styles.button} activeOpacity={0.5} onPress={goToInventory}>
-            <Ionicons name={icon} size={20} color={"white"}/>
+        <TouchableOpacity style={[styles.button, {backgroundColor: color}]} activeOpacity={0.5} onPress={onPress}>
+            <Ionicons name={icon} size={20} color={"white"} />
             <Text style={styles.name}>{label}</Text>
         </TouchableOpacity>
     )
@@ -20,7 +14,6 @@ export default function ButtonWithIcon({route, icon, label} : {route: string, ic
 
 const styles = StyleSheet.create({
     button: {
-        backgroundColor: "#079C6D",
         padding: 18,
         justifyContent: "center",
         alignItems: "center",

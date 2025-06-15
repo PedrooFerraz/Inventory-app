@@ -1,23 +1,25 @@
 import { router } from "expo-router";
-import HowToUse from "@/components/import-sheet/how-to-use";
+import HowToUse from "@/components/master/import-sheet/how-to-use";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import DataPreview from "@/components/import-sheet/data-preview";
-import { formatSizeUnits, getData, readDocument } from "@/services/fileService";
+import DataPreview from "@/components/master/import-sheet/data-preview";
+import { formatSizeUnits, generateCSVPreview, saveSelectedFileInfo, clearFileCache } from "@/services/fileService";
 import * as DocumentPicker from 'expo-document-picker';
-import FileInfoAfter from "@/components/import-sheet/file-info-after";
+import FileInfoAfter from "@/components/master/import-sheet/file-info-after";
 import ButtonWithIcon from "@/components/button-with-icon";
-import FileInfoBefore from "@/components/import-sheet/file-info-before";
-import { View, StyleSheet, Text, ScrollView } from "react-native"
+import FileInfoBefore from "@/components/master/import-sheet/file-info-before";
+import { View, StyleSheet, Text, ScrollView, ActivityIndicator } from "react-native"
 import { useState } from "react";
-import Loading from "@/components/import-sheet/loading-preview";
+import Loading from "@/components/master/import-sheet/loading-preview";
+import { insertInventory } from "@/models/inventory";
 
 interface fileInfo {
   date: string,
   name: string,
   size: string,
+  uri: string
 }
 
-interface dataPreview {
+export interface dataPreview {
   qty: number,
   localizations: number
 }
@@ -29,6 +31,7 @@ export default function ImportScreen() {
   const [showPreview, setShowPreview] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [dataPreview, setDataPreview] = useState<dataPreview>()
+  const [saving, setSaving] = useState(false)
 
   const getDoc = async () => {
     try {
@@ -42,14 +45,13 @@ export default function ImportScreen() {
       }
       const selectedDoc = doc as DocumentPicker.DocumentPickerSuccessResult
       if (selectedDoc.assets) {
+        await saveSelectedFileInfo(selectedDoc.assets[0].uri, selectedDoc.assets[0].name)
         handleSelectDocument(selectedDoc.assets[0])
-        readDocument(selectedDoc.assets[0])
       }
     } catch (err: any) {
       console.log("Erro ao selecionar um documento:", err);
     }
   }
-
   const handleSelectDocument = (info: DocumentPicker.DocumentPickerAsset) => {
     let date = new Date()
     let MBSize: string
@@ -62,39 +64,55 @@ export default function ImportScreen() {
     const fileInfo = {
       name: info.name,
       size: MBSize,
-      date: date.toLocaleDateString("Pt-br")
+      date: date.toLocaleDateString("Pt-br"),
+      uri: info.uri
     }
-    setShowInfo(true)
     setFileInfo(fileInfo)
-    loadPreview()
+    setShowInfo(true)
+    loadPreview(info)
   }
-
   const handleSelectOtherDocument = () => {
     setShowInfo(false)
     setFileInfo(undefined)
     setShowPreview(false)
+    clearFileCache()
   }
-
-  const loadPreview = async () => {
-    setIsLoading(true)
+  const loadPreview = async (info: DocumentPicker.DocumentPickerAsset) => {
     setShowPreview(true)
-    const res = await getData("fileData")
+    setIsLoading(true)
+    const res = await generateCSVPreview(info)
 
-    // const localizations = res.data.filter((d: { Material: string; }) => d.Material == "100-400")
-
-    const data : dataPreview = {
-      qty: res.data.length,
-      localizations: 1,
-    }
     setIsLoading(false)
-    console.log(res.meta)
-    console.log("DATA: " + JSON.stringify(data))
+    const preview: dataPreview = {
+      localizations: res.uniqueLocations,
+      qty: res.totalRows
+    }
+    setDataPreview(preview)
+  }
+  const handleSubmit = async () => {
+    await clearFileCache()
+
+    if (!fileInfo?.uri || !fileInfo?.name) {
+      return
+    }
+
+    setSaving(true)
+
+    await insertInventory(fileInfo?.uri, fileInfo?.name)
+
+    setSaving(false)
+
+    router.navigate("/master-acess-screen")
   }
 
 
   return (
     <View style={styles.container}>
-
+      {saving &&
+        <View style={{ position: "absolute", width: "100%", height: "100%", zIndex: 10, backgroundColor: "rgba(24, 34, 52, 0.8)" }}>
+          <ActivityIndicator size={"large"} color={"#60A5FA"} style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+        </View>
+      }
       <View style={styles.header} >
         <Ionicons onPress={() => router.back()} name="arrow-back" size={26} color={"white"} />
         <Text style={styles.headerTitle}>Importar Inventário</Text>
@@ -119,8 +137,6 @@ export default function ImportScreen() {
                 Selecione o arquivo CSV com os dados atuais do estoque
               </Text>
             </View>
-
-
             {
               showInfo && fileInfo ?
                 <FileInfoAfter date={fileInfo.date} name={fileInfo.name} size={fileInfo.size} otherDocument={handleSelectOtherDocument}></FileInfoAfter>
@@ -128,18 +144,20 @@ export default function ImportScreen() {
                 <FileInfoBefore onPress={getDoc}></FileInfoBefore>
             }
           </View>
-
           {
             showPreview && (
-              isLoading ? <Loading /> : <DataPreview />
+              isLoading ?
+                <Loading />
+                :
+                dataPreview && (
+                  <View style={{ gap: 28 }}>
+                    <DataPreview data={dataPreview} />
+                    <ButtonWithIcon color={"#10B981"} onPress={handleSubmit} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon>
+                  </View>
+                )
             )
           }
-
-
-          {/* <ButtonWithIcon route={"/inventory-screen"} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon> */}
-
           <HowToUse></HowToUse>
-
         </View>
       </ScrollView>
     </View>

@@ -3,16 +3,24 @@ import { Text, View, StyleSheet, DimensionValue } from "react-native";
 import ProgressCard from "./progress-card";
 import ProgressBar from "./progress-bar";
 
-export default function InventoryProgress() {
+export default function InventoryProgress(
+    {
+        totalItems,
+        countedItems
+    }
+    :
+    {
+        totalItems : number,
+        countedItems: number
 
-    const [qtyItem, setQtyItem] = useState(200);
-    const [qtyDone, setQtyDone] = useState(86);
+    }){
+
     const [barPercentage, setBarPercentage] = useState<DimensionValue>()
     const [Percentage, setPercentage] = useState(0)
 
     const getPercentage = ()=>{
 
-        let res = (qtyDone / qtyItem) * 100
+        let res = (countedItems / totalItems) * 100
         if(isNaN(res))
             res = 0
 
@@ -37,9 +45,9 @@ export default function InventoryProgress() {
 
                 </View>
                 <View style={styles.progressStatusArea}>
-                    <ProgressCard label="Total Estocados" color={"#60A5FA"} number={qtyItem}></ProgressCard>
-                    <ProgressCard label="Itens Apurados" color={"#079C6D"} number={qtyDone}></ProgressCard>
-                    <ProgressCard label="Itens Pendentes" color={"#FBBF24"} number={qtyItem - qtyDone}></ProgressCard>
+                    <ProgressCard label="Total Estocados" color={"#60A5FA"} number={totalItems}></ProgressCard>
+                    <ProgressCard label="Itens Apurados" color={"#079C6D"} number={countedItems}></ProgressCard>
+                    <ProgressCard label="Itens Pendentes" color={"#FBBF24"} number={totalItems - countedItems}></ProgressCard>
                 </View>
             </View>
         </View>
