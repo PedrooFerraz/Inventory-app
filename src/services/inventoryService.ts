@@ -1,4 +1,4 @@
-import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemById, updateInventoryCountedItems, updateInventoryStatus, updateItemCount } from "@/models/inventory";
+import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemById, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount } from "@/models/inventory";
 import { Item, Inventory } from "@/types/types";
 
 export const InventoryService = {
@@ -51,8 +51,6 @@ export const InventoryService = {
             return "Item not found";
         }
 
-        console.log(item)
-
         if (item[0].status !== 0) {
             return "Item has already been accounted for"
         }
@@ -85,6 +83,49 @@ export const InventoryService = {
         } catch (error) {
             console.error("Error updating item:", error);
             return "An error occurred while updating the item";
+        }
+    },
+
+    async addNewItem(inventoryId: number,
+        data: {
+            code: string
+            reportedQuantity: number,
+            reportedLocation: string,
+            observation: string,
+            operator: string
+        }) {
+
+        const inventory = await fetchInventoryById(inventoryId)
+        if (!inventory) {
+            return { success: false, message: "Inventory not found" }
+        }
+        if (inventory.status == 2) {
+            return { success: false, message: "Inventory has already been completed" }
+        }
+        const updatedCount = inventory.countedItems + 1
+        const updateTotal = inventory.totalItems + 1
+
+
+        const now = new Date()
+        const newValue = {
+            code: data.code,
+            reportedQuantity: data.reportedQuantity,
+            reportedLocation: data.reportedLocation,
+            observation: data.observation,
+            operator: data.operator,
+            status: 5,
+            countTime: now.toLocaleDateString("pt-br")
+        }
+
+
+        try {
+            await insertNewInventoryItem(inventoryId, newValue);
+            await updateInventoryTotalItems(inventoryId, updateTotal)
+            await updateInventoryCountedItems(inventoryId, updatedCount);
+
+            return { success: true, message: "Item accounted for successfully" }
+        } catch (error) {
+            return { success: false, message: "An error occurred while updating the item" }
         }
     }
 

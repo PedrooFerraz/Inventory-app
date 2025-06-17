@@ -6,32 +6,31 @@ import ProgressBar from "./progress-bar";
 export default function InventoryProgress(
     {
         totalItems,
-        countedItems
+        countedItems,
     }
-    :
-    {
-        totalItems : number,
-        countedItems: number
+        :
+        {
+            totalItems: number,
+            countedItems: number,
 
-    }){
+        }) {
 
     const [barPercentage, setBarPercentage] = useState<DimensionValue>()
     const [Percentage, setPercentage] = useState(0)
 
-    const getPercentage = ()=>{
+    const getPercentage = () => {
 
         let res = Math.floor((countedItems / totalItems) * 100)
-        if(isNaN(res))
+        if (isNaN(res))
             res = 0
 
-        setBarPercentage(`${res}%` as DimensionValue) 
+        setBarPercentage(`${res}%` as DimensionValue)
         setPercentage(res)
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         getPercentage()
-    }, [])
-
+    }, [totalItems, countedItems])
     return (
         <View style={styles.progress}>
             <View style={styles.progressCard}>
@@ -55,7 +54,7 @@ export default function InventoryProgress(
 }
 
 const styles = StyleSheet.create({
-        progress: {
+    progress: {
         padding: 12,
         borderBottomColor: "#263346",
         borderBottomWidth: 0.8

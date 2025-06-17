@@ -29,9 +29,10 @@ export const fetchAll = async <T>(
 };
 
 export const initDB = async () => {
-  const database = await getDatabase();
+  if (!db) return;
 
-  await database.execAsync(`
+  await db.execAsync(`
+
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -51,11 +52,20 @@ export const initDB = async () => {
     CREATE TABLE IF NOT EXISTS inventory_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     inventory_id INTEGER NOT NULL,
+    inventoryDocument TEXT,
+    year TEXT,
+    center TEXT,
+    storage TEXT,
+    batch TEXT,
+    inventoryItem TEXT,
+    unit TEXT,
+    lock TEXT,
+    completeDescription TEXT,
     code TEXT NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     expectedLocation TEXT,
     reportedLocation TEXT,
-    expectedQuantity INTEGER NOT NULL,
+    expectedQuantity INTEGER,
     reportedQuantity INTEGER,
     status INTEGER DEFAULT 0,
     observation TEXT,

@@ -1,6 +1,7 @@
 import { ColorValue, DimensionValue, StyleSheet, View } from "react-native";
 
 export default function ProgressBar({percentage, color}: {percentage: DimensionValue | undefined, color: ColorValue | undefined}) {
+    
     return (
         <View style={{ height: 8, backgroundColor: color, borderRadius: 12 }}>
             <View style={[styles.progresBar, { width: percentage }]}>

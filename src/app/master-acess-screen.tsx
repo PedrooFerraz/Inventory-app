@@ -12,7 +12,7 @@ import { deleteOperator, fetchOperatorById, insertOperator, updateOperator } fro
 
 export default function MasterAcessScreen() {
 
-    const { operators, loading, error, refresh } = useDatabase();
+    const { operators, refresh } = useDatabase();
 
     const [operatorsModalVisible, setOperatorsModalVisible] = useState(false);
     const [operatorFormModalVisible, setOperatorFormModalVisible] = useState(false);
@@ -95,7 +95,7 @@ export default function MasterAcessScreen() {
         <View style={styles.container}>
             <View style={styles.header} >
 
-                <Ionicons onPress={() => router.back()} name="arrow-back" size={32} color={"white"} style={{ position: "absolute", top: 20, left: 10 }} />
+                <Ionicons onPress={() => router.navigate("/")} name="arrow-back" size={32} color={"white"} style={{ position: "absolute", top: 20, left: 10 }} />
 
                 <LinearGradient
                     colors={['#EF4444', '#DC2626']}

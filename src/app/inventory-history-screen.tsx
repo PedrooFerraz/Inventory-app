@@ -14,7 +14,7 @@ import {
 import SelectInventoryCard from '@/components/inventory/select-inventory-card';
 import { CustomModal } from '@/components/master/custom-modal';
 import ButtonWithIcon from '@/components/button-with-icon';
-import { deleteInventory } from '@/models/inventory';
+import { deleteInventory, fetchInventoryById, fetchItemsByInventoryId } from '@/models/inventory';
 
 const InventorySelectionScreen = () => {
 
@@ -29,8 +29,13 @@ const InventorySelectionScreen = () => {
     const handleCloseModal = () => {
         setShowModal(false)
     }
-    const handleExport = () => {
-        console.log('Exporting')
+    const handleExport = async () => {
+
+        let res
+        if(selectedInventory)
+           res = await fetchItemsByInventoryId(selectedInventory)
+
+        console.log(res)
     }
     const handleDelete = () => {
         Alert.alert(

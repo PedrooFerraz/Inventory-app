@@ -6,12 +6,11 @@ import ItemDescription from "@/components/item-description";
 import { CustomModal } from "@/components/master/custom-modal";
 import NumericInput from "@/components/numeric-input";
 import QRCodeInput from "@/components/qrcode-input";
-import { updateItemCount } from "@/models/inventory";
 import { Inventory, Item } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from "react-native";
+import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert } from "react-native";
 import { InventoryService } from "@/services/inventoryService";
 
 
@@ -23,23 +22,34 @@ export default function InventoryScreen() {
 
     const params = useLocalSearchParams();
     const drawer = useRef<DrawerLayoutAndroid>(null);
-    const qrCodeInputRefCode = useRef<{ clearInput: () => void }>(null);
-    const qrCodeInputRefLoc = useRef<{ clearInput: () => void }>(null);
     const numericInputRef = useRef<{ clearInput: () => void }>(null);
+    const qrCodeInputRefLoc = useRef<{ clearInput: () => void }>(null);
+    const qrCodeInputRefCode = useRef<{ clearInput: () => void }>(null);
 
-    const [isLoading, setIsLoading] = useState(true)
-    const [currentInventory, setCurrentInventory] = useState<Inventory | null>()
-    const [showCamera, setShowCamera] = useState(false)
-    const [currentItem, setCurrentItem] = useState<Item>()
-    const [showDescription, setShowDescription] = useState(false)
-    const [description, setDescription] = useState<[string, status: 0 | 1]>() //0-Ok 1-Error
-    const [wrongQuantity, setWrongQuantity] = useState(false)
-    const [wrongLocation, setWrongLocation] = useState(false)
-    const [itemNotFound, setItemNotFound] = useState(false)
-    const [observation, setObservation] = useState("")
-    const [currentLocation, setCurrentLocation] = useState("")
-    const [currentQuantity, setCurrentQuantity] = useState(0)
+    const [progress, setProgress] = useState(0);
+    const [success, setSuccess] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [observation, setObservation] = useState("");
+    const [showCamera, setShowCamera] = useState(false);
+    const [currentItem, setCurrentItem] = useState<Item>();
+    const [itemNotFound, setItemNotFound] = useState(false);
+    const [errorModal, setErrorModal] = useState<{
+        visible: boolean,
+        message: string,
+        title: string,
+        onConfirm: () => any,
+        onCancel: () => any,
+    }
+    >()
+    const [wrongQuantity, setWrongQuantity] = useState(false);
+    const [wrongLocation, setWrongLocation] = useState(false);
+    const [currentQuantity, setCurrentQuantity] = useState(0);
     const [pendingSubmit, setPendingSubmit] = useState(false);
+    const [currentLocation, setCurrentLocation] = useState("");
+    const [currentCode, setCurrentCode] = useState("");
+    const [showDescription, setShowDescription] = useState(false);
+    const [currentInventory, setCurrentInventory] = useState<Inventory | null>();
+    const [description, setDescription] = useState<[string, status: 0 | 1]>(); //0-Ok 1-Error
     const [userChoices, setUserChoices] = useState<{
         ignoreLocation?: boolean;
         ignoreQuantity?: boolean;
@@ -67,9 +77,14 @@ export default function InventoryScreen() {
     }
     const handleEndEditingCode = async (code: string) => {
 
+        setCurrentCode(code)
         const res = await InventoryService.getItemByCode(Number(params.id), code)
         if (!res) {
-            setDescription(["", 1]); // Force a red description
+            if (code == "")
+                setDescription(["É preciso inserir algum código", 1])
+            else {
+                setDescription(["Item não encontrado", 1]); // Force a red description
+            }
             setShowDescription(true);
             setCurrentItem(undefined); // Clear the current item
             return;
@@ -96,8 +111,30 @@ export default function InventoryScreen() {
     const handleItemNotFound = () => {
         setItemNotFound(!itemNotFound)
     }
+    const handleErrorModal = (message: string, title: string,) => {
+        setErrorModal(
+            {
+                visible: !errorModal?.visible,
+                message: "",
+                title: "",
+                onConfirm: () => {},
+                onCancel: () => {}
+            }
+        )
+    }
+
+    const handleSuccess = () => {
+        setSuccess(!success)
+    }
 
     const handleSubmit = async () => {
+
+        if (currentCode == "") {
+            setDescription(["É preciso inserir algum código", 1])
+            setShowDescription(true);
+            return
+        }
+
         if (!currentItem) {
             setItemNotFound(true);
             return;
@@ -115,7 +152,7 @@ export default function InventoryScreen() {
         await confirmItem();
     };
 
-    const resetForm = () => {
+    const restartForm = () => {
         setCurrentItem(undefined);
         setShowDescription(false);
         setUserChoices({});
@@ -123,20 +160,22 @@ export default function InventoryScreen() {
         qrCodeInputRefCode.current?.clearInput();
         qrCodeInputRefLoc.current?.clearInput();
         numericInputRef.current?.clearInput();
+        getInventoryData();
+        setProgress(prev => prev + 1)
     };
 
     const confirmItem = async () => {
         if (!currentItem || !currentInventory)
             return;
-        let status = 0
+        let status = 1
         if (currentItem.expectedQuantity !== currentQuantity) {
-            status = 1
-        }
-        if (currentItem.expectedLocation !== currentLocation) {
             status = 2
         }
-        if (currentItem.expectedLocation !== currentLocation && currentItem.expectedQuantity !== currentQuantity) {
+        if (currentItem.expectedLocation !== currentLocation) {
             status = 3
+        }
+        if (currentItem.expectedLocation !== currentLocation && currentItem.expectedQuantity !== currentQuantity) {
+            status = 4
         }
         const updatedItem = {
             reportedQuantity: currentQuantity,
@@ -146,17 +185,34 @@ export default function InventoryScreen() {
             status: status
         }
         const res = await InventoryService.updateItem(currentItem.id, currentInventory.id, updatedItem)
-        if(res == "Item has already been accounted for"){
+        if (res == "Item has already been accounted for") {
             alert("Este Item já foi contabilizado")
         }
-        resetForm();
-        // refresh();
+
+        handleSuccess()
+        restartForm();
     };
 
     const addNewItem = async () => {
 
-    };
+        if (!currentInventory)
+            return;
 
+        const newItem = {
+            code: currentCode,
+            reportedQuantity: currentQuantity,
+            reportedLocation: currentLocation,
+            observation: observation,
+            operator: Array.isArray(params.operator) ? params.operator[0] : params.operator as string,
+        }
+
+        const res = await InventoryService.addNewItem(currentInventory.id, newItem)
+
+        if (res.success) {
+            handleSuccess()
+            restartForm();
+        }
+    };
 
     const getDescription = async (item: string): Promise<boolean> => {
         const res = await InventoryService.getItemDescriptionByCode(Number(params.id), item)
@@ -196,7 +252,7 @@ export default function InventoryScreen() {
 
                 {
                     currentInventory &&
-                    <InventoryProgress totalItems={currentInventory.totalItems} countedItems={currentInventory.countedItems}></InventoryProgress>
+                    <InventoryProgress key={progress} totalItems={currentInventory.totalItems} countedItems={currentInventory.countedItems}></InventoryProgress>
                 }
 
                 <View style={styles.content}>
@@ -312,12 +368,42 @@ export default function InventoryScreen() {
                         onPress={async () => {
                             await addNewItem();
                             handleItemNotFound();
-                            resetForm();
                         }}
                     />
                 </View>
             </CustomModal>
 
+            <CustomModal onClose={handleSuccess} title="Sucesso" visible={success}>
+                <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+                    Item inserido com sucesso!
+                </Text>
+                <View style={{ gap: 20 }}>
+                    <ButtonWithIcon
+                        color="#079C6D"
+                        icon="checkmark-outline"
+                        label="Ok"
+                        onPress={handleSuccess}
+                    />
+
+                </View>
+            </CustomModal>
+            {
+                errorModal &&
+                <CustomModal onClose={handleErrorModal} title="Sucesso" visible={errorModal.visible}>
+                    <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+                        Item inserido com sucesso!
+                    </Text>
+                    <View style={{ gap: 20 }}>
+                        <ButtonWithIcon
+                            color="#079C6D"
+                            icon="checkmark-outline"
+                            label="Ok"
+                            onPress={handleSuccess}
+                        />
+
+                    </View>
+                </CustomModal>
+            }
         </DrawerLayoutAndroid>
     )
 }

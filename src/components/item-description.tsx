@@ -37,9 +37,9 @@ export default function ItemDescription({ description, status }: { description: 
                         fontWeight: "500",
                         fontSize: 14,
                         color: "#fa6060"
-                    }}>Descrição</Text>
+                    }}>Erro</Text>
                     <Text style={styles.description}>
-                        Item não encontrado
+                        {description}
                     </Text>
                 </View>
             </View>

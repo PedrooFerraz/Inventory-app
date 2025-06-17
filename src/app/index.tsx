@@ -13,7 +13,7 @@ import MasterLoginModal from '@/components/home/master-login-modal';
 import { masterPassword } from '@/password';
 import Card from '@/components/home/card';
 import { router } from 'expo-router';
-import { initDB } from '@/services/database';
+import { getDatabase } from '@/services/database';
 
 
 export default function GMIHomeScreen() {
@@ -22,8 +22,17 @@ export default function GMIHomeScreen() {
   const [wrongPasswod, setWrongPassword] = useState(false);
 
   useEffect(() => {
-    initDB()
-  }, [])
+    const initDatabase = async () => {
+      try {
+        await getDatabase(); // Isso já abre o banco e cria as tabelas
+        console.log("Banco de dados inicializado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao inicializar o banco de dados:", error);
+      }
+    };
+
+    initDatabase();
+  }, []);
 
   const handleMasterAccess = () => {
     setShowMasterLogin(true);
