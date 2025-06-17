@@ -5,10 +5,10 @@ import {
   StyleSheet,
   StatusBar,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import MasterLoginModal from '@/components/home/master-login-modal';
 import { masterPassword } from '@/password';
 import Card from '@/components/home/card';
@@ -17,13 +17,13 @@ import { initDB } from '@/services/database';
 
 
 export default function GMIHomeScreen() {
-  
+
   const [showMasterLogin, setShowMasterLogin] = useState(false);
   const [wrongPasswod, setWrongPassword] = useState(false);
 
-  useEffect(()=>{
+  useEffect(() => {
     initDB()
-  },[])
+  }, [])
 
   const handleMasterAccess = () => {
     setShowMasterLogin(true);
@@ -34,7 +34,7 @@ export default function GMIHomeScreen() {
 
   };
 
-  const handleMasterLogin = (password : string) => {
+  const handleMasterLogin = (password: string) => {
     if (password == masterPassword) {
       router.navigate("/master-acess-screen")
     }
@@ -68,13 +68,13 @@ export default function GMIHomeScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <LinearGradient
-              colors={['#3B82F6', '#2563EB']}
+              colors={['white', '#4f6a92']}
               style={styles.logoContainer}
             >
-              <Ionicons name="cube-outline" size={48} color="#FFFFFF" />
+              <Image source={require("@/assets/images/LogoGMIConsultoria.png")} style={{ width: 90, height: 90 }}></Image>
             </LinearGradient>
 
-            <Text style={styles.title}>Inventário GMI</Text>
+            <Text style={styles.title}>GMI Inventory Pro</Text>
             <Text style={styles.subtitle}>
               Sistema Profissional de Gestão de Inventário Industrial
             </Text>
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: 'center'
   },
   subtitle: {
     fontSize: 16,

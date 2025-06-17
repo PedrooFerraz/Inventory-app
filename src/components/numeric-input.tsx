@@ -1,15 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-export default function NumericInput() {
+export default function NumericInput({ onChange, ref}: { onChange: (e: string) => any , ref: any}) {
 
     const [qtyInput, onChangeQty] = useState('0');
     const [disabled, setDisabled] = useState(false)
 
+    const inputRef = useRef(null);
+
+    useImperativeHandle(ref, () => ({
+        clearInput: () => {
+            onChangeQty("0")
+        }
+    }));
+
+    useEffect(() => {
+        onChange(qtyInput)
+        if (qtyInput == "0")
+            setDisabled(true)
+        else
+            setDisabled(false)
+
+    }, [qtyInput])
+
 
     const onChanged = (text: string) => {
         const sanitized = text.replace(/[^0-9]/g, '');
-        onChangeQty(sanitized === '' ? '0' : sanitized);
+        onChangeQty(sanitized === '' ? '' : sanitized);
     }
 
     const add = () => {
@@ -20,13 +37,6 @@ export default function NumericInput() {
         onChangeQty(newValue.toString());
     }
 
-    useEffect(()=>{
-        if(qtyInput == "0")
-            setDisabled(true)
-        else
-            setDisabled(false)
-
-    }, [qtyInput])
 
     return (
         <View style={styles.inputGroup}>
@@ -36,7 +46,7 @@ export default function NumericInput() {
                     style={styles.inputButton}
                     onPress={subtract}
                     disabled={disabled}>
-                        
+
 
                     <Text style={{ fontSize: 26, color: "#DDDFE3", fontWeight: "400" }}>-</Text>
                 </TouchableOpacity>
@@ -45,6 +55,15 @@ export default function NumericInput() {
                     style={[styles.input, styles.numericInput]}
                     onChangeText={(text) => { onChanged(text) }}
                     value={qtyInput}
+                    onEndEditing={() => {
+                        if (qtyInput == "")
+                            onChangeQty("0")
+                    }}
+                    onFocus={() => {
+                        if (qtyInput == "0") {
+                            onChangeQty("")
+                        }
+                    }}
                 />
 
                 <TouchableOpacity

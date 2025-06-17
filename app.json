@@ -43,7 +43,8 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

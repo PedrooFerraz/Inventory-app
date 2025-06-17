@@ -20,7 +20,7 @@ export default function InventoryProgress(
 
     const getPercentage = ()=>{
 
-        let res = (countedItems / totalItems) * 100
+        let res = Math.floor((countedItems / totalItems) * 100)
         if(isNaN(res))
             res = 0
 

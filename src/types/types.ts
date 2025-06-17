@@ -29,7 +29,7 @@ export type Item = {
   reportedLocation: string,
   expectedQuantity: number,
   reportedQuantity: number,
-  status: number,
+  status: number, //0-Não realizado 1-Ok 2-Quantidade divergente 3-Localização Divergente -Quantidade e Localização Divergente 5- Item Novo
   observation: string,
   operator: string,
   countTime: string

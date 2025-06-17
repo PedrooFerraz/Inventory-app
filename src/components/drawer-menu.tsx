@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
 import { DrawerLayoutAndroid, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function DrawerMenu({ drawer }: { drawer: React.RefObject<DrawerLayoutAndroid | null> }) {
@@ -13,12 +14,10 @@ export default function DrawerMenu({ drawer }: { drawer: React.RefObject<DrawerL
             </View>
 
             <View>
-                <TouchableOpacity style={styles.menuButton} activeOpacity={0.5}>
-                    <Text style={{color:"white", fontSize: 14}}>Limpar Importação</Text>
+                <TouchableOpacity style={styles.menuButton} activeOpacity={0.5} onPress={()=>router.navigate("/")}>
+                    <Text style={{color:"white", fontSize: 14}}>Voltar para a Tela Inicial</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.menuButton} activeOpacity={0.5}>
-                    <Text style={{color:"white"}}>Exportar arquivo</Text>
-                </TouchableOpacity>
+
             </View>
 
 

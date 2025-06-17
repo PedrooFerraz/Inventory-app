@@ -22,12 +22,12 @@ export const insertInventory = async (
   });
 
   const items = parseResult.data
-    .filter(item => item['Material'])
+    .filter(item => item['Material'] && item['Material'].trim() !== '')
     .map(item => ({
-      code: item['Material'] || '',
+      code: item['Material'],
       description: item['Texto Breve'],
       expectedLocation: item['Posição Depósito'] || '',
-      expectedQuantity: item['Estoque Utilização Livre'] || ''
+      expectedQuantity: formatQuantity(item['Estoque Utilização Livre'] || 0)
     }));
 
   const totalItems = items.length;
@@ -65,11 +65,18 @@ export const fetchInventories = async () => {
 
 export const updateItemCount = async (
   itemId: number,
-  newCount: number
+  item : {
+    reportedQuantity: number,
+    reportedLocation: string,
+    observation: string,
+    operator: string,
+    status: number,
+    countTime: string
+  }
 ) => {
   return await executeQuery(
-    `UPDATE inventory_items SET counted = ? WHERE id = ?;`,
-    [newCount, itemId]
+    `UPDATE inventory_items SET reportedQuantity = ?, reportedLocation = ?, observation = ?, operator = ?, status = ?, countTime = ? WHERE id = ?;`,
+    [item.reportedQuantity, item.reportedLocation, item.observation, item.operator, item.status, item.countTime, itemId]
   );
 };
 
@@ -84,6 +91,25 @@ export const updateInventoryStatus = async (
   return result;
 };
 
+export const updateInventoryCountedItems = async (
+  inventoryID: number,
+  counted: number
+) =>{
+  const result = await executeQuery(
+    `UPDATE inventories SET countedItems = ? WHERE id = ?`,
+    [counted, inventoryID])
+  return result
+}
+
+export const updateInventoryTotalItems = async (
+  inventoryID: number,
+  total: number
+) =>{
+  const result = await executeQuery(
+    `UPDATE inventories SET totalItems = ? WHERE id = ?`,
+    [total, inventoryID])
+  return result
+}
 
 export const fetchInventoryById = async (
   id: number
@@ -106,10 +132,10 @@ export const insertInventoryItem = async (
   return result;
 }
 
-export const getItemByCode = async (
+export const fetchItemByCode = async (
   inventoryId: number,
   materialCode: string
-) => {
+) : Promise<Item[]> => {
   return await  fetchAll<Item>(
     `SELECT * FROM inventory_items WHERE inventory_id = ? AND code = ? LIMIT 1;`,
     [inventoryId, materialCode]
@@ -122,6 +148,12 @@ export const fetchItemsByInventoryId = async (inventoryId: number) => {
     [inventoryId]
   );
 };
+
+export const fetchItemById = async (inventoryId: number, itemId: number) =>{
+  return await fetchAll<Item>(
+    `SELECT * FROM inventory_items WHERE inventory_id = ? AND id = ?`,
+    [inventoryId, itemId])
+}
 
 export const fetchDescriptionByCode = async (inventoryId: number, code: string) => {
   const res = await fetchAll<Item>(
@@ -141,3 +173,15 @@ export const deleteInventory = async (inventoryId: number) => {
   )
   return result;
 }
+
+
+const formatQuantity = (value: string | number): number => {
+  if (typeof value === 'number') return Math.floor(value); // If already a number, take all
+
+  // remove dots and commas
+  const numericString = value
+    .replace(/\./g, '') 
+    .replace(/,/g, '.');
+
+  return Math.floor(parseFloat(numericString));
+};
