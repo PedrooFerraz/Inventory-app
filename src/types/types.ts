@@ -59,3 +59,11 @@ export type ImportedInventoryItem = {
   expectedLocation: string;
   expectedQuantity: number;
 };
+
+export type ErrorModalProps = {
+  visible: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+};

@@ -14,7 +14,7 @@ export default function ButtonWithIcon({ icon, label, onPress, color }: { onPres
 
 const styles = StyleSheet.create({
     button: {
-        padding: 18,
+        padding: 16,
         justifyContent: "center",
         alignItems: "center",
         borderRadius: 10,

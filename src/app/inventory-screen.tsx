@@ -6,11 +6,11 @@ import ItemDescription from "@/components/item-description";
 import { CustomModal } from "@/components/master/custom-modal";
 import NumericInput from "@/components/numeric-input";
 import QRCodeInput from "@/components/qrcode-input";
-import { Inventory, Item } from "@/types/types";
+import { ErrorModalProps, Inventory, Item } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert } from "react-native";
+import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput} from "react-native";
 import { InventoryService } from "@/services/inventoryService";
 
 
@@ -33,17 +33,19 @@ export default function InventoryScreen() {
     const [showCamera, setShowCamera] = useState(false);
     const [currentItem, setCurrentItem] = useState<Item>();
     const [itemNotFound, setItemNotFound] = useState(false);
-    const [errorModal, setErrorModal] = useState<{
-        visible: boolean,
-        message: string,
-        title: string,
-        onConfirm: () => any,
-        onCancel: () => any,
-    }
-    >()
+    const [errorModal, setErrorModal] = useState<ErrorModalProps>({
+        visible: false,
+        title: "",
+        message: "",
+        onConfirm: () => { },
+        onCancel: () => { },
+    })
     const [wrongQuantity, setWrongQuantity] = useState(false);
     const [wrongLocation, setWrongLocation] = useState(false);
     const [currentQuantity, setCurrentQuantity] = useState(0);
+    const [emptyCodeError, setEmptyCodeError] = useState(false);
+    const [emptyLocError, setEmptyLocError] = useState(false);
+    const [zeroQuantityError, setZeroQuantityError] = useState(false);
     const [pendingSubmit, setPendingSubmit] = useState(false);
     const [currentLocation, setCurrentLocation] = useState("");
     const [currentCode, setCurrentCode] = useState("");
@@ -67,7 +69,6 @@ export default function InventoryScreen() {
         }
     }, [userChoices])
 
-
     const handleCamView = () => {
         setShowCamera(!showCamera)
     }
@@ -76,26 +77,38 @@ export default function InventoryScreen() {
         console.log(e.data)
     }
     const handleEndEditingCode = async (code: string) => {
+        setEmptyCodeError(false)
+        setShowDescription(false);
+        if (code.trim() == "") {
+            setCurrentCode("")
+            setEmptyCodeError(true)
+            return
+        }
 
         setCurrentCode(code)
         const res = await InventoryService.getItemByCode(Number(params.id), code)
         if (!res) {
-            if (code == "")
-                setDescription(["É preciso inserir algum código", 1])
-            else {
-                setDescription(["Item não encontrado", 1]); // Force a red description
-            }
+            setDescription(["Item não encontrado", 1]); // Force a red description
             setShowDescription(true);
             setCurrentItem(undefined); // Clear the current item
             return;
         }
         setCurrentItem(res);
         getDescription(res.code);
-    };
-    const handleEndEditingLoc = (e: any) => {
+    }
+    const handleEndEditingLoc = (e: string) => {
+        setEmptyLocError(false)
+        if (e.trim() == "") {
+            setCurrentLocation("")
+            setEmptyLocError(true)
+            return
+        }
         setCurrentLocation(e);
     }
     const handleOnQuantityChange = (e: any) => {
+        if(zeroQuantityError)
+            setZeroQuantityError(false)
+
         setCurrentQuantity(Number(e))
     }
     const handleWrongQuantity = () => {
@@ -111,27 +124,41 @@ export default function InventoryScreen() {
     const handleItemNotFound = () => {
         setItemNotFound(!itemNotFound)
     }
-    const handleErrorModal = (message: string, title: string,) => {
-        setErrorModal(
-            {
-                visible: !errorModal?.visible,
-                message: "",
-                title: "",
-                onConfirm: () => {},
-                onCancel: () => {}
-            }
-        )
+    const handleErrorModal = ({
+        title,
+        message,
+        onConfirm,
+        onCancel,
+        visible,
+    }: {
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        onCancel: () => void;
+        visible: boolean;
+    }) => {
+        setErrorModal({
+            visible,
+            title,
+            message,
+            onConfirm,
+            onCancel,
+        });
     }
-
     const handleSuccess = () => {
         setSuccess(!success)
     }
-
     const handleSubmit = async () => {
 
-        if (currentCode == "") {
-            setDescription(["É preciso inserir algum código", 1])
-            setShowDescription(true);
+        if (currentCode.trim() == "" || currentLocation.trim() == "") {
+            if(!emptyCodeError && currentCode.trim() == "")
+                setEmptyCodeError(true)
+            if(!emptyLocError && currentLocation.trim() == "")
+                setEmptyLocError(true)
+            return
+        }
+        if(currentQuantity == 0){
+            setZeroQuantityError(true)
             return
         }
 
@@ -150,8 +177,10 @@ export default function InventoryScreen() {
         }
 
         await confirmItem();
-    };
+    }
+    const handleFinalizeInventory= () => {
 
+    }
     const restartForm = () => {
         setCurrentItem(undefined);
         setShowDescription(false);
@@ -162,8 +191,7 @@ export default function InventoryScreen() {
         numericInputRef.current?.clearInput();
         getInventoryData();
         setProgress(prev => prev + 1)
-    };
-
+    }
     const confirmItem = async () => {
         if (!currentItem || !currentInventory)
             return;
@@ -186,13 +214,22 @@ export default function InventoryScreen() {
         }
         const res = await InventoryService.updateItem(currentItem.id, currentInventory.id, updatedItem)
         if (res == "Item has already been accounted for") {
-            alert("Este Item já foi contabilizado")
+            handleErrorModal(
+                {
+                    title: "Error",
+                    message: "Este item já foi contabilizado, deseja continuar?",
+                    onConfirm: () => {addNewItem()},
+                    onCancel: () => {},
+                    visible: true,
+                }
+            )
+            restartForm()
+            return
         }
 
         handleSuccess()
         restartForm();
-    };
-
+    }
     const addNewItem = async () => {
 
         if (!currentInventory)
@@ -212,8 +249,7 @@ export default function InventoryScreen() {
             handleSuccess()
             restartForm();
         }
-    };
-
+    }
     const getDescription = async (item: string): Promise<boolean> => {
         const res = await InventoryService.getItemDescriptionByCode(Number(params.id), item)
         if (res == null)
@@ -260,15 +296,15 @@ export default function InventoryScreen() {
                     <View style={styles.form}>
 
 
-                        <QRCodeInput ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
+                        <QRCodeInput error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
 
                         {showDescription && description &&
                             <ItemDescription status={description[1]} description={description[0]} ></ItemDescription>
                         }
 
-                        <QRCodeInput ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Localização *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
+                        <QRCodeInput error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Localização *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
 
-                        <NumericInput ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
+                        <NumericInput error={zeroQuantityError} ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
 
                         <View style={{ gap: 10 }}>
                             <Text style={styles.label}>Observação</Text>
@@ -352,14 +388,17 @@ export default function InventoryScreen() {
 
             <CustomModal onClose={handleItemNotFound} title="Atenção" visible={itemNotFound}>
                 <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                    Este item não consta na lista.
+                    Este item não consta na lista, deseja adicionar?
                 </Text>
                 <View style={{ gap: 20 }}>
                     <ButtonWithIcon
                         color="#334155"
                         icon="close-outline"
                         label="Cancelar"
-                        onPress={handleItemNotFound}
+                        onPress={()=>{
+                            handleItemNotFound()
+                            restartForm()
+                        }}
                     />
                     <ButtonWithIcon
                         color="#079C6D"
@@ -388,21 +427,37 @@ export default function InventoryScreen() {
                 </View>
             </CustomModal>
             {
-                errorModal &&
-                <CustomModal onClose={handleErrorModal} title="Sucesso" visible={errorModal.visible}>
+                errorModal.visible &&
+                <CustomModal
+                    onClose={() => handleErrorModal({ ...errorModal, visible: false })}
+                    title={errorModal.title}
+                    visible={errorModal.visible}
+                >
                     <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                        Item inserido com sucesso!
+                        {errorModal.message}
                     </Text>
                     <View style={{ gap: 20 }}>
                         <ButtonWithIcon
                             color="#079C6D"
                             icon="checkmark-outline"
-                            label="Ok"
-                            onPress={handleSuccess}
+                            label="Confirmar"
+                            onPress={() => {
+                                errorModal.onConfirm();
+                                handleErrorModal({ ...errorModal, visible: false });
+                            }}
                         />
-
+                        <ButtonWithIcon
+                            color="#334155"
+                            icon="close-outline"
+                            label="Cancelar"
+                            onPress={() => {
+                                errorModal.onCancel();
+                                handleErrorModal({ ...errorModal, visible: false });
+                            }}
+                        />
                     </View>
                 </CustomModal>
+
             }
         </DrawerLayoutAndroid>
     )

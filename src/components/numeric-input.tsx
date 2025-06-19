@@ -1,10 +1,11 @@
 import { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-export default function NumericInput({ onChange, ref}: { onChange: (e: string) => any , ref: any}) {
+export default function NumericInput({ error, onChange, ref }: { error: boolean, onChange: (e: string) => any, ref: any }) {
 
     const [qtyInput, onChangeQty] = useState('0');
     const [disabled, setDisabled] = useState(false)
+    const [color, setColor] = useState<"#fa6060" | "#475569">()
 
     const inputRef = useRef(null);
 
@@ -22,6 +23,15 @@ export default function NumericInput({ onChange, ref}: { onChange: (e: string) =
             setDisabled(false)
 
     }, [qtyInput])
+
+    useEffect(() => {
+        if (error) {
+            setColor("#fa6060")
+        }
+        else {
+            setColor("#475569")
+        }
+    }, [error])
 
 
     const onChanged = (text: string) => {
@@ -52,7 +62,7 @@ export default function NumericInput({ onChange, ref}: { onChange: (e: string) =
                 </TouchableOpacity>
                 <TextInput
                     keyboardType="numeric"
-                    style={[styles.input, styles.numericInput]}
+                    style={[styles.input, styles.numericInput, { borderColor: color }]}
                     onChangeText={(text) => { onChanged(text) }}
                     value={qtyInput}
                     onEndEditing={() => {
@@ -73,6 +83,10 @@ export default function NumericInput({ onChange, ref}: { onChange: (e: string) =
                     <Text style={{ fontSize: 26, color: "#DDDFE3", fontWeight: "400" }}>+</Text>
                 </TouchableOpacity>
             </View>
+            {
+                error &&
+                <Text style={{ color: "#fa6060" }}>A Quantidade Precisa ser diferente de 0</Text>
+            }
         </View>
     )
 }
@@ -85,7 +99,6 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: "#475569",
         borderRadius: 8,
         color: "white",
         padding: 10,
@@ -97,7 +110,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     inputGroup: {
-        gap: 10
+        gap: 4
     },
     inputButton: {
         height: 50,

@@ -1,10 +1,11 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState, useImperativeHandle, useRef, forwardRef } from "react";
+import { useState, useImperativeHandle, useRef, useEffect } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
-export default function QRCodeInput({ label, placeholder, iconName, onScanPress, onEndEditing, ref }: { value?: string, label: string, placeholder: string, iconName: any, onScanPress: () => any, onEndEditing: (e: any) => any, ref: any }) {
+export default function QRCodeInput({error, label, placeholder, iconName, onScanPress, onEndEditing, ref }: { error: boolean, label: string, placeholder: string, iconName: any, onScanPress: () => any, onEndEditing: (e: any) => any, ref: any }) {
 
     const [text, onChangeText] = useState('')
+    const [color, setColor] = useState<"#fa6060" | "#475569">()
 
     const inputRef = useRef(null);
 
@@ -13,11 +14,19 @@ export default function QRCodeInput({ label, placeholder, iconName, onScanPress,
             onChangeText("")
         }
     }));
+    useEffect(()=>{
+        if(error){
+            setColor("#fa6060")
+        }
+        else{
+            setColor("#475569")
+        }
+    }, [error])
 
     return (
-        <View style={{ gap: 10 }}>
+        <View style={{ gap: 4 }}>
             <Text style={styles.label}>{label}</Text>
-            <View style={styles.inputGroup}>
+            <View style={[styles.inputGroup, { borderColor: color }]}>
                 <TextInput
                     style={styles.input}
                     placeholder={placeholder}
@@ -26,8 +35,12 @@ export default function QRCodeInput({ label, placeholder, iconName, onScanPress,
                     value={text}
                     onEndEditing={() => onEndEditing(text)}
                 />
-                <Ionicons onPress={onScanPress} name={iconName} color={"#94A3B8"} size={32} style={styles.icon} />
+                <Ionicons onPress={onScanPress} name={iconName} color={"#94A3B8"} size={32} />
             </View>
+            {
+                error &&
+                <Text style={{ color: "#fa6060" }}>Esse campo precisa ser preenchido</Text>
+            }
         </View>
     )
 }
@@ -48,12 +61,8 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#475569",
         borderRadius: 8,
         flexDirection: "row",
         paddingHorizontal: 10
-    },
-    icon: {
-
     }
 })
