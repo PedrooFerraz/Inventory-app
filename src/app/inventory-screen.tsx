@@ -77,14 +77,14 @@ export default function InventoryScreen() {
         setShowCamera(!showCamera)
     }
     const onScan = (e: any) => {
-        if (scanInputTarget == "C") {
-            setCurrentCode(e)
-            qrCodeInputRefCode.current?.setValue(e);
+        if (scanInputTarget == "C" && e.data != undefined) {
+            handleEndEditingCode(e.data)
+            qrCodeInputRefCode.current?.setValue(e.data);
         }
 
 
-        if (scanInputTarget == "L") {
-            setCurrentLocation(e)
+        if (scanInputTarget == "L" && e.data != undefined) {
+            handleEndEditingCode(e.data)
             qrCodeInputRefLoc.current?.setValue(e);
         }
 
