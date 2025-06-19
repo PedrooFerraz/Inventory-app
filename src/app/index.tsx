@@ -6,25 +6,29 @@ import {
   StatusBar,
   SafeAreaView,
   ScrollView,
-  Image
+  Image,
+  ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MasterLoginModal from '@/components/home/master-login-modal';
-import { masterPassword } from '@/password';
 import Card from '@/components/home/card';
 import { router } from 'expo-router';
 import { getDatabase } from '@/services/database';
+import FirstTimeSetupModal from '@/components/home/first-time-setup-modal';
+import { hasMasterPassword, setMasterPassword, verifyMasterPassword } from '@/services/passwordService';
 
 
 export default function GMIHomeScreen() {
 
   const [showMasterLogin, setShowMasterLogin] = useState(false);
-  const [wrongPasswod, setWrongPassword] = useState(false);
+  const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(false);
+  const [wrongPassword, setWrongPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initDatabase = async () => {
       try {
-        await getDatabase(); // Isso já abre o banco e cria as tabelas
+        await getDatabase();
       } catch (error) {
         console.error("Erro ao inicializar o banco de dados:", error);
       }
@@ -33,24 +37,43 @@ export default function GMIHomeScreen() {
     initDatabase();
   }, []);
 
+  useEffect(() => {
+    const checkPasswordExists = async () => {
+      try {
+        const passwordExists = await hasMasterPassword();
+        setShowFirstTimeSetup(!passwordExists);
+      } catch (error) {
+        console.error("Erro ao verificar senha:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkPasswordExists();
+  }, []);
+
+
+  const handleFirstTimeSetup = async (password: string) => {
+    try {
+      await setMasterPassword(password);
+      setShowFirstTimeSetup(false);
+    } catch (error) {
+      console.error("Erro ao salvar senha:", error);
+    }
+  };
+
+  const handleMasterLogin = async (password: string) => {
+    const isValid = await verifyMasterPassword(password);
+    if (isValid) {
+      router.navigate("/master-acess-screen");
+    } else {
+      setWrongPassword(true);
+      setTimeout(() => setWrongPassword(false), 4000);
+    }
+  };
+
   const handleMasterAccess = () => {
     setShowMasterLogin(true);
-  };
-
-  const handleCloseMasterLogin = () => {
-    setShowMasterLogin(false);
-
-  };
-
-  const handleMasterLogin = (password: string) => {
-    if (password == masterPassword) {
-      router.navigate("/master-acess-screen")
-    }
-    setWrongPassword(true)
-    setTimeout(() => {
-      setWrongPassword(false)
-    }, 4000)
-
   };
 
   const handleInventoryAccess = () => {
@@ -58,9 +81,16 @@ export default function GMIHomeScreen() {
   };
 
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
       <LinearGradient
         colors={['#182234', '#121A2D']}
@@ -102,7 +132,18 @@ export default function GMIHomeScreen() {
 
           </View>
         </ScrollView>
-        <MasterLoginModal error={wrongPasswod} visible={showMasterLogin} handleCloseMasterLogin={handleCloseMasterLogin} handleMasterLogin={handleMasterLogin}></MasterLoginModal>
+      <FirstTimeSetupModal
+          visible={showFirstTimeSetup}
+          onSubmit={handleFirstTimeSetup}
+        />
+
+        {/* Modal de login existente */}
+        <MasterLoginModal
+          error={wrongPassword}
+          visible={showMasterLogin}
+          handleCloseMasterLogin={() => setShowMasterLogin(false)}
+          handleMasterLogin={handleMasterLogin}
+        />
       </LinearGradient>
     </SafeAreaView>
   );

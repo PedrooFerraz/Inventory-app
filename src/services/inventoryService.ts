@@ -72,7 +72,7 @@ export const InventoryService = {
             observation: data.observation,
             operator: data.operator,
             status: data.status,
-            countTime: `${now.toLocaleDateString("pt-br")} - ${now.toLocaleTimeString("pt-br")}`
+            countTime: now.toLocaleDateString("pt-br")
         }
         try {
             await updateInventoryCountedItems(inventoryId, updatedCount);
@@ -114,7 +114,7 @@ export const InventoryService = {
             observation: data.observation,
             operator: data.operator,
             status: 5,
-            countTime: `${now.toLocaleDateString("pt-br")} - ${now.toLocaleTimeString("pt-br")}`
+            countTime: now.toLocaleDateString("pt-br")
         }
 
 

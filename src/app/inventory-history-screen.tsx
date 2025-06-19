@@ -35,7 +35,7 @@ const InventorySelectionScreen = () => {
         if(selectedInventory)
            await fetchItemsByInventoryId(selectedInventory)
             .then(res => {
-                exportInventoryToExcel(res).then(res => console.log(res))
+                exportInventoryToExcel(res)
             })
         
     }

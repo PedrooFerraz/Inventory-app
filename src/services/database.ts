@@ -32,7 +32,6 @@ export const initDB = async () => {
   if (!db) return;
 
   await db.execAsync(`
-
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -73,5 +72,12 @@ export const initDB = async () => {
     countTime TEXT,
     FOREIGN KEY (inventory_id) REFERENCES inventories (id)
   );
+
+  CREATE TABLE IF NOT EXISTS app_config (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      master_password TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
   `);
 };
