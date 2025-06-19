@@ -14,7 +14,8 @@ import {
 import SelectInventoryCard from '@/components/inventory/select-inventory-card';
 import { CustomModal } from '@/components/master/custom-modal';
 import ButtonWithIcon from '@/components/button-with-icon';
-import { deleteInventory, fetchInventoryById, fetchItemsByInventoryId } from '@/models/inventory';
+import { deleteInventory, fetchItemsByInventoryId } from '@/models/inventory';
+import { exportInventoryToExcel } from '@/services/xlsxService';
 
 const InventorySelectionScreen = () => {
 
@@ -31,11 +32,12 @@ const InventorySelectionScreen = () => {
     }
     const handleExport = async () => {
 
-        let res
         if(selectedInventory)
-           res = await fetchItemsByInventoryId(selectedInventory)
-
-        console.log(res)
+           await fetchItemsByInventoryId(selectedInventory)
+            .then(res => {
+                exportInventoryToExcel(res).then(res => console.log(res))
+            })
+        
     }
     const handleDelete = () => {
         Alert.alert(

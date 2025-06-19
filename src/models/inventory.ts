@@ -75,6 +75,12 @@ export const fetchInventories = async () => {
   );
 };
 
+export const fetchOpenInventories = async () => {
+  return await fetchAll<Inventory>(
+    'SELECT * FROM inventories WHERE status IS NOT 2 ORDER BY importDate DESC;'
+  );
+};
+
 const BATCH_SIZE = 50; // Processa 50 itens por vez
 
 const insertItemsInBatches = async (inventoryId: number, items: ImportedInventoryItem[]) => {
@@ -211,7 +217,7 @@ export const fetchItemByCode = async (
   );
 };
 
-export const fetchItemsByInventoryId = async (inventoryId: number) => {
+export const fetchItemsByInventoryId = async (inventoryId: number) : Promise<any[]> => {
   return await fetchAll(
     `SELECT * FROM inventory_items WHERE inventory_id = ? ORDER BY code ASC;`,
     [inventoryId]

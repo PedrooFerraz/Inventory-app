@@ -72,7 +72,7 @@ export const InventoryService = {
             observation: data.observation,
             operator: data.operator,
             status: data.status,
-            countTime: now.toLocaleDateString("pt-br")
+            countTime: `${now.toLocaleDateString("pt-br")} - ${now.toLocaleTimeString("pt-br")}`
         }
         try {
             await updateInventoryCountedItems(inventoryId, updatedCount);
@@ -114,7 +114,7 @@ export const InventoryService = {
             observation: data.observation,
             operator: data.operator,
             status: 5,
-            countTime: now.toLocaleDateString("pt-br")
+            countTime: `${now.toLocaleDateString("pt-br")} - ${now.toLocaleTimeString("pt-br")}`
         }
 
 
@@ -126,6 +126,24 @@ export const InventoryService = {
             return { success: true, message: "Item accounted for successfully" }
         } catch (error) {
             return { success: false, message: "An error occurred while updating the item" }
+        }
+    },
+
+    async finalizeInventory(inventoryId: number) {
+        const inventory = await fetchInventoryById(inventoryId)
+
+        if (!inventory) {
+            return { success: false, message: "Inventory not found" }
+        }
+
+        if (inventory.status == 2) {
+            return { success: false, message: "Inventory has already been completed" }
+        }
+        try {
+            await updateInventoryStatus(inventoryId, 2);
+            return { success: true, message: "Inventory finalized with success" }
+        } catch (e: any) {
+            return { success: false, message: "An error occurred while finalizing the inventory" }
         }
     }
 

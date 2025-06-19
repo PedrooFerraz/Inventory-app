@@ -8,9 +8,9 @@ import NumericInput from "@/components/numeric-input";
 import QRCodeInput from "@/components/qrcode-input";
 import { ErrorModalProps, Inventory, Item, scanTypes } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from "react-native";
+import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert } from "react-native";
 import { InventoryService } from "@/services/inventoryService";
 
 
@@ -85,7 +85,7 @@ export default function InventoryScreen() {
 
         if (scanInputTarget == "L" && e.data != undefined) {
             handleEndEditingCode(e.data)
-            qrCodeInputRefLoc.current?.setValue(e);
+            qrCodeInputRefLoc.current?.setValue(e.data);
         }
 
         if (showCamera)
@@ -141,7 +141,7 @@ export default function InventoryScreen() {
     const handleItemNotFound = () => {
         setItemNotFound(!itemNotFound)
     }
-    const handleErrorModal = ({
+    const handleCustomModal = ({
         title,
         message,
         onConfirm,
@@ -197,7 +197,43 @@ export default function InventoryScreen() {
     }
     const handleFinalizeInventory = () => {
 
+        let diff
+        if (currentInventory) {
+            diff = currentInventory?.totalItems - currentInventory?.countedItems;
+
+            if (diff == 0) {
+                handleCustomModal({
+                    title: "Atanção",
+                    message: "Realmente deseja finalizar o inventário? Após finalizar você não poderá mais adicionar novos registros",
+                    onConfirm: () => { finalizeInventory() },
+                    onCancel: () => { },
+                    visible: true,
+                })
+            }
+            if (diff > 0) {
+                handleCustomModal({
+                    title: "Atanção",
+                    message: `Ainda restam itens a serem registrados, realmente deseja finalizar o inventário?  Após finalizar você não poderá mais adicionar novos registros`,
+                    onConfirm: () => { finalizeInventory() },
+                    onCancel: () => { },
+                    visible: true,
+                })
+            }
+        }
     }
+    const finalizeInventory = async () => {
+
+        if (!currentInventory)
+            return
+        const res = await InventoryService.finalizeInventory(currentInventory?.id)
+        if (res.success) {
+            router.navigate("/")
+            Alert.alert("Sucesso", "Inventario Concluído")
+            return
+        }
+        Alert.alert("Error", "Ocorreu algum erro ao finalizar o inventário tente novamente")
+    }
+
     const restartForm = () => {
         setCurrentItem(undefined);
         setShowDescription(false);
@@ -231,7 +267,7 @@ export default function InventoryScreen() {
         }
         const res = await InventoryService.updateItem(currentItem.id, currentInventory.id, updatedItem)
         if (res == "Item has already been accounted for") {
-            handleErrorModal(
+            handleCustomModal(
                 {
                     title: "Error",
                     message: "Este item já foi contabilizado, deseja continuar?",
@@ -241,6 +277,7 @@ export default function InventoryScreen() {
                 }
             )
             restartForm()
+            return
 
         }
 
@@ -343,7 +380,7 @@ export default function InventoryScreen() {
                 </View>
             </ScrollView>
             <View style={styles.footer}>
-                <TouchableOpacity style={styles.endButton}>
+                <TouchableOpacity onPress={handleFinalizeInventory} style={styles.endButton}>
                     <Text style={styles.buttonName}>Finalizar Contagem</Text>
                 </TouchableOpacity>
             </View>
@@ -446,7 +483,7 @@ export default function InventoryScreen() {
             {
                 errorModal.visible &&
                 <CustomModal
-                    onClose={() => handleErrorModal({ ...errorModal, visible: false })}
+                    onClose={() => handleCustomModal({ ...errorModal, visible: false })}
                     title={errorModal.title}
                     visible={errorModal.visible}
                 >
@@ -460,7 +497,7 @@ export default function InventoryScreen() {
                             label="Confirmar"
                             onPress={() => {
                                 errorModal.onConfirm();
-                                handleErrorModal({ ...errorModal, visible: false });
+                                handleCustomModal({ ...errorModal, visible: false });
                             }}
                         />
                         <ButtonWithIcon
@@ -469,7 +506,7 @@ export default function InventoryScreen() {
                             label="Cancelar"
                             onPress={() => {
                                 errorModal.onCancel();
-                                handleErrorModal({ ...errorModal, visible: false });
+                                handleCustomModal({ ...errorModal, visible: false });
                             }}
                         />
                     </View>

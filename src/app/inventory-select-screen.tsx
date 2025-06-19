@@ -14,7 +14,7 @@ import {
 
 export default function InventorySelectionScreen(){
     
-    const { inventories } = useDatabase()
+    const { openInventories } = useDatabase()
     const params = useLocalSearchParams();
 
     const handleSelect = (id: number) =>{
@@ -43,7 +43,7 @@ export default function InventorySelectionScreen(){
 
             <View style={styles.content}>
                 <FlatList
-                    data={inventories}
+                    data={openInventories}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderInventarioItem}
                     showsVerticalScrollIndicator={false}

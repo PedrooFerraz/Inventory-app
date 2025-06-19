@@ -25,7 +25,6 @@ export default function GMIHomeScreen() {
     const initDatabase = async () => {
       try {
         await getDatabase(); // Isso já abre o banco e cria as tabelas
-        console.log("Banco de dados inicializado com sucesso!");
       } catch (error) {
         console.error("Erro ao inicializar o banco de dados:", error);
       }
