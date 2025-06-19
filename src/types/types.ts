@@ -67,3 +67,5 @@ export type ErrorModalProps = {
   onConfirm: () => void;
   onCancel: () => void;
 };
+
+export type scanTypes = "C" | "L" //C- Código Material; L- Localização

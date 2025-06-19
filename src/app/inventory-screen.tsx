@@ -6,11 +6,11 @@ import ItemDescription from "@/components/item-description";
 import { CustomModal } from "@/components/master/custom-modal";
 import NumericInput from "@/components/numeric-input";
 import QRCodeInput from "@/components/qrcode-input";
-import { ErrorModalProps, Inventory, Item } from "@/types/types";
+import { ErrorModalProps, Inventory, Item, scanTypes } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput} from "react-native";
+import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from "react-native";
 import { InventoryService } from "@/services/inventoryService";
 
 
@@ -23,8 +23,8 @@ export default function InventoryScreen() {
     const params = useLocalSearchParams();
     const drawer = useRef<DrawerLayoutAndroid>(null);
     const numericInputRef = useRef<{ clearInput: () => void }>(null);
-    const qrCodeInputRefLoc = useRef<{ clearInput: () => void }>(null);
-    const qrCodeInputRefCode = useRef<{ clearInput: () => void }>(null);
+    const qrCodeInputRefLoc = useRef<{ clearInput: () => void, setValue: (value: string) => void }>(null);
+    const qrCodeInputRefCode = useRef<{ clearInput: () => void, setValue: (value: string) => void }>(null);
 
     const [progress, setProgress] = useState(0);
     const [success, setSuccess] = useState(false);
@@ -47,6 +47,7 @@ export default function InventoryScreen() {
     const [emptyLocError, setEmptyLocError] = useState(false);
     const [zeroQuantityError, setZeroQuantityError] = useState(false);
     const [pendingSubmit, setPendingSubmit] = useState(false);
+    const [scanInputTarget, setScanInputTarget] = useState<scanTypes>() //C - Código Material; L - Localização
     const [currentLocation, setCurrentLocation] = useState("");
     const [currentCode, setCurrentCode] = useState("");
     const [showDescription, setShowDescription] = useState(false);
@@ -69,11 +70,27 @@ export default function InventoryScreen() {
         }
     }, [userChoices])
 
-    const handleCamView = () => {
+    const handleCamView = (input?: scanTypes) => {
+        if (input)
+            setScanInputTarget(input)
+
         setShowCamera(!showCamera)
     }
     const onScan = (e: any) => {
-        handleCamView()
+        if (scanInputTarget == "C") {
+            setCurrentCode(e)
+            qrCodeInputRefCode.current?.setValue(e);
+        }
+
+
+        if (scanInputTarget == "L") {
+            setCurrentLocation(e)
+            qrCodeInputRefLoc.current?.setValue(e);
+        }
+
+        if (showCamera)
+            handleCamView()
+
         console.log(e.data)
     }
     const handleEndEditingCode = async (code: string) => {
@@ -106,7 +123,7 @@ export default function InventoryScreen() {
         setCurrentLocation(e);
     }
     const handleOnQuantityChange = (e: any) => {
-        if(zeroQuantityError)
+        if (zeroQuantityError)
             setZeroQuantityError(false)
 
         setCurrentQuantity(Number(e))
@@ -151,13 +168,13 @@ export default function InventoryScreen() {
     const handleSubmit = async () => {
 
         if (currentCode.trim() == "" || currentLocation.trim() == "") {
-            if(!emptyCodeError && currentCode.trim() == "")
+            if (!emptyCodeError && currentCode.trim() == "")
                 setEmptyCodeError(true)
-            if(!emptyLocError && currentLocation.trim() == "")
+            if (!emptyLocError && currentLocation.trim() == "")
                 setEmptyLocError(true)
             return
         }
-        if(currentQuantity == 0){
+        if (currentQuantity == 0) {
             setZeroQuantityError(true)
             return
         }
@@ -178,7 +195,7 @@ export default function InventoryScreen() {
 
         await confirmItem();
     }
-    const handleFinalizeInventory= () => {
+    const handleFinalizeInventory = () => {
 
     }
     const restartForm = () => {
@@ -218,13 +235,13 @@ export default function InventoryScreen() {
                 {
                     title: "Error",
                     message: "Este item já foi contabilizado, deseja continuar?",
-                    onConfirm: () => {addNewItem()},
-                    onCancel: () => {},
+                    onConfirm: () => { addNewItem() },
+                    onCancel: () => { },
                     visible: true,
                 }
             )
             restartForm()
-            return
+
         }
 
         handleSuccess()
@@ -395,7 +412,7 @@ export default function InventoryScreen() {
                         color="#334155"
                         icon="close-outline"
                         label="Cancelar"
-                        onPress={()=>{
+                        onPress={() => {
                             handleItemNotFound()
                             restartForm()
                         }}

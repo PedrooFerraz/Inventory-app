@@ -1,18 +1,21 @@
+import { scanTypes } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState, useImperativeHandle, useRef, useEffect } from "react";
+import { useState, useImperativeHandle, useEffect } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
-export default function QRCodeInput({error, label, placeholder, iconName, onScanPress, onEndEditing, ref }: { error: boolean, label: string, placeholder: string, iconName: any, onScanPress: () => any, onEndEditing: (e: any) => any, ref: any }) {
+export default function QRCodeInput({error, label, placeholder, iconName, onScanPress, onEndEditing, ref }: { error: boolean, label: string, placeholder: string, iconName: any, onScanPress: (label: scanTypes) => any, onEndEditing: (e: any) => any, ref: any }) {
 
     const [text, onChangeText] = useState('')
     const [color, setColor] = useState<"#fa6060" | "#475569">()
 
-    const inputRef = useRef(null);
-
     useImperativeHandle(ref, () => ({
         clearInput: () => {
             onChangeText("")
+        },
+        setValue: (value: string) => {
+            onChangeText(value)
         }
+
     }));
     useEffect(()=>{
         if(error){
@@ -35,7 +38,7 @@ export default function QRCodeInput({error, label, placeholder, iconName, onScan
                     value={text}
                     onEndEditing={() => onEndEditing(text)}
                 />
-                <Ionicons onPress={onScanPress} name={iconName} color={"#94A3B8"} size={32} />
+                <Ionicons onPress={()=>{onScanPress(label[0] as scanTypes)}} name={iconName} color={"#94A3B8"} size={32} />
             </View>
             {
                 error &&
