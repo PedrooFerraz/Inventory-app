@@ -93,7 +93,7 @@ export default function GMIHomeScreen() {
     <SafeAreaView style={styles.container}>
 
       <LinearGradient
-        colors={['#182234', '#121A2D']}
+        colors={['#3a5073', '#4f6a92']}
         style={styles.background}
       >
         <View style={styles.backgroundElements}>
@@ -120,8 +120,8 @@ export default function GMIHomeScreen() {
 
           <View style={styles.mainContent}>
 
-            <Card icon={"shield-outline"} onPress={handleMasterAccess} title='Acesso Master' description='Administração do sistema' colors={['#EF4444', '#DC2626']}></Card>
-            <Card icon={"cube-outline"} onPress={handleInventoryAccess} title='Realizar Inventário' description='Executar contagem de itens' colors={['#10B981', '#059669']}></Card>
+            <Card icon={"shield-outline"} onPress={handleMasterAccess} title='Acesso Master' description='Administração do sistema' colors={['#4f6a92', '#6b8ab5']}></Card>
+            <Card icon={"cube-outline"} onPress={handleInventoryAccess} title='Realizar Inventário' description='Executar contagem de itens' colors={['#7f96b9', '#8fa5c7']}></Card>
 
             <View style={styles.infoCard}>
               <Text style={styles.versionText}>Versão 1.0.0</Text>
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   circle: {
     position: 'absolute',
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.1)',
+    borderColor: 'rgba(59, 131, 246, 0.39)',
     borderRadius: 1000,
   },
   circle1: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#CBD5E1',
+    color: 'rgba(255, 255, 255, 0.85)',
     textAlign: 'center',
     maxWidth: 280,
     lineHeight: 22,
@@ -236,9 +236,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   infoCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.3)',
+    backgroundColor: 'rgba(58, 80, 115, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.3)',
+    borderColor: 'rgba(51, 65, 85, 0.42)',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -246,12 +246,12 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: 'rgba(255, 255, 255, 0.65)',
     marginBottom: 8,
   },
   copyrightText: {
     fontSize: 12,
-    color: '#64748B',
+    color: 'rgba(255, 255, 255, 0.65)',
     textAlign: 'center',
   }
 });

@@ -29,7 +29,7 @@ export default function FileInfoAfter({name, size, date, otherDocument} : {name:
 
             </View>
             <TouchableOpacity style={styles.otherDocumentButton} onPress={otherDocument}>
-                <Text style={{ color: "#94A3B8" }}>Selecionar outro documento</Text>
+                <Text style={{ color: "rgba(255, 255, 255, 0.6)" }}>Selecionar outro documento</Text>
             </TouchableOpacity>
         </View>
     )
@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
         padding: 20,
         borderWidth: 1,
         borderRadius: 10,
-        borderColor: "#475569",
-        backgroundColor: "#263245",
+        borderColor: "#FFF",
+        backgroundColor: "#647998",
         width: "100%",
         gap: 10,
         justifyContent: "space-between",

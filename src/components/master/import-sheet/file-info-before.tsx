@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#2563EB",
+    backgroundColor: "#5a7ba3",
     paddingVertical: 12,
     paddingHorizontal: 22,
     borderRadius: 10
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
   },
   fileInfoSubText: {
     fontSize: 12,
-    color: "#4C5B70",
+    color: "rgba(255, 255, 255, 0.6)",
   },  
   fileInfo: {
     gap: 16

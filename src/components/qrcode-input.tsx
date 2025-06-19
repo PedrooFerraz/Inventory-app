@@ -6,7 +6,7 @@ import { StyleSheet, Text, TextInput, View } from "react-native";
 export default function QRCodeInput({error, label, placeholder, iconName, onScanPress, onEndEditing, ref }: { error: boolean, label: string, placeholder: string, iconName: any, onScanPress: (label: scanTypes) => any, onEndEditing: (e: any) => any, ref: any }) {
 
     const [text, onChangeText] = useState('')
-    const [color, setColor] = useState<"#fa6060" | "#475569">()
+    const [color, setColor] = useState<"#fa6060" | "#79859B">()
 
     useImperativeHandle(ref, () => ({
         clearInput: () => {
@@ -22,7 +22,7 @@ export default function QRCodeInput({error, label, placeholder, iconName, onScan
             setColor("#fa6060")
         }
         else{
-            setColor("#475569")
+            setColor("#79859B")
         }
     }, [error])
 
@@ -33,7 +33,7 @@ export default function QRCodeInput({error, label, placeholder, iconName, onScan
                 <TextInput
                     style={styles.input}
                     placeholder={placeholder}
-                    placeholderTextColor={"#475569"}
+                    placeholderTextColor={"rgba(255, 255, 255, 0.3)"}
                     onChangeText={onChangeText}
                     value={text}
                     onEndEditing={() => onEndEditing(text)}
@@ -50,7 +50,7 @@ export default function QRCodeInput({error, label, placeholder, iconName, onScan
 
 const styles = StyleSheet.create({
     label: {
-        color: "#BDC7D3",
+        color: "rgba(255, 255, 255, 0.75)",
         fontWeight: "500",
         fontSize: 14
     },

@@ -66,19 +66,19 @@ export const CustomModal = ({
 const styles = StyleSheet.create({
     modalBackdrop: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     modalContent: {
-        backgroundColor: '#121A2D',
+        backgroundColor: '#6b8ab5',
         borderRadius: 20,
         width: '90%',
         maxWidth: 400,
         maxHeight: '90%',
     },
     modalHeader: {
-        backgroundColor: '#182234',
+        backgroundColor: '#4f6a92',
         padding: 30,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,

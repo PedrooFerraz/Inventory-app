@@ -52,14 +52,14 @@ export default function UserSelectScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121A2D',
+        backgroundColor: '#3a5073',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 20,
         paddingVertical: 16,
-        backgroundColor: '#182234',
+        backgroundColor: '#4f6a92',
         borderBottomWidth: 1,
         borderBottomColor: '#334155',
     },

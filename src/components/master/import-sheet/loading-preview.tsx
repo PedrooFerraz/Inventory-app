@@ -12,7 +12,7 @@ export default function Loading() {
 
 const styles = StyleSheet.create({
     container: {
-        borderColor: "#475569",
+        borderColor: "#5E7290",
         borderWidth: 1,
         borderRadius: 15,
         borderStyle: "solid",

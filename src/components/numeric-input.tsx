@@ -5,7 +5,7 @@ export default function NumericInput({ error, onChange, ref }: { error: boolean,
 
     const [qtyInput, onChangeQty] = useState('0');
     const [disabled, setDisabled] = useState(false)
-    const [color, setColor] = useState<"#fa6060" | "#475569">()
+    const [color, setColor] = useState<"#fa6060" | "#79859B">()
 
     const inputRef = useRef(null);
 
@@ -29,7 +29,7 @@ export default function NumericInput({ error, onChange, ref }: { error: boolean,
             setColor("#fa6060")
         }
         else {
-            setColor("#475569")
+            setColor("#79859B")
         }
     }, [error])
 
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     inputButton: {
         height: 50,
         width: 50,
-        backgroundColor: "#334155",
+        backgroundColor: "#5A7BA2",
         justifyContent: "center",
         alignItems: "center",
         borderRadius: 10

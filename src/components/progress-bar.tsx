@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
         gap: 16
     },
     progresBar: {
-        backgroundColor: "#079C6D",
+        backgroundColor: "#FFF",
         zIndex: 100,
         flex: 1,
         borderRadius: 12

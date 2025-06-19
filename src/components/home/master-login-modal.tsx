@@ -33,7 +33,7 @@ export default function MasterLoginModal(
                 <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
                         <LinearGradient
-                            colors={['#EF4444', '#DC2626']}
+                            colors={['#7f96b9', '#6b8ab5']}
                             style={styles.modalIcon}
                         >
                             <Ionicons name="lock-closed-outline" size={32} color="#FFFFFF" />
@@ -68,7 +68,7 @@ export default function MasterLoginModal(
                         {
                             error &&
                             <View>
-                                <Text style={{ color: "#EF4444", fontWeight: "400" }}>
+                                <Text style={{ color: "#ff6b6b", fontWeight: "500" }}>
                                     Senha Incorreta
                                 </Text>
                             </View>
@@ -88,7 +88,7 @@ export default function MasterLoginModal(
                                 onPress={() => handleMasterLogin(masterPassword)}
                             >
                                 <LinearGradient
-                                    colors={['#10B981', '#059669']}
+                                    colors={['#aecce7', '#e8f1fc']}
                                     style={styles.loginButtonGradient}
                                 >
 
@@ -107,15 +107,15 @@ export default function MasterLoginModal(
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: 24,
     },
     modalContent: {
-        backgroundColor: '#1E293B',
+        backgroundColor: '#4f6a92',
         borderWidth: 1,
-        borderColor: '#334155',
+        borderColor: 'rgba(51, 65, 85, 0.42)',
         borderRadius: 16,
         padding: 24,
         width: '100%',
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     },
     modalSubtitle: {
         fontSize: 14,
-        color: '#94A3B8',
+        color: 'rgba(255, 255, 255, 0.85)',
         textAlign: 'center',
     },
     inputContainer: {
@@ -156,9 +156,9 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     passwordInput: {
-        backgroundColor: '#334155',
+        backgroundColor: '#3a5073',
         borderWidth: 1,
-        borderColor: '#475569',
+        borderColor: 'rgba(51, 65, 85, 0.42)',
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 12,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     },
     cancelButton: {
         flex: 1,
-        backgroundColor: '#334155',
+        backgroundColor: '#7f96b9',
         paddingVertical: 12,
         borderRadius: 8,
         alignItems: 'center',
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     loginButtonText: {
-        color: '#FFFFFF',
+        color: '#3a5073',
         fontSize: 16,
         fontWeight: '500',
     },

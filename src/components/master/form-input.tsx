@@ -35,12 +35,12 @@ export const FormInput = ({
         style={{
           width: '100%',
           padding: 12,
-          backgroundColor: '#182234',
+          backgroundColor: '#3a5073',
           color: 'white',
           fontSize: 16,
           borderRadius: 8,
           borderWidth: 1,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderColor: 'rgba(51, 65, 85, 0.42)',
         }}
         placeholder={placeholder}
         placeholderTextColor="rgba(255, 255, 255, 0.5)"

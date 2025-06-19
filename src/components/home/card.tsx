@@ -49,9 +49,9 @@ export default function Card(
 
 const styles = StyleSheet.create({
     accessCard: {
-        backgroundColor: "#1c263d",
+        backgroundColor: "#5a7ba3",
         borderWidth: 1,
-        borderColor: 'rgba(51, 65, 85, 0.5)',
+        borderColor: 'rgba(58, 80, 115, 0.85)',
         borderRadius: 16,
         marginBottom: 24,
         shadowColor: '#000',
@@ -92,6 +92,6 @@ const styles = StyleSheet.create({
     },
     cardDescription: {
         fontSize: 14,
-        color: '#94A3B8',
+        color: 'rgba(255, 255, 255, 0.75)',
     },
 })

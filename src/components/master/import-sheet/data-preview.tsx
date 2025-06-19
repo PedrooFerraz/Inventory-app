@@ -12,8 +12,8 @@ export default function DataPreview({data} : {data : dataPreview}) {
                 <Text style={styles.previewTitle}>Prévia dos Dados</Text>
             </View>
 
-            <Card info={data.qty} label="Total de Itens" color="#60A5FA"></Card>
-            <Card info={data.localizations} label="Localizações" color="#FBBF24"></Card>
+            <Card info={data.qty} label="Total de Itens" color="#2793EC"></Card>
+            <Card info={data.localizations} label="Localizações" color="#F3BB13"></Card>
 
 
         </View>
@@ -23,7 +23,7 @@ export default function DataPreview({data} : {data : dataPreview}) {
 
 const styles = StyleSheet.create({
     container: {
-        borderColor: "#475569",
+        borderColor: "#FFF",
         borderWidth: 1,
         borderRadius: 15,
         borderStyle: "solid",

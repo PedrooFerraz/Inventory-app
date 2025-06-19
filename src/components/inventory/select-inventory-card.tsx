@@ -21,11 +21,11 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
     const getStatusColor = (status: number) => {
         switch (status) {
             case 0:
-                return "#079C6D"
+                return "#4CAF50"
             case 1:
-                return "#FBBF24"
+                return "#E5B51F"
             case 2:
-                return "#EF4444"
+                return "#EE6C70"
             default:
                 break;
         }
@@ -41,7 +41,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
             <View style={styles.cardHeader}>
                 <View style={styles.iconContainer}>
                     <LinearGradient
-                        colors={["#1A3266", "#1A3266"]}
+                        colors={['#4f6a92', '#6b8ab5']}
                         style={styles.iconContainer}
                     >
                         <Ionicons name="cube-outline" size={28} color="#FFFFFF" />
@@ -50,7 +50,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
                 <View style={styles.cardContent}>
                     <Text style={styles.inventarioNome}>{item.fileName}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={24} color="#666" />
+                <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
             </View>
 
             <View style={styles.cardDetails}>
@@ -63,7 +63,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
 
                 <View style={styles.detailsRow}>
                     <View style={styles.detailItem}>
-                        <Ionicons name="calendar" color="#888" size={12} />
+                        <Ionicons name="calendar" color="rgba(255, 255, 255, 0.75)" size={12} />
                         <Text style={styles.detailText}>Data da Importação: {item.importDate}</Text>
                     </View>
                 </View>
@@ -75,7 +75,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
                             {`${Math.floor((item.countedItems / item.totalItems) * 100)}%`}
                         </Text>
                     </View>
-                    <ProgressBar color={"#334155"} percentage={`${(item.countedItems / item.totalItems) * 100}%`}></ProgressBar>
+                    <ProgressBar color={"#758CAC"} percentage={`${(item.countedItems / item.totalItems) * 100}%`}></ProgressBar>
                     <Text style={styles.progressText}>
                         {item.countedItems} de {item.totalItems} itens
                     </Text>
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
         padding: 20,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#263346',
+        borderColor: '#FFF',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     },
     detailText: {
         fontSize: 12,
-        color: '#94A3B8',
+        color: 'rgba(255, 255, 255, 0.75)',
         marginLeft: 4,
     },
     progressContainer: {
@@ -175,16 +175,16 @@ const styles = StyleSheet.create({
     },
     progressLabel: {
         fontSize: 12,
-        color: '#94A3B8',
+        color: 'rgba(255, 255, 255, 0.85)',
         fontWeight: '500',
     },
     progressPercentage: {
         fontSize: 12,
-        color: '#079C6D',
+        color: '#FFFFFF',
         fontWeight: 'bold',
     },
     progressText: {
         fontSize: 11,
-        color: '#64748B',
+        color: 'rgba(255, 255, 255, 0.6)',
     },
 });

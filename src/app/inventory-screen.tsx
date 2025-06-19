@@ -336,7 +336,7 @@ export default function InventoryScreen() {
                 <View style={styles.header} >
                     <Text style={styles.headerTitle}>Inventário</Text>
                     <TouchableOpacity onPress={() => drawer.current?.openDrawer()}>
-                        <Ionicons name="menu" size={32} color={"#94A3B8"} />
+                        <Ionicons name="menu" size={32} color={"#FFF"} />
                     </TouchableOpacity>
                 </View>
 
@@ -396,13 +396,13 @@ export default function InventoryScreen() {
                 </Text>
                 <View style={{ gap: 20 }}>
                     <ButtonWithIcon
-                        color="#334155"
+                        color="#7F95B9"
                         icon="close-outline"
                         label="Reavaliar"
                         onPress={() => handleWrongQuantity()}
                     />
                     <ButtonWithIcon
-                        color="#079C6D"
+                        color="#5A7BA1"
                         icon="checkmark-outline"
                         label="Aprovar"
                         onPress={async () => {
@@ -420,7 +420,7 @@ export default function InventoryScreen() {
                 </Text>
                 <View style={{ gap: 20 }}>
                     <ButtonWithIcon
-                        color="#334155"
+                        color="#7F95B9"
                         icon="close-outline"
                         label="Reavaliar"
                         onPress={() => {
@@ -430,7 +430,7 @@ export default function InventoryScreen() {
                         }}
                     />
                     <ButtonWithIcon
-                        color="#079C6D"
+                        color="#5A7BA1"
                         icon="checkmark-outline"
                         label="Confirmar"
                         onPress={async () => {
@@ -446,7 +446,7 @@ export default function InventoryScreen() {
                 </Text>
                 <View style={{ gap: 20 }}>
                     <ButtonWithIcon
-                        color="#334155"
+                        color="#7F95B9"
                         icon="close-outline"
                         label="Cancelar"
                         onPress={() => {
@@ -455,7 +455,7 @@ export default function InventoryScreen() {
                         }}
                     />
                     <ButtonWithIcon
-                        color="#079C6D"
+                        color="#5A7BA1"
                         icon="add-outline"
                         label="Adicionar"
                         onPress={async () => {
@@ -472,7 +472,7 @@ export default function InventoryScreen() {
                 </Text>
                 <View style={{ gap: 20 }}>
                     <ButtonWithIcon
-                        color="#079C6D"
+                        color="#5A7BA1"
                         icon="checkmark-outline"
                         label="Ok"
                         onPress={handleSuccess}
@@ -492,7 +492,7 @@ export default function InventoryScreen() {
                     </Text>
                     <View style={{ gap: 20 }}>
                         <ButtonWithIcon
-                            color="#079C6D"
+                            color="#5A7BA1"
                             icon="checkmark-outline"
                             label="Confirmar"
                             onPress={() => {
@@ -501,7 +501,7 @@ export default function InventoryScreen() {
                             }}
                         />
                         <ButtonWithIcon
-                            color="#334155"
+                            color="#7F95B9"
                             icon="close-outline"
                             label="Cancelar"
                             onPress={() => {
@@ -524,12 +524,12 @@ const styles = StyleSheet.create({
         height: 70,
         width: "100%",
         flexDirection: "row",
-        backgroundColor: "#182234",
+        backgroundColor: "#4E6A92",
         justifyContent: "space-between",
         alignItems: "center",
         paddingHorizontal: 10,
         color: "white",
-        borderBottomColor: "#263346",
+        borderBottomColor: "#79859B",
         borderBottomWidth: 0.8
     },
     headerTitle: {
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 16,
-        backgroundColor: "#121A2D"
+        backgroundColor: "#3A5073"
     },
     content: {
         flex: 1,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
         gap: 28
     },
     nextButton: {
-        backgroundColor: "#079C6D",
+        backgroundColor: "#5A7BA3",
         padding: 18,
         justifyContent: "center",
         alignItems: "center",
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
         color: "white",
     },
     endButton: {
-        backgroundColor: "#334155",
+        backgroundColor: "#8BA1C3",
         padding: 12,
         paddingHorizontal: 28,
         justifyContent: "center",
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
         gap: 10
     },
     footer: {
-        backgroundColor: "#182234",
+        backgroundColor: "#4E6A92",
         opacity: 0.9,
         alignSelf: "flex-end",
         height: 70,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         justifyContent: "flex-end",
         alignItems: "center",
-        borderTopColor: "#263346",
+        borderTopColor: "#3B5275",
         borderTopWidth: 1
     },
     observationInput: {
@@ -599,12 +599,12 @@ const styles = StyleSheet.create({
         flex: 1,
         color: "white",
         borderWidth: 1,
-        borderColor: "#475569",
+        borderColor: "#79859B",
         borderRadius: 8,
         paddingHorizontal: 10
     },
     label: {
-        color: "#BDC7D3",
+        color: "rgba(255, 255, 255, 0.75)",
         fontWeight: "500",
         fontSize: 14
     }

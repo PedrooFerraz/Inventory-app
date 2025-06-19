@@ -28,7 +28,7 @@ export default function DrawerMenu({ drawer }: { drawer: React.RefObject<DrawerL
 
 const styles = StyleSheet.create({
     navigationContainer: {
-        backgroundColor: "#121A2D",
+        backgroundColor: "#3A5073",
         flex: 1,
     },
     headerTitle: {
@@ -42,12 +42,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: "center",
         alignItems: "center",
-        borderBottomColor: "#263346",
+        borderBottomColor: "#5B7295",
         borderBottomWidth: 0.8
     },
     menuButton: {
         padding: 14,
         borderBottomWidth: 1,
-        borderBottomColor: "#263346",
+        borderBottomColor: "#5B7295",
     }
 })

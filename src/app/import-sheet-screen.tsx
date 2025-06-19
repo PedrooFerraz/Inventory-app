@@ -125,7 +125,7 @@ export default function ImportScreen() {
           <View style={styles.fileContainer}>
 
             <View style={styles.selectFileIconArea}>
-              <Ionicons name="document-text-outline" size={32} color={"#94A3B8"} />
+              <Ionicons name="document-text-outline" size={32} color={"#FFFFFF"} />
             </View>
 
             <View style={styles.selectFile}>
@@ -152,7 +152,7 @@ export default function ImportScreen() {
                 dataPreview && (
                   <View style={{ gap: 28 }}>
                     <DataPreview data={dataPreview} />
-                    <ButtonWithIcon color={"#10B981"} onPress={handleSubmit} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon>
+                    <ButtonWithIcon color={"#5A7BA2"} onPress={handleSubmit} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon>
                   </View>
                 )
             )
@@ -167,13 +167,13 @@ export default function ImportScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121A2D"
+    backgroundColor: "#3a5073"
   },
   header: {
     height: 90,
     width: "100%",
     flexDirection: "row",
-    backgroundColor: "#182234",
+    backgroundColor: "#4f6a92",
     alignItems: "center",
     color: "white",
     gap: 16,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     gap: 28
   },
   fileContainer: {
-    borderColor: "#475569",
+    borderColor: "#7284A0",
     borderWidth: 2,
     borderRadius: 15,
     borderStyle: "dashed",
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     gap: 8
   },
   selectFileIconArea: {
-    backgroundColor: "#263246",
+    backgroundColor: "#6b8ab5",
     borderRadius: "50%",
     justifyContent: "center",
     alignItems: "center",
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   selectFileSubTitle: {
-    color: "#94A3B8",
+    color: "rgba(255, 255, 255, 0.85)",
     fontSize: 14,
     textAlign: "center"
   }

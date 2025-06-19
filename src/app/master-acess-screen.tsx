@@ -98,7 +98,7 @@ export default function MasterAcessScreen() {
                 <Ionicons onPress={() => router.navigate("/")} name="arrow-back" size={32} color={"white"} style={{ position: "absolute", top: 20, left: 10 }} />
 
                 <LinearGradient
-                    colors={['#EF4444', '#DC2626']}
+                    colors={['#3a5073', '#4f6a92']}
                     style={styles.logoContainer}
                 >
                     <Ionicons name="bar-chart" size={48} color="#FFFFFF" />
@@ -111,9 +111,9 @@ export default function MasterAcessScreen() {
             </View>
 
             <View style={styles.mainContent}>
-                <Card colors={['#10B981', '#059669']} description="Adicionar, editar ou remover operários" title="Gerenciar Operários" icon={"people"} onPress={openOperatorsModal}></Card>
-                <Card colors={['#3B82F6', '#2563EB']} description="Importar dados via arquivo CSV" title="Importar Inventário" icon={"folder-open"} onPress={() => { router.navigate("/import-sheet-screen") }}></Card>
-                <Card colors={['#FBBF24', '#FFC121']} description="Exporte os invetários realizados" title="Histórico" icon={"folder-open"} onPress={() => router.navigate("/inventory-history-screen")}></Card>
+                <Card colors={['#4f6a92', '#6b8ab5']} description="Adicionar, editar ou remover operários" title="Gerenciar Operários" icon={"people"} onPress={openOperatorsModal}></Card>
+                <Card colors={['#7f96b9', '#8fa5c7']} description="Importar dados via arquivo CSV" title="Importar Inventário" icon={"folder-open"} onPress={() => { router.navigate("/import-sheet-screen") }}></Card>
+                <Card colors={['#4f6a92', '#6b8ab5']} description="Exporte os invetários realizados" title="Histórico" icon={"folder-open"} onPress={() => router.navigate("/inventory-history-screen")}></Card>
 
                 <CustomModal onClose={closeOperatorsModal} title="Gerenciar Operários" visible={operatorsModalVisible} showCloseButton>
                     <TouchableOpacity
@@ -211,22 +211,22 @@ export default function MasterAcessScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#121A2D"
+        backgroundColor: "#3a5073"
     },
     header: {
-        backgroundColor: "#182234",
+        backgroundColor: "#5a7ba3",
         alignItems: 'center',
         paddingTop: 64,
         paddingBottom: 32,
     },
     headerTitle: {
         fontSize: 24,
-        color: "white",
+        color: "#FFFFFF",
         fontWeight: "bold"
     },
     headerSubTitle: {
         fontSize: 14,
-        color: "#94A3B8",
+        color: "rgba(255, 255, 255, 0.85)",
     },
     logoContainer: {
         width: 96,
@@ -256,10 +256,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     buttonPrimary: {
-        backgroundColor: '#3B82F6',
+        backgroundColor: '#3a5073',
     },
     buttonSecondary: {
-        backgroundColor: '#546e7a',
+        backgroundColor: '#8fa5c7',
     },
     buttonTertiary: {
         backgroundColor: '#546e7a',

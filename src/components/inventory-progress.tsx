@@ -36,17 +36,17 @@ export default function InventoryProgress(
             <View style={styles.progressCard}>
                 <View style={styles.progressBarArea}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                        <Text style={{ color: "#CBD5E1" }}>Progresso do Inventário</Text>
-                        <Text style={{ color: "#079C6D", fontWeight: "600" }}>{Percentage}%</Text>
+                        <Text style={{ color: "#FFF" }}>Progresso do Inventário</Text>
+                        <Text style={{ color: "#FFF", fontWeight: "600" }}>{Percentage}%</Text>
                     </View>
 
-                    <ProgressBar percentage={barPercentage} color={"#273347"}></ProgressBar>
+                    <ProgressBar percentage={barPercentage} color={"#758BAB"}></ProgressBar>
 
                 </View>
                 <View style={styles.progressStatusArea}>
                     <ProgressCard label="Total Estocados" color={"#60A5FA"} number={totalItems}></ProgressCard>
-                    <ProgressCard label="Itens Apurados" color={"#079C6D"} number={countedItems}></ProgressCard>
-                    <ProgressCard label="Itens Pendentes" color={"#FBBF24"} number={totalItems - countedItems}></ProgressCard>
+                    <ProgressCard label="Itens Apurados" color={"#8FCB74"} number={countedItems}></ProgressCard>
+                    <ProgressCard label="Itens Pendentes" color={"#FFC107"} number={totalItems - countedItems}></ProgressCard>
                 </View>
             </View>
         </View>
@@ -56,7 +56,7 @@ export default function InventoryProgress(
 const styles = StyleSheet.create({
     progress: {
         padding: 12,
-        borderBottomColor: "#263346",
+        borderBottomColor: "#79859B",
         borderBottomWidth: 0.8
     },
     progressCard: {
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         borderWidth: 1,
         gap: 16,
-        borderColor: "#263346"
+        borderColor: "#79859B"
     },
     progressBarArea: {
         gap: 16

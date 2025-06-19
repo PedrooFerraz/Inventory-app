@@ -11,7 +11,7 @@ export default function Card({info, label, color} : {info: number, label : strin
 
 const styles = StyleSheet.create({
         card :{
-        backgroundColor: "#283447",
+        backgroundColor: "#5a7ba3",
         borderRadius: 10,
         padding: 14,
         justifyContent: "center",
@@ -19,6 +19,6 @@ const styles = StyleSheet.create({
     },
     cardLabel: {
         fontSize: 14,
-        color: "#94A3B8",
+        color: "rgba(255, 255, 255, 0.85)",
     }
 })

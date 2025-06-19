@@ -32,7 +32,7 @@ export default function HowToUse() {
 
 const styles = StyleSheet.create({
     howToUse: {
-        borderColor: "#475569",
+        borderColor: "#7284A0",
         borderWidth: 1,
         borderRadius: 15,
         borderStyle: "solid",
@@ -51,13 +51,13 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     howToUseText: {
-        color: "#94A3B8",
+        color: "#rgba(255, 255, 255, 0.75)",
     },
     listItemsDecoration: {
         width: 20,
         height: 20,
         borderRadius: "50%",
-        backgroundColor: "#2563EB",
+        backgroundColor: "#5a7ba3",
         justifyContent: "center",
         alignItems: "center",
         color: "white"

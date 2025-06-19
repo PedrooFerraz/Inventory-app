@@ -50,17 +50,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: "#263346"
+        borderColor: "rgba(51, 65, 85, 0.60)"
     },
     buttonSmall: {
         padding: 8,
         borderRadius: 8,
     },
     card: {
-        backgroundColor: '#182234',
+        backgroundColor: '#4f6a92',
         borderRadius: 16,
         padding: 20,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: 'rgba(51, 65, 85, 0.42)',
     },
 })
