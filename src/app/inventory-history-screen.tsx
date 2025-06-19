@@ -98,8 +98,8 @@ const InventorySelectionScreen = () => {
 
             <CustomModal onClose={handleCloseModal} visible={showModal} showCloseButton title='Gerenciar Inventario'>
                 <View style={{ gap: 20 }}>
-                    <ButtonWithIcon color={"#10B981"} icon={"download-outline"} onPress={handleExport} label='Exportar Inventario'></ButtonWithIcon>
-                    <ButtonWithIcon color={"#EF4444"} icon={"trash-outline"} onPress={handleDelete} label='Exluir Inventario'></ButtonWithIcon>
+                    <ButtonWithIcon color={"#5A7BA1"} icon={"download-outline"} onPress={handleExport} label='Exportar Inventario'></ButtonWithIcon>
+                    <ButtonWithIcon color={"#7F95B9"} icon={"trash-outline"} onPress={handleDelete} label='Exluir Inventario'></ButtonWithIcon>
                 </View>
             </CustomModal>
 

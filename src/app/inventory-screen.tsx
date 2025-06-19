@@ -237,6 +237,8 @@ export default function InventoryScreen() {
     const restartForm = () => {
         setCurrentItem(undefined);
         setShowDescription(false);
+        setCurrentCode("")
+        setCurrentLocation("")
         setUserChoices({});
         setObservation("")
         qrCodeInputRefCode.current?.clearInput();
@@ -506,6 +508,7 @@ export default function InventoryScreen() {
                             label="Cancelar"
                             onPress={() => {
                                 errorModal.onCancel();
+                                restartForm()
                                 handleCustomModal({ ...errorModal, visible: false });
                             }}
                         />

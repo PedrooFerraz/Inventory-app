@@ -7,7 +7,8 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableOpacity
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MasterLoginModal from '@/components/home/master-login-modal';
@@ -16,6 +17,9 @@ import { router } from 'expo-router';
 import { getDatabase } from '@/services/database';
 import FirstTimeSetupModal from '@/components/home/first-time-setup-modal';
 import { hasMasterPassword, setMasterPassword, verifyMasterPassword } from '@/services/passwordService';
+import { Ionicons } from '@expo/vector-icons';
+import { CustomModal } from '@/components/master/custom-modal';
+import Configuration from '@/components/home/configurtation';
 
 
 export default function GMIHomeScreen() {
@@ -24,6 +28,7 @@ export default function GMIHomeScreen() {
   const [showFirstTimeSetup, setShowFirstTimeSetup] = useState(false);
   const [wrongPassword, setWrongPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showConfig, setShowConfig] = useState(false)
 
   useEffect(() => {
     const initDatabase = async () => {
@@ -71,6 +76,10 @@ export default function GMIHomeScreen() {
       setTimeout(() => setWrongPassword(false), 4000);
     }
   };
+
+  const closeConfig = ()=>{
+    setShowConfig(false)
+  }
 
   const handleMasterAccess = () => {
     setShowMasterLogin(true);
@@ -131,11 +140,25 @@ export default function GMIHomeScreen() {
             </View>
 
           </View>
+          <TouchableOpacity
+            style={styles.configButton}
+            onPress={()=>setShowConfig(true)}
+            >
+            <Ionicons name="settings-outline" size={34} color={"white"} />
+          </TouchableOpacity>
+
         </ScrollView>
-      <FirstTimeSetupModal
+        <FirstTimeSetupModal
           visible={showFirstTimeSetup}
           onSubmit={handleFirstTimeSetup}
         />
+
+        <CustomModal onClose={closeConfig} title='Configurações' visible={showConfig} showCloseButton >
+          <Configuration>
+            
+          </Configuration>
+        </CustomModal>
+
 
         {/* Modal de login existente */}
         <MasterLoginModal
@@ -253,5 +276,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.65)',
     textAlign: 'center',
+  },
+  configButton: {
+    position: 'absolute',
+    right: 20,
+    top: 20,
   }
 });

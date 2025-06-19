@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#4E6A91',
     borderRadius: 12,
     padding: 24,
     width: '80%',
@@ -102,20 +102,20 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: 'rgba(255, 255, 255, 0.85)',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
   },
   input: {
-    backgroundColor: '#334155',
+    backgroundColor: '#3A5074',
     color: '#FFFFFF',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#EF4444',
+    color: '#E27E85',
     fontSize: 12,
     marginBottom: 16,
     textAlign: 'center',
@@ -124,13 +124,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   submitButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#C7DCF0',
     borderRadius: 8,
     padding: 14,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#3A5073',
     fontWeight: 'bold',
   },
 });
