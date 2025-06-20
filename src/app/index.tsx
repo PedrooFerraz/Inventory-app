@@ -40,22 +40,20 @@ export default function GMIHomeScreen() {
     };
 
     initDatabase();
-  }, []);
-
-  useEffect(() => {
-    const checkPasswordExists = async () => {
-      try {
-        const passwordExists = await hasMasterPassword();
-        setShowFirstTimeSetup(!passwordExists);
-      } catch (error) {
-        console.error("Erro ao verificar senha:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     checkPasswordExists();
   }, []);
+
+
+  const checkPasswordExists = async () => {
+    try {
+      const passwordExists = await hasMasterPassword();
+      setShowFirstTimeSetup(!passwordExists);
+    } catch (error) {
+      console.error("Erro ao verificar senha:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   const handleFirstTimeSetup = async (password: string) => {
@@ -77,7 +75,7 @@ export default function GMIHomeScreen() {
     }
   };
 
-  const closeConfig = ()=>{
+  const closeConfig = () => {
     setShowConfig(false)
   }
 
@@ -142,8 +140,8 @@ export default function GMIHomeScreen() {
           </View>
           <TouchableOpacity
             style={styles.configButton}
-            onPress={()=>setShowConfig(true)}
-            >
+            onPress={() => setShowConfig(true)}
+          >
             <Ionicons name="settings-outline" size={34} color={"white"} />
           </TouchableOpacity>
 
@@ -155,7 +153,7 @@ export default function GMIHomeScreen() {
 
         <CustomModal onClose={closeConfig} title='Configurações' visible={showConfig} showCloseButton >
           <Configuration>
-            
+
           </Configuration>
         </CustomModal>
 
