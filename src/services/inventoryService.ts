@@ -129,6 +129,43 @@ export const InventoryService = {
         }
     },
 
+
+    async replaceItem(
+        inventoryId: number,
+        itemId: number,
+        data: {
+            reportedQuantity: number,
+            reportedLocation: string,
+            observation: string,
+            operator: string
+        }): Promise<{ success: boolean, message: string }> {
+
+        const inventory = await fetchInventoryById(inventoryId)
+        if (!inventory) {
+            return { success: false, message: "Inventory not found" }
+        }
+        if (inventory.status == 2) {
+            return { success: false, message: "Inventory has already been completed" }
+        }
+
+        const now = new Date()
+        const replaceValues = {
+            reportedQuantity: data.reportedQuantity,
+            reportedLocation: data.reportedLocation,
+            observation: data.observation,
+            operator: data.operator,
+            status: 1,
+            countTime: now.toLocaleDateString("pt-br")
+        }
+        try {
+            await updateItemCount(itemId, replaceValues);
+            return { success: true, message: "Item replaced successfully" }
+
+        } catch {
+            return { success: false, message: "An error occurred while trying to replace the item" }
+        }
+    },
+
     async finalizeInventory(inventoryId: number) {
         const inventory = await fetchInventoryById(inventoryId)
 

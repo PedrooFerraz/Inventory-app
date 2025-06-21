@@ -91,7 +91,6 @@ export default function InventoryScreen() {
         if (showCamera)
             handleCamView()
 
-        console.log(e.data)
     }
     const handleEndEditingCode = async (code: string) => {
         setEmptyCodeError(false)
@@ -268,12 +267,13 @@ export default function InventoryScreen() {
             status: status
         }
         const res = await InventoryService.updateItem(currentItem.id, currentInventory.id, updatedItem)
+
         if (res == "Item has already been accounted for") {
             handleCustomModal(
                 {
                     title: "Error",
-                    message: "Este item já foi contabilizado, deseja continuar?",
-                    onConfirm: () => { addNewItem() },
+                    message: "Este item já foi contabilizado, deseja substituir?",
+                    onConfirm: () => { replaceItem() },
                     onCancel: () => { },
                     visible: true,
                 }
@@ -305,6 +305,28 @@ export default function InventoryScreen() {
             handleSuccess()
             restartForm();
         }
+    }
+
+    const replaceItem = async () => {
+        if (!currentItem || !currentInventory)
+            return;
+
+        const dataToReplace = {
+            code: currentCode,
+            reportedQuantity: currentQuantity,
+            reportedLocation: currentLocation,
+            observation: observation,
+            operator: Array.isArray(params.operator) ? params.operator[0] : params.operator as string,
+        }
+
+        const res = await InventoryService.replaceItem(currentInventory.id, currentItem.id, dataToReplace)
+
+        if (res.success) {
+            handleSuccess()
+            restartForm();
+        }
+
+
     }
     const getDescription = async (item: string): Promise<boolean> => {
         const res = await InventoryService.getItemDescriptionByCode(Number(params.id), item)

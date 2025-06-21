@@ -1,22 +1,23 @@
 import { openDatabaseAsync, SQLiteDatabase } from 'expo-sqlite';
 
-let db: SQLiteDatabase;
+let dbInstance: SQLiteDatabase | null = null;
 
-export const getDatabase = async () => {
-  if (!db) {
-    db = await openDatabaseAsync('inventory.db', { useNewConnection: true });
-
-    await initDB();
+export const getDatabase = async (): Promise<SQLiteDatabase> => {
+  if (!dbInstance) {
+    dbInstance = await openDatabaseAsync('inventory.db', { useNewConnection: true });
+    await initDB(dbInstance);
   }
-  return db;
+  return dbInstance;
 };
 
-export const executeQuery = async <T>(
-  sql: string,
-  params: any[] = []
-) => {
-  const database = await getDatabase();
-  return await database.runAsync(sql, params);
+export const executeQuery = async <T>(sql: string, params: any[] = []): Promise<any> => {
+  try {
+    const database = await getDatabase();
+    return await database.runAsync(sql, params);
+  } catch (error) {
+    console.error('Erro ao executar query:', sql, error);
+    throw error;
+  }
 };
 
 export const fetchAll = async <T>(
@@ -28,10 +29,8 @@ export const fetchAll = async <T>(
   return result as T[];
 };
 
-export const initDB = async () => {
-  if (!db) return;
-
-  await db.execAsync(`
+const initDB = async (database: SQLiteDatabase) => {
+  await database.execAsync(`
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,

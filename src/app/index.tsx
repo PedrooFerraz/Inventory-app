@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  StatusBar,
   SafeAreaView,
   ScrollView,
   Image,
