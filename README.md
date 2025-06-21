@@ -74,7 +74,7 @@ O **GMI Inventory Pro** é um sistema profissional de gestão de inventário ind
 
 > **Atenção:** Para importar corretamente o inventário, o arquivo CSV deve obrigatoriamente conter as seguintes colunas (com estes nomes exatos):
 
-| Documento Inventário | Ano | centro | Depósito | Lote | Item Inventário | Material | Texto Breve | Estoque Utilização Livre | UN | Posição Depósito | Bloqueio
+| Documento Inventário | Ano | Centro | Depósito | Lote | Item Inventário | Material | Texto Breve | Estoque Utilização Livre | UN | Posição Depósito | Bloqueio
 |----------------------|-----|--------|----------|------|-----------------|----------|-------------|--------------------------|----|------------------|----------
 
 Exemplo de cabeçalho e linhas do arquivo CSV:
