@@ -8,7 +8,7 @@ export default function Layout() {
         <SafeAreaView style={{ flex: 1, backgroundColor: "#4f6a92" }}>
             <StatusBar
                 animated={true}
-                backgroundColor="#FFF"
+                backgroundColor="#4f6a92"
                 barStyle="light-content"
             />
             <Slot />
