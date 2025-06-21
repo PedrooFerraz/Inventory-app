@@ -56,9 +56,9 @@ O **GMI Inventory Pro** é um sistema profissional de gestão de inventário ind
   - Campos para e-mail e senha.
   - Botão de login que redireciona para a tela principal.
 
-- **Tela Principal:**
-  - Visão geral do inventário com gráficos e estatísticas.
-  - Acesso rápido às funções de contagem, importação e exportação.
+- **Tela Master:**
+  - Visão geral podendo gerenciar operadores e inventários.
+  - Acesso rápido às funções de importação e exportação.
 
 - **Contagem de Itens:**
   - Leitura de QR Code para identificação de produtos.
@@ -68,19 +68,14 @@ O **GMI Inventory Pro** é um sistema profissional de gestão de inventário ind
 - **Importação e Exportação:**
   - Opções para importar dados de inventário via CSV.
   - Geração de relatórios em Excel para exportação.
-
-- **Configurações:**
-  - Gerenciamento de usuários e permissões.
-  - Configurações de integração com outras ferramentas.
-
 ---
 
 ## Como importar o inventário (CSV)
 
 > **Atenção:** Para importar corretamente o inventário, o arquivo CSV deve obrigatoriamente conter as seguintes colunas (com estes nomes exatos):
 
-| Material | Texto Breve | Posição Depósito | Estoque Utilização Livre | Unidade de Medida | Centro |
-|----------|-------------|------------------|-------------------------|-------------------|--------|
+| Documento Inventário | Ano | centro | Depósito | Lote | Item Inventário | Material | Texto Breve | Estoque Utilização Livre | UN | Posição Depósito | Bloqueio
+|----------------------|-----|--------|----------|------|-----------------|----------|-------------|--------------------------|----|------------------|----------
 
 Exemplo de cabeçalho e linhas do arquivo CSV:
 ```
@@ -95,7 +90,7 @@ Material,Texto Breve,Posição Depósito,Estoque Utilização Livre,Unidade de M
 - Certifique-se de que não há espaços extras nos nomes das colunas.
 
 **Passos para importar:**
-1. Acesse a tela de administração ("Administração do Sistema").
+1. Acesse a tela de acesso master.
 2. Clique em **"Importar Inventário"**.
 3. Selecione o arquivo CSV conforme o modelo acima.
 4. Confirme se os dados foram lidos corretamente na pré-visualização.
