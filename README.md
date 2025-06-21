@@ -77,13 +77,6 @@ O **GMI Inventory Pro** é um sistema profissional de gestão de inventário ind
 | Documento Inventário | Ano | Centro | Depósito | Lote | Item Inventário | Material | Texto Breve | Estoque Utilização Livre | UN | Posição Depósito | Bloqueio
 |----------------------|-----|--------|----------|------|-----------------|----------|-------------|--------------------------|----|------------------|----------
 
-Exemplo de cabeçalho e linhas do arquivo CSV:
-```
-Material,Texto Breve,Posição Depósito,Estoque Utilização Livre,Unidade de Medida,Centro
-100001,Parafuso M10,ALMOX 01,150,UN,0010
-100002,Arruela A10,ALMOX 02,300,UN,0010
-```
-
 - O arquivo deve estar salvo em formato **CSV separado por vírgulas**.
 - Não altere os nomes das colunas para garantir a correta importação dos dados.
 - Caso o arquivo possua colunas extras, elas serão ignoradas.
