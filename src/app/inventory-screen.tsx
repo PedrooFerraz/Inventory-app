@@ -358,7 +358,7 @@ export default function InventoryScreen() {
             <ScrollView>
 
                 <View style={styles.header} >
-                    <Text style={styles.headerTitle}>Inventário</Text>
+                    <Text style={styles.headerTitle}>Inventário - {currentInventory?.inventoryDocument}</Text>
                     <TouchableOpacity onPress={() => drawer.current?.openDrawer()}>
                         <Ionicons name="menu" size={32} color={"#FFF"} />
                     </TouchableOpacity>
