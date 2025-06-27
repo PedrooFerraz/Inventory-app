@@ -84,7 +84,7 @@ export default function InventoryScreen() {
 
 
         if (scanInputTarget == "L" && e.data != undefined) {
-            handleEndEditingCode(e.data)
+            handleEndEditingLoc(e.data)
             qrCodeInputRefLoc.current?.setValue(e.data);
         }
 

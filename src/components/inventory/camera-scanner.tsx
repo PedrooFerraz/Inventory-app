@@ -2,7 +2,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function CameraScanner({ onScan, onButtonPress }: { onScan: (event: any) => any, onButtonPress: ()=> any }) {
+export default function CameraScanner({ onScan, onButtonPress }: { onScan: (event: any) => any, onButtonPress: () => any }) {
 
   const [permission, requestPermission] = useCameraPermissions();
 
@@ -12,9 +12,11 @@ export default function CameraScanner({ onScan, onButtonPress }: { onScan: (even
 
   if (!permission.granted) {
     return (
-      <View style={styles.messageContainer}>
-        <Text style={styles.message}>Precisamos de Permissão para acessar sua camera</Text>
-        <Button onPress={requestPermission} title="grant permission" />
+      <View style={styles.modalOverlay}>
+        <View style={styles.messageContainer}>
+          <Text style={styles.message}>Precisamos de permissão para acessar sua camera</Text>
+          <Button onPress={requestPermission} title="Permitir" />
+        </View>
       </View>
     );
   }
@@ -36,20 +38,35 @@ export default function CameraScanner({ onScan, onButtonPress }: { onScan: (even
 }
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    position: 'absolute',
+    height:"100%",
+    width: "100%",
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
-    position: "absolute", 
-    width: "100%", 
-    height: "100%", 
-    zIndex: 10, 
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    zIndex: 10,
   },
   messageContainer: {
-    flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    backgroundColor: "#4E6B92",
+    padding: 20,
+    borderRadius: 10
   },
   message: {
     textAlign: 'center',
+    color: "white",
     paddingBottom: 10,
   },
   camera: {
