@@ -1,27 +1,49 @@
+import { fileInfo } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function FileInfoAfter({name, size, date, otherDocument} : {name: string, size: string, date: string, otherDocument:any}) {
+export default function FileInfoAfter({ data, otherDocument }: { data: fileInfo[], otherDocument: any }) {
 
-    const fileData = [
-        { label: "Nome", data: name },
-        { label: "Tamanho", data: size },
-        { label: "Modificado", data: date }
-    ]
+    if (data.length == 1) {
+        return (
+            <View style={styles.fileInfo}>
+                <View style={styles.fileInfoTitleArea}>
+                    <Ionicons name="checkmark-circle-outline" size={25} color={"#34D399"} />
+                    <Text style={styles.fileInfoTitle}>Arquivo Selecionado</Text>
+                </View>
+                <View style={styles.fileData}>
+                    {
+                        data.map((item, index) => {
+                            return (
+                                <View style={styles.dataSummary} key={index}>
+                                    <Text style={styles.dataLabel}>Nome: {item.name}</Text>
+                                    <Text style={styles.data}>Data: {item.date}</Text>
+                                </View>
+                            )
+                        })
+                    }
+
+                </View>
+                <TouchableOpacity style={styles.otherDocumentButton} onPress={otherDocument}>
+                    <Text style={{ color: "rgba(255, 255, 255, 0.6)" }}>Selecionar outro documento</Text>
+                </TouchableOpacity>
+            </View>
+        )
+    }
 
     return (
         <View style={styles.fileInfo}>
             <View style={styles.fileInfoTitleArea}>
                 <Ionicons name="checkmark-circle-outline" size={25} color={"#34D399"} />
-                <Text style={styles.fileInfoTitle}>Arquivo Selecionado</Text>
+                <Text style={styles.fileInfoTitle}>{data.length} Arquivos Selecionados</Text>
             </View>
             <View style={styles.fileData}>
                 {
-                    fileData.map((item, index) => {
+                    data.map((item, index) => {
                         return (
                             <View style={styles.dataSummary} key={index}>
-                                <Text style={styles.dataLabel}>{item.label}:</Text>
-                                <Text style={styles.data}>{item.data}</Text>
+                                <Text style={styles.dataLabel}>Nome: {item.name}</Text>
+                                <Text style={styles.data}>Data: {item.date}</Text>
                             </View>
                         )
                     })
@@ -29,10 +51,13 @@ export default function FileInfoAfter({name, size, date, otherDocument} : {name:
 
             </View>
             <TouchableOpacity style={styles.otherDocumentButton} onPress={otherDocument}>
-                <Text style={{ color: "rgba(255, 255, 255, 0.6)" }}>Selecionar outro documento</Text>
+                <Text style={{ color: "rgba(255, 255, 255, 0.6)" }}>Selecionar outros documentos</Text>
             </TouchableOpacity>
         </View>
     )
+
+
+
 }
 
 const styles = StyleSheet.create({
@@ -45,7 +70,7 @@ const styles = StyleSheet.create({
         width: "100%",
         gap: 10,
         justifyContent: "space-between",
-        
+
     },
     fileInfoTitleArea: {
         flexDirection: "row",
@@ -65,7 +90,7 @@ const styles = StyleSheet.create({
 
     },
     dataLabel: {
-        color: "#C1CBD8"
+        color: "white"
     },
     data: {
         color: "white",

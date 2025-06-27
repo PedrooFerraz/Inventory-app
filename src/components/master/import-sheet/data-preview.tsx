@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import Card from "@/components/card";
 import { dataPreview } from "@/app/import-sheet-screen";
 
-export default function DataPreview({data} : {data : dataPreview}) {
+export default function DataPreview({ data }: { data: dataPreview }) {
 
     return (
         <View style={styles.container}>
@@ -12,6 +12,7 @@ export default function DataPreview({data} : {data : dataPreview}) {
                 <Text style={styles.previewTitle}>Prévia dos Dados</Text>
             </View>
 
+            <Card info={data.fileQuantity} label="Arquivos Selecionados" color="#36D299"></Card>
             <Card info={data.qty} label="Total de Itens" color="#2793EC"></Card>
             <Card info={data.localizations} label="Localizações" color="#F3BB13"></Card>
 

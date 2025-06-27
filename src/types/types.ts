@@ -69,4 +69,11 @@ export type ErrorModalProps = {
   onCancel: () => void;
 };
 
+export interface fileInfo {
+  date: string,
+  name: string,
+  size: string,
+  uri: string
+}
+
 export type scanTypes = "C" | "L" //C- Código Material; L- Localização

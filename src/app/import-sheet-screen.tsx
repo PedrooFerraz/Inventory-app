@@ -12,22 +12,17 @@ import { useState } from "react";
 import Loading from "@/components/master/import-sheet/loading-preview";
 import { insertInventory } from "@/models/inventory";
 import { exportModelSheet } from "@/services/xlsxService";
-
-interface fileInfo {
-  date: string,
-  name: string,
-  size: string,
-  uri: string
-}
+import { fileInfo } from "@/types/types";
 
 export interface dataPreview {
   qty: number,
-  localizations: number
+  localizations: number,
+  fileQuantity: number
 }
 
 export default function ImportScreen() {
 
-  const [fileInfo, setFileInfo] = useState<fileInfo>()
+  const [fileInfoList, setFileInfoList] = useState<fileInfo[]>([])
   const [showInfo, setShowInfo] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -36,75 +31,82 @@ export default function ImportScreen() {
 
   const getDoc = async () => {
     try {
-      const doc = await DocumentPicker.getDocumentAsync({
+      const docs = await DocumentPicker.getDocumentAsync({
         type: 'text/comma-separated-values',
-        multiple: false,
+        multiple: true,
       })
 
-      if (doc.canceled) {
-        return
-      }
-      const selectedDoc = doc as DocumentPicker.DocumentPickerSuccessResult
-      if (selectedDoc.assets) {
-        await saveSelectedFileInfo(selectedDoc.assets[0].uri, selectedDoc.assets[0].name)
-        handleSelectDocument(selectedDoc.assets[0])
+      if (docs.canceled) return
+
+      const selectedDocs = docs as DocumentPicker.DocumentPickerSuccessResult;
+
+      if (selectedDocs.assets) {
+        const infos: fileInfo[] = [];
+
+        for (const file of selectedDocs.assets) {
+          await saveSelectedFileInfo(file.uri, file.name);
+
+          let date = new Date();
+          let MBSize = typeof file.size === "number" ? formatSizeUnits(file.size) : "0MB";
+
+          infos.push({
+            name: file.name,
+            size: MBSize,
+            date: date.toLocaleDateString("pt-BR"),
+            uri: file.uri
+          });
+        }
+
+        setFileInfoList(infos);
+        setShowInfo(true);
+        loadPreview(selectedDocs.assets);
       }
     } catch (err: any) {
-      console.log("Erro ao selecionar um documento:", err);
+      console.log("Erro ao selecionar documentos:", err);
     }
-  }
-  const handleSelectDocument = (info: DocumentPicker.DocumentPickerAsset) => {
-    let date = new Date()
-    let MBSize: string
-    if (typeof info.size === "number") {
-      MBSize = formatSizeUnits(info.size)
-    } else {
-      MBSize = "0MB"
-    }
+  };
 
-    const fileInfo = {
-      name: info.name,
-      size: MBSize,
-      date: date.toLocaleDateString("Pt-br"),
-      uri: info.uri
-    }
-    setFileInfo(fileInfo)
-    setShowInfo(true)
-    loadPreview(info)
-  }
   const handleSelectOtherDocument = () => {
-    setShowInfo(false)
-    setFileInfo(undefined)
-    setShowPreview(false)
-    clearFileCache()
-  }
-  const loadPreview = async (info: DocumentPicker.DocumentPickerAsset) => {
+    setShowInfo(false);
+    setFileInfoList([]);
+    setShowPreview(false);
+    clearFileCache();
+  };
+  const loadPreview = async (infos: DocumentPicker.DocumentPickerAsset[]) => {
     setShowPreview(true)
     setIsLoading(true)
-    const res = await generateCSVPreview(info)
+    let totalRows = 0;
 
-    setIsLoading(false)
-    const preview: dataPreview = {
-      localizations: res.uniqueLocations,
-      qty: res.totalRows
-    }
-    setDataPreview(preview)
+    for (const info of infos) {
+      const res = await generateCSVPreview(info);
+      totalRows += res.totalRows;
+
+      setIsLoading(false);
+      const preview: dataPreview = {
+        localizations: res.uniqueLocations,
+        qty: totalRows,
+        fileQuantity: infos.length
+      };
+
+      setDataPreview(preview);
+    };
   }
+
+
   const handleSubmit = async () => {
-    await clearFileCache()
+    await clearFileCache();
 
-    if (!fileInfo?.uri || !fileInfo?.name) {
-      return
+    if (!fileInfoList.length) return;
+
+    setSaving(true);
+
+    for (const file of fileInfoList) {
+      await insertInventory(file.uri, file.name);
     }
 
-    setSaving(true)
-
-    await insertInventory(fileInfo?.uri, fileInfo?.name)
-
-    setSaving(false)
-
-    router.navigate("/master-acess-screen")
-  }
+    setSaving(false);
+    router.navigate("/master-acess-screen");
+  };
 
   const handleDowloadModel = async () => {
     exportModelSheet()
@@ -143,16 +145,17 @@ export default function ImportScreen() {
               </Text>
             </View>
             {
-              showInfo && fileInfo ?
-                <FileInfoAfter date={fileInfo.date} name={fileInfo.name} size={fileInfo.size} otherDocument={handleSelectOtherDocument}></FileInfoAfter>
+              showInfo && fileInfoList ?
+                <FileInfoAfter data={fileInfoList} otherDocument={handleSelectOtherDocument}></FileInfoAfter>
                 :
                 <FileInfoBefore onPress={getDoc}></FileInfoBefore>
             }
           </View>
 
-          <ButtonWithIcon color={"#5A7BA2"} icon={"share-outline"} label="Baixar Planilha Modelo" onPress={() => {handleDowloadModel()}}>
-
-          </ButtonWithIcon>
+          {
+            !showInfo &&
+            <ButtonWithIcon color={"#5A7BA2"} icon={"share-outline"} label="Baixar Planilha Modelo" onPress={() => { handleDowloadModel() }}></ButtonWithIcon>
+          }
 
           {
             showPreview && (
