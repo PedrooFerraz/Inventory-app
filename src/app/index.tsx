@@ -103,10 +103,26 @@ export default function GMIHomeScreen() {
         style={styles.background}
       >
         <View style={styles.backgroundElements}>
-          <View style={[styles.circle, styles.circle1]} />
-          <View style={[styles.circle, styles.circle2]} />
-          <View style={[styles.circle, styles.circle3]} />
-          <View style={[styles.circle, styles.circle4]} />
+          <View>
+            <View style={[styles.hexagon1top]} />
+            <View style={[styles.hexagon1mid]} />
+            <View style={[styles.hexagon1bot]} />
+          </View>
+          <View>
+            <View style={[styles.hexagon2top]} />
+            <View style={[styles.hexagon2mid]} />
+            <View style={[styles.hexagon2bot]} />
+          </View>
+          <View>
+            <View style={[styles.hexagon3top]} />
+            <View style={[styles.hexagon3mid]} />
+            <View style={[styles.hexagon3bot]} />
+          </View>
+          <View>
+            <View style={[styles.hexagon4top]} />
+            <View style={[styles.hexagon4mid]} />
+            <View style={[styles.hexagon4bot]} />
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -183,34 +199,132 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  circle: {
+  hexagon1top: {
     position: 'absolute',
-    borderWidth: 1,
-    borderColor: 'rgba(59, 131, 246, 0.39)',
-    borderRadius: 1000,
+    borderBottomColor: 'rgba(59, 131, 246, 0.07)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderBottomWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
+    top: 50,
+    left: 40,
   },
-  circle1: {
-    width: 128,
-    height: 128,
+  hexagon1mid: {
+    position: 'absolute',
+    backgroundColor: 'rgba(59, 131, 246, 0.07)',
+    height: 60,
+    width: 104,
     top: 80,
     left: 40,
   },
-  circle2: {
-    width: 96,
-    height: 96,
+  hexagon1bot: {
+    position: 'absolute',
+    borderTopColor: 'rgba(59, 131, 246, 0.07)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderTopWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
+    top: 140,
+    left: 40,
+  },
+  hexagon2top: {
+    position: 'absolute',
+    borderBottomColor: 'rgba(59, 131, 246, 0.07)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderBottomWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
     top: 160,
     right: 80,
   },
-  circle3: {
-    width: 160,
-    height: 160,
-    bottom: 128,
+  hexagon2mid: {
+    position: 'absolute',
+    backgroundColor: 'rgba(59, 131, 246, 0.07)',
+    height: 60,
+    width: 104,
+    top: 190,
+    right: 80,
+  },
+  hexagon2bot: {
+    position: 'absolute',
+    borderTopColor: 'rgba(59, 131, 246, 0.07)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderTopWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
+    top: 250,
+    right: 80,
+  },
+  hexagon3top: {
+    position: 'absolute',
+    borderBottomColor: 'rgba(59, 131, 246, 0.08)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderBottomWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
+    top: 350,
     left: 80,
   },
-  circle4: {
-    width: 64,
-    height: 64,
-    bottom: 80,
+  hexagon3mid: {
+    position: 'absolute',
+    backgroundColor: 'rgba(59, 131, 246, 0.08)',
+    height: 60,
+    width: 104,
+    top: 380,
+    left: 80,
+  },
+  hexagon3bot: {
+    position: 'absolute',
+    borderTopColor: 'rgba(59, 131, 246, 0.08)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderTopWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
+    top: 440,
+    left: 80,
+  },
+  hexagon4top: {
+    position: 'absolute',
+    borderBottomColor: 'rgba(59, 131, 246, 0.10)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderBottomWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
+    top: 550,
+    right: 40,
+  },
+  hexagon4mid: {
+    position: 'absolute',
+    backgroundColor: 'rgba(59, 131, 246, 0.10)',
+    height: 60,
+    width: 104,
+    top: 580,
+    right: 40,
+  },
+  hexagon4bot: {
+    position: 'absolute',
+    borderTopColor: 'rgba(59, 131, 246, 0.10)',
+    borderLeftColor: "rgba(0, 0, 0, 0.00)",
+    borderRightColor: "rgba(0, 0, 0, 0.00)",
+    borderTopWidth: 30,
+    borderLeftWidth: 52,
+    borderRightWidth: 52,
+    width: 0,
+    top: 640,
     right: 40,
   },
   scrollContent: {
