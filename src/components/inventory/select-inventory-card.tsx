@@ -4,7 +4,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ProgressBar from "../progress-bar";
 import { Inventory } from "@/types/types";
 
-export default function SelectInventoryCard({ item, onPress }: { item: Inventory, onPress: (id: number) => any}) {
+export default function SelectInventoryCard({ item, onPress }: { item: Inventory, onPress: (id: number) => any }) {
+
 
     const getStatus = (status: number) => {
         switch (status) {
@@ -35,7 +36,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
         <TouchableOpacity
             style={styles.inventarioCard}
             activeOpacity={0.7}
-            onPress={()=> onPress(item.id)}
+            onPress={() => onPress(item.id)}
         >
 
             <View style={styles.cardHeader}>
@@ -48,7 +49,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
                     </LinearGradient>
                 </View>
                 <View style={styles.cardContent}>
-                    <Text style={styles.inventarioNome}>{item.fileName}</Text>
+                    <Text style={styles.inventarioNome}>Inventario: {item.inventoryDocument}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
             </View>

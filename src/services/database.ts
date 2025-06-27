@@ -31,6 +31,7 @@ export const fetchAll = async <T>(
 
 const initDB = async (database: SQLiteDatabase) => {
   await database.execAsync(`
+
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -44,7 +45,8 @@ const initDB = async (database: SQLiteDatabase) => {
       importDate TEXT NOT NULL,
       status INTEGER NOT NULL DEFAULT 0,
       totalItems INTEGER NOT NULL,
-      countedItems INTEGER DEFAULT 0
+      countedItems INTEGER DEFAULT 0,
+      inventoryDocument TEXT
     );
 
     CREATE TABLE IF NOT EXISTS inventory_items (

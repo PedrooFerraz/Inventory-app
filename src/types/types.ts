@@ -12,6 +12,7 @@ export type Inventory = {
   status: number; // 0-Aberto, 1-Em Andamento, 2-Finalizado
   totalItems: number;
   countedItems: number;
+  inventoryDocument: string;
 };
 
 export type CSVParseResult = {

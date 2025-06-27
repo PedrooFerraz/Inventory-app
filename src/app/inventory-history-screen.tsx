@@ -16,6 +16,7 @@ import { CustomModal } from '@/components/master/custom-modal';
 import ButtonWithIcon from '@/components/button-with-icon';
 import { deleteInventory, fetchItemsByInventoryId } from '@/models/inventory';
 import { exportInventoryToExcel } from '@/services/xlsxService';
+import { InventoryService } from '@/services/inventoryService';
 
 const InventorySelectionScreen = () => {
 
@@ -27,17 +28,18 @@ const InventorySelectionScreen = () => {
         setSelectedInventory(id)
         setShowModal(true)
     }
+
     const handleCloseModal = () => {
         setShowModal(false)
     }
     const handleExport = async () => {
 
-        if(selectedInventory)
-           await fetchItemsByInventoryId(selectedInventory)
-            .then(res => {
-                exportInventoryToExcel(res)
-            })
-        
+        if (selectedInventory)
+            await fetchItemsByInventoryId(selectedInventory)
+                .then(res => {
+                    exportInventoryToExcel(res)
+                })
+
     }
     const handleDelete = () => {
         Alert.alert(

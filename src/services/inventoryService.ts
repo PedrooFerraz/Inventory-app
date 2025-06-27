@@ -1,4 +1,4 @@
-import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemById, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount } from "@/models/inventory";
+import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemById, fetchItemsByInventoryId, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount } from "@/models/inventory";
 import { Item, Inventory } from "@/types/types";
 
 export const InventoryService = {
@@ -20,6 +20,15 @@ export const InventoryService = {
             throw new Error("Cant find any inventory with this ID, try again later")
 
         return res
+    },
+
+    async getInventoryNumber(id: number): Promise<{success: boolean, inventoryNumber: string}> {
+        try{
+        const res = await fetchItemsByInventoryId(id)
+        return {success: true, inventoryNumber: res[0].inventoryDocument}
+        }catch(e : any){
+            return {success: false, inventoryNumber: "Undefined"}
+        }
     },
 
     async getItemByCode(inventoryId: number, code: string): Promise<Item> {

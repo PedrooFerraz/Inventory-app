@@ -9,7 +9,7 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
     // Validação inicial do arquivo
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
     if (!fileInfo.exists) throw new Error('Arquivo não encontrado');
-    if (fileInfo.size > 10 * 1024 * 1024) throw new Error('Arquivo muito grande (máximo 10MB)');
+    if (fileInfo.size > 6 * 1024 * 1024) throw new Error('Arquivo muito grande (máximo 6MB)');
 
     // Leitura e parse do CSV
     const fileContent = await FileSystem.readAsStringAsync(fileUri);
@@ -47,9 +47,9 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
     // Insere cabeçalho do inventário
     const result = await executeQuery(
       `INSERT INTO inventories 
-      (fileName, fileUri, importDate, totalItems) 
-      VALUES (?, ?, ?, ?);`,
-      [fileName, fileUri, new Date().toLocaleDateString("pt-br"), items.length]
+      (fileName, fileUri, importDate, totalItems, inventoryDocument) 
+      VALUES (?, ?, ?, ?, ?);`,
+      [fileName, fileUri, new Date().toLocaleDateString("pt-br"), items.length, items[0].inventoryDocument]
     );
 
     const inventoryId = result.lastInsertRowId!;
@@ -217,8 +217,8 @@ export const fetchItemByCode = async (
   );
 };
 
-export const fetchItemsByInventoryId = async (inventoryId: number) : Promise<any[]> => {
-  return await fetchAll(
+export const fetchItemsByInventoryId = async (inventoryId: number) : Promise<Item[]> => {
+  return await fetchAll<Item>(
     `SELECT * FROM inventory_items WHERE inventory_id = ? ORDER BY code ASC;`,
     [inventoryId]
   );
