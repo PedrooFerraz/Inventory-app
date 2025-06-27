@@ -227,7 +227,7 @@ export default function InventoryScreen() {
         const res = await InventoryService.finalizeInventory(currentInventory?.id)
         if (res.success) {
             router.navigate("/")
-            Alert.alert("Sucesso", "Inventario Concluído")
+            Alert.alert("Sucesso", "Contagem Concluída")
             return
         }
         Alert.alert("Error", "Ocorreu algum erro ao finalizar o inventário tente novamente")

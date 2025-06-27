@@ -115,7 +115,7 @@ export default function GMIHomeScreen() {
               colors={['white', '#4f6a92']}
               style={styles.logoContainer}
             >
-              <Image source={require("@/assets/images/LogoGMIConsultoria.png")} style={{ width: 90, height: 90 }}></Image>
+              <Image source={require("@/assets/images/LogoGMI.png")} style={{ width: 70, height: 70 }}></Image>
             </LinearGradient>
 
             <Text style={styles.title}>GMI Inventory Pro</Text>
@@ -127,7 +127,7 @@ export default function GMIHomeScreen() {
           <View style={styles.mainContent}>
 
             <Card icon={"shield-outline"} onPress={handleMasterAccess} title='Acesso Master' description='Administração do sistema' colors={['#4f6a92', '#6b8ab5']}></Card>
-            <Card icon={"cube-outline"} onPress={handleInventoryAccess} title='Realizar Inventário' description='Executar contagem de itens' colors={['#7f96b9', '#8fa5c7']}></Card>
+            <Card icon={"cube-outline"} onPress={handleInventoryAccess} title='Realizar Contagem' description='Executar contagem de itens' colors={['#7f96b9', '#8fa5c7']}></Card>
 
             <View style={styles.infoCard}>
               <Text style={styles.versionText}>Versão 1.0.0</Text>
@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: 96,
     height: 96,
+    paddingTop: 8,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',

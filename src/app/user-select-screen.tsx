@@ -31,7 +31,7 @@ export default function UserSelectScreen() {
                     <Ionicons name="arrow-back" size={22} color="#FFF" />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>Selecionar Operador</Text>
+                    <Text style={styles.headerTitle}>Selecionar Membro da Equipe</Text>
                 </View>
             </View>
 

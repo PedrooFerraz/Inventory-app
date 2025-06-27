@@ -42,7 +42,7 @@ export default function MasterAcessScreen() {
             await deleteOperator(id);
             await refresh();
         } catch (err: any) {
-            console.error('Erro ao excluir operário:', err);
+            console.error('Erro ao excluir membro da equipe:', err);
         }
     };
 
@@ -58,7 +58,7 @@ export default function MasterAcessScreen() {
             await refresh();
             closeOperatorFormModal();
         } catch (err: any) {
-            console.error('Erro ao atualizar operário:', err);
+            console.error('Erro ao atualizar membro da equipe:', err);
         }
     }
 
@@ -73,7 +73,7 @@ export default function MasterAcessScreen() {
     const deleteOp = (id: number) => {
         Alert.alert(
             'Confirmar Exclusão',
-            'Tem certeza que deseja excluir este operário?',
+            'Tem certeza que deseja excluir este membro da equipe?',
             [
                 {
                     text: 'Cancelar',
@@ -83,7 +83,7 @@ export default function MasterAcessScreen() {
                     text: 'Excluir',
                     onPress: () => {
                         handleDelete(id)
-                        Alert.alert('Sucesso', 'Operário excluído com sucesso!');
+                        Alert.alert('Sucesso', 'Membro da equipe excluído com sucesso!');
                     },
                     style: 'destructive'
                 }
@@ -111,11 +111,11 @@ export default function MasterAcessScreen() {
             </View>
 
             <View style={styles.mainContent}>
-                <Card colors={['#4f6a92', '#6b8ab5']} description="Adicionar, editar ou remover operários" title="Gerenciar Operários" icon={"people"} onPress={openOperatorsModal}></Card>
+                <Card colors={['#4f6a92', '#6b8ab5']} description="Adicionar, editar ou remover membros da equipe de contagem" title="Gerenciar Equipe de Contagem" icon={"people"} onPress={openOperatorsModal}></Card>
                 <Card colors={['#7f96b9', '#8fa5c7']} description="Importar dados via arquivo CSV" title="Importar Inventário" icon={"folder-open"} onPress={() => { router.navigate("/import-sheet-screen") }}></Card>
-                <Card colors={['#4f6a92', '#6b8ab5']} description="Exporte os invetários realizados" title="Histórico" icon={"folder-open"} onPress={() => router.navigate("/inventory-history-screen")}></Card>
+                <Card colors={['#4f6a92', '#6b8ab5']} description="Exporte os inventários realizados" title="Histórico" icon={"folder-open"} onPress={() => router.navigate("/inventory-history-screen")}></Card>
 
-                <CustomModal onClose={closeOperatorsModal} title="Gerenciar Operários" visible={operatorsModalVisible} showCloseButton>
+                <CustomModal onClose={closeOperatorsModal} title="Gerenciar Equipe de Contagem" visible={operatorsModalVisible} showCloseButton>
                     <TouchableOpacity
                         style={[
                             styles.button,
@@ -125,7 +125,7 @@ export default function MasterAcessScreen() {
                         onPress={showAddOperatorForm}
                     >
                         <Text style={{ color: 'white', fontWeight: '600' }}>
-                            + Adicionar Novo Operário
+                            + Adicionar Novo Membro
                         </Text>
                     </TouchableOpacity>
                     {operators.length == 0 ? "" :
@@ -135,11 +135,11 @@ export default function MasterAcessScreen() {
                             fontWeight: "500",
                             color: 'white'
                         }}>
-                            Lista de Operários
+                            Membros da Equipe
                         </Text>
                     }
 
-                    {/* Lista de operários */}
+                    {/*  Membros da Equipe*/}
                     <ScrollView style={{ maxHeight: 300 }}>
                         {operators.map(operator => (
                             <OperatorItem
@@ -156,7 +156,7 @@ export default function MasterAcessScreen() {
                 <CustomModal
                     visible={operatorFormModalVisible}
                     onClose={closeOperatorFormModal}
-                    title={currentOperator.id ? 'Editar Operário' : 'Adicionar Operário'}
+                    title={currentOperator.id ? 'Editar Membro' : 'Adicionar Membro'}
                 >
                     <FormInput
                         label="Nome Completo"
@@ -166,7 +166,7 @@ export default function MasterAcessScreen() {
                         required
                     />
                     <FormInput
-                        label="Código Operário"
+                        label="Matrícula"
                         placeholder="000000"
                         value={currentOperator.code}
                         onChangeText={(text) => setCurrentOperator({ ...currentOperator, code: text })}
@@ -182,7 +182,7 @@ export default function MasterAcessScreen() {
                         onPress={() => handleUpdate(currentOperator.id, currentOperator.name, currentOperator.code)}
                     >
                         <Text style={{ color: 'white', fontWeight: '600' }}>
-                            {currentOperator.id ? 'Salvar Alterações' : 'Salvar Operário'}
+                            {currentOperator.id ? 'Salvar Alterações' : 'Salvar Membro'}
                         </Text>
                     </TouchableOpacity>
 
