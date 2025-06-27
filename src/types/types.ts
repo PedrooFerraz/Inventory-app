@@ -52,13 +52,13 @@ export type ImportedInventoryItem = {
   storage: string;
   batch: string;
   inventoryItem: string;
-  unit: string;
-  lock: string;
-  completeDescription: string;
   code: string;
   description: string;
-  expectedLocation: string;
   expectedQuantity: number;
+  unit: string;
+  averagePrice: string;
+  currency: string;
+  expectedLocation: string;
 };
 
 export type ErrorModalProps = {

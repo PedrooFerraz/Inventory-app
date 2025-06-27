@@ -40,7 +40,7 @@ export async function exportInventoryToExcel(inventoryData: any[]) {
         });
 
         // 4 Salva o arquivo
-        const fileUri = FileSystem.documentDirectory + `inventario_${Date.now()}.xlsx`;
+        const fileUri = FileSystem.documentDirectory + `inventario_${Date.now()}`;
         await FileSystem.writeAsStringAsync(fileUri, wbout, {
             encoding: FileSystem.EncodingType.Base64,
         });
@@ -73,5 +73,52 @@ export function getOperatorCode(operators: Operator[], id: string) {
         return op[0].code
     } catch {
         return ""
+    }
+}
+
+export async function exportModelSheet() {
+    try {
+        const modelSheet = [
+            {"INVENTÁRIO": ""},
+            {"ANO": ""},
+            {"CENTRO": ""},
+            {"DEPÓSITO": ""},
+            {"LOTE": ""},
+            {"ITEM": ""},
+            {"MATERIAL": ""},
+            {"DESCRIÇÃO": ""},
+            {"ESTOQUE": ""},
+            {"UN": ""},
+            {"PREÇO MÉDIO": ""},
+            {"MOEDA": ""},
+            {"POSIÇÃO NO DEPÓSITO": ""},
+        ]
+        // 2 Cria a planilha
+        const ws = XLSX.utils.json_to_sheet(modelSheet);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Planilha Modelo");
+
+        // 3 Gera o arquivo
+        const wbout = XLSX.write(wb, {
+            type: 'base64',  // Usa base64 diretamente
+            bookType: 'xlsx'
+        });
+
+        // 4 Salva o arquivo
+        const fileUri = FileSystem.documentDirectory + `planilha_modelo`;
+        await FileSystem.writeAsStringAsync(fileUri, wbout, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+
+        // 5 Compartilha
+        await shareAsync(fileUri, {
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            dialogTitle: 'Exportar Planilha Modelo'
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Erro ao exportar planilha modelo:', error);
+        return false;
     }
 }

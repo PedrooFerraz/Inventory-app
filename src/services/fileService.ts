@@ -52,10 +52,10 @@ export const generateCSVPreview = async (SelectedDocument: DocumentPickerAsset):
         
         const data = row.data as Record<string, any>;
         
-        if(data["Material"] != "" && data["Material"] != "Material")
+        if(data["MATERIAL"] != "" && data["MATERIAL"] != "MATERIAL")
           totalRows++;
 
-        const location = data['Localização'] || data['location'] || data['Posição Depósito'] || ''; // Ajuste o nome da coluna de acordo com seu CSV
+        const location = data['Localização'] || data['location'] || data['POSIÇÃO NO DEPÓSITO'] || ''; // Ajuste o nome da coluna de acordo com seu CSV
         if (location && location !="Pos.dpst.") {
           locationSet.add(location.trim());
         }

@@ -11,6 +11,7 @@ import { View, StyleSheet, Text, ScrollView, ActivityIndicator } from "react-nat
 import { useState } from "react";
 import Loading from "@/components/master/import-sheet/loading-preview";
 import { insertInventory } from "@/models/inventory";
+import { exportModelSheet } from "@/services/xlsxService";
 
 interface fileInfo {
   date: string,
@@ -105,6 +106,10 @@ export default function ImportScreen() {
     router.navigate("/master-acess-screen")
   }
 
+  const handleDowloadModel = async () => {
+    exportModelSheet()
+  }
+
 
   return (
     <View style={styles.container}>
@@ -144,6 +149,11 @@ export default function ImportScreen() {
                 <FileInfoBefore onPress={getDoc}></FileInfoBefore>
             }
           </View>
+
+          <ButtonWithIcon color={"#5A7BA2"} icon={"share-outline"} label="Baixar Planilha Modelo" onPress={() => {handleDowloadModel()}}>
+
+          </ButtonWithIcon>
+
           {
             showPreview && (
               isLoading ?

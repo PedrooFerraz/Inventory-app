@@ -24,21 +24,21 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
 
     // Processamento dos itens
     const items: ImportedInventoryItem[] = parseResult.data
-      .filter(item => item['Material'] && item['Material'].trim() !== '' && item['Material'] !== "Material")
+      .filter(item => item['MATERIAL'] && item['MATERIAL'].trim() !== '' && item['MATERIAL'] !== "MATERIAL")
       .map(item => ({
-        inventoryDocument: item["Documento Inventário"] || "",
-        year: item["Ano"] || "",
-        center: item["Centro"] || "",
-        storage: item["Depósito"] || "",
-        batch: item["Lote"] || "",
-        inventoryItem: item["Item Inventário"] || "",
+        inventoryDocument: item["INVENTÁRIO"] || "",
+        year: item["ANO"] || "",
+        center: item["CENTRO"] || "",
+        storage: item["DEPÓSITO"] || "",
+        batch: item["LOTE"] || "",
+        inventoryItem: item["ITEM"] || "",
+        code: item['MATERIAL']!,
+        description: item['DESCRIÇÃO']!,
+        expectedQuantity: formatQuantity(item['ESTOQUE'] || 0),
         unit: item["UN"] || "",
-        lock: item["Bloqueio"] || "",
-        completeDescription: item["Descrição Completa"] || "",
-        code: item['Material']!,
-        description: item['Texto Breve']!,
-        expectedLocation: item['Posição Depósito'] || '',
-        expectedQuantity: formatQuantity(item['Estoque Utilização Livre'] || 0),
+        averagePrice: item["PREÇO MÉDIO"] || "",
+        currency: item["MOEDA"] || "",
+        expectedLocation: item['POSIÇÃO NO DEPÓSITO'] || '',
       }));
 
     // Inicia transação
@@ -156,7 +156,7 @@ export const insertInventoryItem = async (
   const result = await executeQuery(
     `INSERT INTO inventory_items (
       inventory_id, inventoryDocument, year, center, storage, batch,
-      inventoryItem, unit, lock, completeDescription, code, description,
+      inventoryItem, unit, averagePrice, currency, code, description,
       expectedLocation, expectedQuantity, status
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`, // Status 0 = "Não realizado"
     [
@@ -168,8 +168,8 @@ export const insertInventoryItem = async (
       item.batch,
       item.inventoryItem,
       item.unit,
-      item.lock,
-      item.completeDescription,
+      item.averagePrice,
+      item.currency,
       item.code,
       item.description,
       item.expectedLocation,
@@ -217,7 +217,7 @@ export const fetchItemByCode = async (
   );
 };
 
-export const fetchItemsByInventoryId = async (inventoryId: number) : Promise<Item[]> => {
+export const fetchItemsByInventoryId = async (inventoryId: number): Promise<Item[]> => {
   return await fetchAll<Item>(
     `SELECT * FROM inventory_items WHERE inventory_id = ? ORDER BY code ASC;`,
     [inventoryId]
