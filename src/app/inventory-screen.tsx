@@ -6,7 +6,7 @@ import ItemDescription from "@/components/item-description";
 import { CustomModal } from "@/components/master/custom-modal";
 import NumericInput from "@/components/numeric-input";
 import QRCodeInput from "@/components/qrcode-input";
-import { ErrorModalProps, Inventory, Item, scanTypes } from "@/types/types";
+import { BatchOption, ErrorModalProps, Inventory, Item, scanTypes } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -52,15 +52,19 @@ export default function InventoryScreen() {
     const [currentCode, setCurrentCode] = useState("");
     const [showDescription, setShowDescription] = useState(false);
     const [currentInventory, setCurrentInventory] = useState<Inventory | null>();
-    const [description, setDescription] = useState<[string, status: 0 | 1]>(); //0-Ok 1-Error
+    const [description, setDescription] = useState<{ item: Partial<Item> | string, status: boolean }>({ item: "", status: false });
     const [userChoices, setUserChoices] = useState<{
         ignoreLocation?: boolean;
         ignoreQuantity?: boolean;
     }>({});
+    const [showBatchSelection, setShowBatchSelection] = useState(false);
+    const [batchOptions, setBatchOptions] = useState<BatchOption[]>([]);
+    const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
 
     useEffect(() => {
         getInventoryData()
         setIsLoading(false)
+        restartForm()
     }, [])
 
     useEffect(() => {
@@ -93,8 +97,10 @@ export default function InventoryScreen() {
 
     }
     const handleEndEditingCode = async (code: string) => {
-        setEmptyCodeError(false)
+        setEmptyCodeError(false);
         setShowDescription(false);
+        setSelectedBatch(null);
+
         if (code.trim() == "") {
             setCurrentCode("")
             setEmptyCodeError(true)
@@ -102,25 +108,59 @@ export default function InventoryScreen() {
         }
 
         setCurrentCode(code)
-        const res = await InventoryService.getItemByCode(Number(params.id), code)
+
+        if (currentInventory) {
+            const batches = await InventoryService.getBatchesForItem(
+                currentInventory.id,
+                code
+            );
+
+            if (batches.length > 1) {
+                getBatch(batches)
+                return
+            }
+        }
+        defineCurrentItem(code, false)
+    }
+
+    const getBatch = (batches: BatchOption[]) => {
+        setBatchOptions(batches);
+        setShowBatchSelection(true);
+    }
+
+    const defineCurrentItem = async (code: string, hasManyBatch: boolean) => {
+        let res
+        if (selectedBatch && hasManyBatch) {
+            res = await InventoryService.getItemByCodeAndBatch(Number(params.id), code, selectedBatch)
+        }
+        else {
+            res = await InventoryService.getItemByCode(Number(params.id), code)
+        }
+
         if (!res) {
-            setDescription(["Item não encontrado", 1]); // Force a red description
+            setDescription({ item: "Item não encontrado", status: false });
             setShowDescription(true);
-            setCurrentItem(undefined); // Clear the current item
+            setCurrentItem(undefined);
             return;
         }
+
         setCurrentItem(res);
-        getDescription(res.code);
+        setDescription({ item: res, status: true })
+        setShowDescription(true)
     }
-    const handleEndEditingLoc = (e: string) => {
+
+
+    const handleEndEditingLoc = async (loc: string) => {
         setEmptyLocError(false)
-        if (e.trim() == "") {
+        if (loc.trim() == "") {
             setCurrentLocation("")
             setEmptyLocError(true)
             return
         }
-        setCurrentLocation(e);
+
+        setCurrentLocation(loc);
     }
+
     const handleOnQuantityChange = (e: any) => {
         if (zeroQuantityError)
             setZeroQuantityError(false)
@@ -173,6 +213,12 @@ export default function InventoryScreen() {
                 setEmptyLocError(true)
             return
         }
+
+        if (batchOptions.length > 1 && !selectedBatch) {
+            setShowBatchSelection(true);
+            return;
+        }
+
         if (currentQuantity == 0) {
             setZeroQuantityError(true)
             return
@@ -236,6 +282,7 @@ export default function InventoryScreen() {
     const restartForm = () => {
         setCurrentItem(undefined);
         setShowDescription(false);
+        setSelectedBatch(null)
         setCurrentCode("")
         setCurrentLocation("")
         setUserChoices({});
@@ -328,14 +375,7 @@ export default function InventoryScreen() {
 
 
     }
-    const getDescription = async (item: string): Promise<boolean> => {
-        const res = await InventoryService.getItemDescriptionByCode(Number(params.id), item)
-        if (res == null)
-            return false
-        setDescription([res, 0])
-        setShowDescription(true)
-        return true
-    }
+
     const getInventoryData = async () => {
         const res = await InventoryService.getInventory(Number(params.id))
         setCurrentInventory(res)
@@ -376,8 +416,8 @@ export default function InventoryScreen() {
 
                         <QRCodeInput error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
 
-                        {showDescription && description &&
-                            <ItemDescription status={description[1]} description={description[0]} ></ItemDescription>
+                        {showDescription &&
+                            <ItemDescription status={description.status} data={description.item} ></ItemDescription>
                         }
 
                         <QRCodeInput error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Localização *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
@@ -537,7 +577,47 @@ export default function InventoryScreen() {
                     </View>
                 </CustomModal>
 
+
             }
+
+            <CustomModal
+                onClose={() => setShowBatchSelection(false)}
+                title="Selecione o Lote"
+                visible={showBatchSelection}
+            >
+
+                <ScrollView style={{ maxHeight: 300 }}>
+                    {batchOptions.map((batch) => (
+                        <TouchableOpacity
+                            key={batch.batch}
+                            style={[
+                                styles.batchOption,
+                                selectedBatch === batch.batch && styles.selectedBatchOption
+                            ]}
+                            onPress={() => setSelectedBatch(batch.batch)}
+                        >
+                            <Text style={styles.batchText}>Lote: {batch.batch}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+
+                <View style={{ marginTop: 20 }}>
+                    <ButtonWithIcon
+                        color="#5A7BA1"
+                        icon="checkmark-outline"
+                        label="Confirmar Lote"
+                        onPress={() => {
+                            if (!selectedBatch) {
+                                Alert.alert("Atenção", "Por favor, selecione um lote");
+                                return;
+                            }
+                            defineCurrentItem(currentCode, true)
+                            setShowBatchSelection(false);
+                        }}
+                    />
+                </View>
+            </CustomModal>
+
         </DrawerLayoutAndroid>
     )
 }
@@ -632,6 +712,26 @@ const styles = StyleSheet.create({
         color: "rgba(255, 255, 255, 0.75)",
         fontWeight: "500",
         fontSize: 14
-    }
+    },
+    batchOption: {
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#5A7BA1',
+        borderRadius: 8,
+        backgroundColor: '#849BBD',
+        marginBottom: 8,
+    },
+    selectedBatchOption: {
+        borderColor: '#3B5275',
+        backgroundColor: '#3B5275',
+    },
+    batchText: {
+        color: 'white',
+        fontSize: 16,
+    },
+    batchLabel: {
+        fontWeight: 'bold',
+        color: '#CBD5E1',
+    },
 
 });

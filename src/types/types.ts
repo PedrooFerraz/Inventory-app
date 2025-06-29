@@ -76,4 +76,9 @@ export interface fileInfo {
   uri: string
 }
 
+export interface BatchOption {
+  batch: string;
+  id: number;
+}
+
 export type scanTypes = "C" | "L" //C- Código Material; L- Localização

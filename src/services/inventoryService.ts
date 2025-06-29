@@ -1,15 +1,15 @@
-import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemById, fetchItemsByInventoryId, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount } from "@/models/inventory";
+import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemByCodeAndBatch, fetchItemById, fetchItemsByInventoryId, getBatchesForItem, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount } from "@/models/inventory";
 import { Item, Inventory } from "@/types/types";
 
 export const InventoryService = {
-    async getItemDescriptionByCode(inventoryId: number, code: string): Promise<string> {
+    async getItemDescriptionByCode(inventoryId: number, code: string): Promise<Item> {
 
         const res = await fetchDescriptionByCode(inventoryId, code)
 
         if (!res)
             throw new Error("Cant find any desciption for this code, try again later")
 
-        return res[0].description
+        return res[0]
 
     },
 
@@ -34,6 +34,17 @@ export const InventoryService = {
     async getItemByCode(inventoryId: number, code: string): Promise<Item> {
 
         const res = await fetchItemByCode(inventoryId, code)
+
+        if (!res)
+            throw new Error("Cant find any Item with this code, try again later")
+
+        return res[0];
+    },
+
+    
+    async getItemByCodeAndBatch(inventoryId: number, code: string, batch: string): Promise<Item> {
+
+        const res = await fetchItemByCodeAndBatch(inventoryId, code, batch)
 
         if (!res)
             throw new Error("Cant find any Item with this code, try again later")
@@ -192,6 +203,14 @@ export const InventoryService = {
         } catch (e: any) {
             return { success: false, message: "An error occurred while finalizing the inventory" }
         }
+    },
+
+    async getBatchesForItem(
+        inventoryId: number,
+        materialCode: string
+    ) {
+        const batches = await getBatchesForItem(inventoryId, materialCode)
+        return batches
     }
 
 }

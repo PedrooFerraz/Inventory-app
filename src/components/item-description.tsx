@@ -1,24 +1,31 @@
+import { Item } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-export default function ItemDescription({ description, status }: { description: string, status: 0 | 1 }) {
+export default function ItemDescription({ data, status }: { data: Partial<Item> | string, status: boolean }) {
 
-    if (status == 0) {
+    if (status && typeof (data) != "string") {
         return (
             <View style={styles.descriptionArea}>
                 <View style={{ width: 30, height: 30, backgroundColor: "#1A3266", borderRadius: "50%", justifyContent: "center", alignItems: "center" }}>
                     <Ionicons name="cube-outline" size={18} color={"#60A5FA"} />
                 </View>
-                <View style={{ flexDirection: "column", width: "100%" }}>
-                    <Text style={styles.descriptionTitle}>Descrição</Text>
-                    <Text style={styles.description}>
-                        {description}
+                <View style={{ flexDirection: "column", width: "100%", gap: 4 }}>
+                    <Text style={styles.descriptionTitle}>Informações do Material</Text>
+                    <Text style={styles.data}>
+                        Descrição: {data.description}
+                    </Text>
+                    <Text style={styles.data}>
+                        Lote: {data.batch}
+                    </Text>
+                    <Text style={styles.data}>
+                        Unidade: {data.unit}
                     </Text>
                 </View>
             </View>
         )
     }
-    else if (status == 1) {
+    else if (!status && typeof (data) == "string") {
         return (
             <View style={{
                 borderWidth: 1,
@@ -38,8 +45,8 @@ export default function ItemDescription({ description, status }: { description: 
                         fontSize: 14,
                         color: "#fa6060"
                     }}>Erro</Text>
-                    <Text style={styles.description}>
-                        {description}
+                    <Text style={styles.data}>
+                        {data}
                     </Text>
                 </View>
             </View>
@@ -55,7 +62,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#60a5fa"
     },
-    description: {
+    data: {
         color: "white",
         fontSize: 14,
         flexWrap: "wrap",

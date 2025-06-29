@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system';
 import * as Papa from 'papaparse';
 import { executeQuery, fetchAll } from '@/services/database';
-import { Inventory, CSVParseResult, Item, ImportedInventoryItem } from '@/types/types';
+import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption } from '@/types/types';
 
 
 export const insertInventory = async (fileUri: string, fileName: string) => {
@@ -24,7 +24,7 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
 
     // Processamento dos itens
     const items: ImportedInventoryItem[] = parseResult.data
-      .filter(item => item['MATERIAL'] && item['MATERIAL'].trim() !== '' && item['MATERIAL'] !== "MATERIAL")
+      .filter(item => item['MATERIAL'] && item['MATERIAL'].trim() != '' && item['MATERIAL'] != "MATERIAL")
       .map(item => ({
         inventoryDocument: item["INVENTÁRIO"] || "",
         year: item["ANO"] || "",
@@ -225,6 +225,17 @@ export const fetchItemByCode = async (
   );
 };
 
+export const fetchItemByCodeAndBatch = async (
+  inventoryId: number,
+  materialCode: string,
+  batch: string
+): Promise<Item[]> => {
+  return await fetchAll<Item>(
+    `SELECT * FROM inventory_items WHERE inventory_id = ? AND code = ? AND batch = ? LIMIT 1;`,
+    [inventoryId, materialCode, batch]
+  );
+};
+
 export const fetchItemsByInventoryId = async (inventoryId: number): Promise<Item[]> => {
   return await fetchAll<Item>(
     `SELECT * FROM inventory_items WHERE inventory_id = ? ORDER BY code ASC;`,
@@ -240,7 +251,7 @@ export const fetchItemById = async (inventoryId: number, itemId: number) => {
 
 export const fetchDescriptionByCode = async (inventoryId: number, code: string) => {
   const res = await fetchAll<Item>(
-    `SELECT description FROM inventory_items WHERE inventory_id = ? AND code = ? LIMIT 1;`,
+    `SELECT description, batch, unit FROM inventory_items WHERE inventory_id = ? AND code = ? LIMIT 1;`,
     [inventoryId, code]
   )
   return res
@@ -268,3 +279,26 @@ const formatQuantity = (value: string | number): number => {
 
   return Math.floor(parseFloat(numericString));
 };
+
+export const getBatchesForItem = async(
+    inventoryId: number,
+    materialCode: string
+): Promise<BatchOption[]> =>{
+    try {
+        const query = `
+            SELECT batch
+            FROM inventory_items 
+            WHERE 
+                inventory_id = ? AND 
+                code = ? AND
+                status IN (0, 1)
+            ORDER BY batch
+        `;
+        
+        const result = await fetchAll<BatchOption>(query, [inventoryId, materialCode]);
+        return result;
+    } catch (error) {
+        console.error("Error fetching batches:", error);
+        return [];
+    }
+}
