@@ -15,7 +15,7 @@ import SelectInventoryCard from '@/components/inventory/select-inventory-card';
 import { CustomModal } from '@/components/master/custom-modal';
 import ButtonWithIcon from '@/components/button-with-icon';
 import { deleteInventory, fetchItemsByInventoryId } from '@/models/inventory';
-import { exportInventoryToExcel } from '@/services/xlsxService';
+import { exportInventoryToExcel, exportSurplusMaterialToExcel } from '@/services/xlsxService';
 
 const InventorySelectionScreen = () => {
 
@@ -42,6 +42,15 @@ const InventorySelectionScreen = () => {
             await fetchItemsByInventoryId(selectedInventory)
                 .then(res => {
                     exportInventoryToExcel(res)
+                })
+
+    }
+    const handleExportSurplusMaterial = async () => {
+
+        if (selectedInventory)
+            await fetchItemsByInventoryId(selectedInventory)
+                .then(res => {
+                    exportSurplusMaterialToExcel(res)
                 })
 
     }
@@ -127,6 +136,7 @@ const InventorySelectionScreen = () => {
             <CustomModal onClose={handleCloseModal} visible={showModal} showCloseButton title='Gerenciar Inventario'>
                 <View style={{ gap: 20 }}>
                     <ButtonWithIcon color={"#5A7BA1"} icon={"download-outline"} onPress={handleExport} label='Exportar Inventario'></ButtonWithIcon>
+                    <ButtonWithIcon color={"#5A7BA1"} icon={"download-outline"} onPress={handleExportSurplusMaterial} label='Exportar Materiais Excedentes'></ButtonWithIcon>
                     <ButtonWithIcon color={"#7F95B9"} icon={"trash-outline"} onPress={handleDelete} label='Exluir Inventario'></ButtonWithIcon>
                 </View>
             </CustomModal>
