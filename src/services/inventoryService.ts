@@ -22,12 +22,12 @@ export const InventoryService = {
         return res
     },
 
-    async getInventoryNumber(id: number): Promise<{success: boolean, inventoryNumber: string}> {
-        try{
-        const res = await fetchItemsByInventoryId(id)
-        return {success: true, inventoryNumber: res[0].inventoryDocument}
-        }catch(e : any){
-            return {success: false, inventoryNumber: "Undefined"}
+    async getInventoryNumber(id: number): Promise<{ success: boolean, inventoryNumber: string }> {
+        try {
+            const res = await fetchItemsByInventoryId(id)
+            return { success: true, inventoryNumber: res[0].inventoryDocument }
+        } catch (e: any) {
+            return { success: false, inventoryNumber: "Undefined" }
         }
     },
 
@@ -131,6 +131,7 @@ export const InventoryService = {
             await insertNewInventoryItem(inventoryId, newValue);
             await updateInventoryTotalItems(inventoryId, updateTotal)
             await updateInventoryCountedItems(inventoryId, updatedCount);
+            await updateInventoryStatus(inventoryId, 1);
 
             return { success: true, message: "Item accounted for successfully" }
         } catch (error) {

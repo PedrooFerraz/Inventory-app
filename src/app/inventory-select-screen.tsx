@@ -3,7 +3,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { Inventory } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -12,12 +12,35 @@ import {
     TouchableOpacity,
 } from 'react-native';
 
-export default function InventorySelectionScreen(){
-    
+export default function InventorySelectionScreen() {
+
     const { openInventories } = useDatabase()
     const params = useLocalSearchParams();
+    const [filter, setFilter] = useState<0 | 1 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
 
-    const handleSelect = (id: number) =>{
+    const filteredInventories = openInventories.filter(openInventories => {
+        if (filter === 3) return true;
+        return openInventories.status === filter;
+    });
+
+    const FilterButton = ({ status, label }: { status: 0 | 1 | 3, label: string }) => (
+        <TouchableOpacity
+            style={[
+                styles.filterButton,
+                filter === status && styles.activeFilter
+            ]}
+            onPress={() => setFilter(status)}
+        >
+            <Text style={[
+                styles.filterButtonText,
+                filter === status && styles.activeFilterText
+            ]}>
+                {label}
+            </Text>
+        </TouchableOpacity>
+    );
+
+    const handleSelect = (id: number) => {
         router.navigate(`/inventory-screen?id=${id}&operator=${params.operator}`)
     }
 
@@ -41,9 +64,15 @@ export default function InventorySelectionScreen(){
                 </View>
             </View>
 
+            <View style={styles.filterContainer}>
+                <FilterButton status={3} label="Todos" />
+                <FilterButton status={0} label="Abertos" />
+                <FilterButton status={1} label="Em Andamento" />
+            </View>
+
             <View style={styles.content}>
                 <FlatList
-                    data={openInventories}
+                    data={filteredInventories}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderInventarioItem}
                     showsVerticalScrollIndicator={false}
@@ -88,101 +117,34 @@ const styles = StyleSheet.create({
     listContainer: {
         paddingVertical: 20,
     },
-    inventarioCard: {
-        borderRadius: 12,
-        padding: 20,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#263346',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-    },
-    cardHeader: {
+    filterContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
+        justifyContent: 'space-around',
+        paddingVertical: 10,
+        backgroundColor: '#3A5073',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     },
-    iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+    filterButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 20,
     },
-    cardContent: {
-        flex: 1,
+    filterButtonText: {
+        color: '#CBD5E1',
+        fontWeight: '500',
     },
-    inventarioNome: {
+    activeFilter: {
+        backgroundColor: '#607EA8',
+    },
+    activeFilterText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+    },
+    emptyText: {
+        color: '#CBD5E1',
+        textAlign: 'center',
+        marginTop: 20,
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#FFF',
-        marginBottom: 4,
-    },
-    inventarioDescricao: {
-        fontSize: 14,
-        color: '#94A3B8',
-    },
-    cardDetails: {
-        gap: 12,
-    },
-    statusContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    statusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: 8,
-    },
-    statusText: {
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    detailsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    detailItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    detailText: {
-        fontSize: 12,
-        color: '#94A3B8',
-        marginLeft: 4,
-    },
-    progressContainer: {
-        gap: 6,
-    },
-    progressHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    progressLabel: {
-        fontSize: 12,
-        color: '#94A3B8',
-        fontWeight: '500',
-    },
-    progressPercentage: {
-        fontSize: 12,
-        color: '#079C6D',
-        fontWeight: 'bold',
-    },
-    progressText: {
-        fontSize: 11,
-        color: '#64748B',
     },
 });

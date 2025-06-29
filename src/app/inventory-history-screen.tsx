@@ -22,12 +22,17 @@ const InventorySelectionScreen = () => {
     const { inventories, refresh } = useDatabase();
     const [showModal, setShowModal] = useState(false)
     const [selectedInventory, setSelectedInventory] = useState<number>()
+    const [filter, setFilter] = useState<0 | 1 | 2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
+
+    const filteredInventories = inventories.filter(inventory => {
+        if (filter === 3) return true;
+        return inventory.status === filter;
+    });
 
     const handleClick = async (id: number) => {
         setSelectedInventory(id)
         setShowModal(true)
     }
-
     const handleCloseModal = () => {
         setShowModal(false)
     }
@@ -67,7 +72,22 @@ const InventorySelectionScreen = () => {
         );
     }
 
-
+    const FilterButton = ({ status, label }: { status: 0 | 1 | 2 | 3, label: string }) => (
+        <TouchableOpacity
+            style={[
+                styles.filterButton,
+                filter === status && styles.activeFilter
+            ]}
+            onPress={() => setFilter(status)}
+        >
+            <Text style={[
+                styles.filterButtonText,
+                filter === status && styles.activeFilterText
+            ]}>
+                {label}
+            </Text>
+        </TouchableOpacity>
+    );
 
     const renderInventarioItem = ({ item }: { item: Inventory }) => (
         <SelectInventoryCard item={item} onPress={handleClick}></SelectInventoryCard>
@@ -87,9 +107,16 @@ const InventorySelectionScreen = () => {
                 </View>
             </View>
 
+            <View style={styles.filterContainer}>
+                <FilterButton status={3} label="Todos" />
+                <FilterButton status={0} label="Abertos" />
+                <FilterButton status={1} label="Em Andamento" />
+                <FilterButton status={2} label="Fechados" />
+            </View>
+
             <View style={styles.content}>
                 <FlatList
-                    data={inventories}
+                    data={filteredInventories}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderInventarioItem}
                     showsVerticalScrollIndicator={false}
@@ -140,6 +167,36 @@ const styles = StyleSheet.create({
     },
     listContainer: {
         paddingVertical: 20,
+    },
+    filterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 10,
+        backgroundColor: '#3A5073',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    filterButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+    },
+    filterButtonText: {
+        color: '#CBD5E1',
+        fontWeight: '500',
+    },
+    activeFilter: {
+        backgroundColor: '#607EA8',
+    },
+    activeFilterText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+    },
+    emptyText: {
+        color: '#CBD5E1',
+        textAlign: 'center',
+        marginTop: 20,
+        fontSize: 16,
     },
 
 });
