@@ -41,10 +41,22 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
         expectedLocation: item['POSIÇÃO NO DEPÓSITO'] || '',
       }));
 
-    // Inicia transação
     await executeQuery('BEGIN TRANSACTION');
 
-    // Insere cabeçalho do inventário
+    if (items.length > 0) {
+      const existingInventory = await fetchAll<Inventory>(
+        `SELECT i.* FROM inventories i
+         JOIN inventory_items ii ON i.id = ii.inventory_id
+         WHERE ii.inventoryDocument = ? AND ii.year = ?
+         LIMIT 1;`,
+        [items[0].inventoryDocument, items[0].year]
+      );
+
+      if (existingInventory.length > 0) {
+        throw new Error(`Já existe um inventário com o documento ${items[0].inventoryDocument} no ano ${items[0].year}`);
+      }
+    }
+
     const result = await executeQuery(
       `INSERT INTO inventories 
       (fileName, fileUri, importDate, totalItems, inventoryDocument) 
@@ -54,17 +66,13 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
 
     const inventoryId = result.lastInsertRowId!;
 
-    // Insere itens em lotes
     await insertItemsInBatches(inventoryId, items);
 
-    // Finaliza com sucesso
     await executeQuery('COMMIT');
     return { success: true, inventoryId };
 
   } catch (error) {
-    // Tratamento de erro
     await executeQuery('ROLLBACK');
-    console.error('Erro na importação:', error);
     throw error;
   }
 };

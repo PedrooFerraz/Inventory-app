@@ -8,11 +8,12 @@ import FileInfoAfter from "@/components/master/import-sheet/file-info-after";
 import ButtonWithIcon from "@/components/button-with-icon";
 import FileInfoBefore from "@/components/master/import-sheet/file-info-before";
 import { View, StyleSheet, Text, ScrollView, ActivityIndicator } from "react-native"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Loading from "@/components/master/import-sheet/loading-preview";
 import { insertInventory } from "@/models/inventory";
 import { exportModelSheet } from "@/services/xlsxService";
 import { fileInfo } from "@/types/types";
+import { CustomModal } from "@/components/master/custom-modal";
 
 export interface dataPreview {
   qty: number,
@@ -28,6 +29,10 @@ export default function ImportScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [dataPreview, setDataPreview] = useState<dataPreview>()
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<{ message: string, visible: boolean }>({ message: "", visible: false })
+
+  useEffect(() => {
+  }, [error])
 
   const getDoc = async () => {
     try {
@@ -100,12 +105,21 @@ export default function ImportScreen() {
 
     setSaving(true);
 
-    for (const file of fileInfoList) {
-      await insertInventory(file.uri, file.name);
+    try {
+      for (const file of fileInfoList) {
+        await insertInventory(file.uri, file.name);
+      }
+      setSaving(false);
+      router.navigate("/master-acess-screen");
+    }
+    catch (e: any) {
+      setSaving(false)
+      setError({
+        message: e.message || "Erro desconhecido ao importar inventário",
+        visible: true
+      });
     }
 
-    setSaving(false);
-    router.navigate("/master-acess-screen");
   };
 
   const handleDowloadModel = async () => {
@@ -126,6 +140,18 @@ export default function ImportScreen() {
       </View>
 
       <ScrollView>
+
+        {
+          error.visible &&
+          <CustomModal onClose={() => setError({ message: "", visible: false })} title="Error" visible={error.visible} showCloseButton >
+            <View style={{gap: 14}}>
+              <Text style={styles.errorMessage}>
+                {error.message}
+              </Text>
+              <ButtonWithIcon color={"#5A7BA1"} icon={"return-down-back-outline"} label="Retornar" onPress={()=>{setError({ message: "", visible: false })}}></ButtonWithIcon>
+            </View>
+          </CustomModal>
+        }
 
         <View style={styles.content}>
 
@@ -237,6 +263,11 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.85)",
     fontSize: 14,
     textAlign: "center"
+  },
+  errorMessage: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "500"
   }
 
 })

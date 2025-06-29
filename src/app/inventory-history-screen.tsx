@@ -16,7 +16,6 @@ import { CustomModal } from '@/components/master/custom-modal';
 import ButtonWithIcon from '@/components/button-with-icon';
 import { deleteInventory, fetchItemsByInventoryId } from '@/models/inventory';
 import { exportInventoryToExcel } from '@/services/xlsxService';
-import { InventoryService } from '@/services/inventoryService';
 
 const InventorySelectionScreen = () => {
 
