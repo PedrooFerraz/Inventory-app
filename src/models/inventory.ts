@@ -164,9 +164,9 @@ export const insertInventoryItem = async (
   const result = await executeQuery(
     `INSERT INTO inventory_items (
       inventory_id, inventoryDocument, year, center, storage, batch,
-      inventoryItem, unit, averagePrice, currency, code, description,
+      inventoryItem, unit, averagePrice, code, description,
       expectedLocation, expectedQuantity, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`, // Status 0 = "Não realizado"
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`, // Status 0 = "Não realizado"
     [
       inventoryId,
       item.inventoryDocument,
@@ -177,7 +177,6 @@ export const insertInventoryItem = async (
       item.inventoryItem,
       item.unit,
       item.averagePrice,
-      item.currency,
       item.code,
       item.description,
       item.expectedLocation,

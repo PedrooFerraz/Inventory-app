@@ -148,13 +148,12 @@ export async function exportModelSheet() {
             {"ESTOQUE": ""},
             {"UN": ""},
             {"PREÇO MÉDIO": ""},
-            {"MOEDA": ""},
             {"POSIÇÃO NO DEPÓSITO": ""},
         ]
         // 2 Cria a planilha
         const ws = XLSX.utils.json_to_sheet(modelSheet);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Planilha Modelo");
+        XLSX.utils.book_append_sheet(wb, ws, "Planilha Modelo", );
 
         // 3 Gera o arquivo
         const wbout = XLSX.write(wb, {

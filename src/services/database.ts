@@ -62,8 +62,7 @@ const initDB = async (database: SQLiteDatabase) => {
     description TEXT,
     expectedQuantity INTEGER,
     unit TEXT,
-    averagePrice TEXT,
-    currency TEXT,
+    averagePrice TEXT
     expectedLocation TEXT,
     reportedLocation TEXT,
     reportedQuantity INTEGER,
