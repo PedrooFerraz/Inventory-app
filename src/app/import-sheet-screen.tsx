@@ -81,14 +81,16 @@ export default function ImportScreen() {
     setShowPreview(true)
     setIsLoading(true)
     let totalRows = 0;
+    let uniqueLocs = 0;
 
     for (const info of infos) {
       const res = await generateCSVPreview(info);
       totalRows += res.totalRows;
+      uniqueLocs += res.uniqueLocations;
 
       setIsLoading(false);
       const preview: dataPreview = {
-        localizations: res.uniqueLocations,
+        localizations: uniqueLocs,
         qty: totalRows,
         fileQuantity: infos.length
       };
@@ -114,6 +116,7 @@ export default function ImportScreen() {
     }
     catch (e: any) {
       setSaving(false)
+      handleSelectOtherDocument()
       setError({
         message: e.message || "Erro desconhecido ao importar inventário",
         visible: true

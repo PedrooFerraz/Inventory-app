@@ -128,7 +128,7 @@ export default function MasterAcessScreen() {
                             + Adicionar Novo Membro
                         </Text>
                     </TouchableOpacity>
-                    {operators.length == 0 ? "" :
+                    {operators.length === 0 ? "" :
                         <Text style={{
                             marginBottom: 15,
                             fontSize: 18,

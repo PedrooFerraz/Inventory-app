@@ -81,13 +81,13 @@ export default function InventoryScreen() {
         setShowCamera(!showCamera)
     }
     const onScan = (e: any) => {
-        if (scanInputTarget == "C" && e.data != undefined) {
+        if (scanInputTarget === "C" && e.data !== undefined) {
             handleEndEditingCode(e.data)
             qrCodeInputRefCode.current?.setValue(e.data);
         }
 
 
-        if (scanInputTarget == "L" && e.data != undefined) {
+        if (scanInputTarget === "L" && e.data !== undefined) {
             handleEndEditingLoc(e.data)
             qrCodeInputRefLoc.current?.setValue(e.data);
         }
@@ -101,7 +101,7 @@ export default function InventoryScreen() {
         setShowDescription(false);
         setSelectedBatch(null);
 
-        if (code.trim() == "") {
+        if (code.trim() === "") {
             setCurrentCode("")
             setEmptyCodeError(true)
             return
@@ -152,7 +152,7 @@ export default function InventoryScreen() {
 
     const handleEndEditingLoc = async (loc: string) => {
         setEmptyLocError(false)
-        if (loc.trim() == "") {
+        if (loc.trim() === "") {
             setCurrentLocation("")
             setEmptyLocError(true)
             return
@@ -206,10 +206,10 @@ export default function InventoryScreen() {
     }
     const handleSubmit = async () => {
 
-        if (currentCode.trim() == "" || currentLocation.trim() == "") {
-            if (!emptyCodeError && currentCode.trim() == "")
+        if (currentCode.trim() === "" || currentLocation.trim() === "") {
+            if (!emptyCodeError && currentCode.trim() === "")
                 setEmptyCodeError(true)
-            if (!emptyLocError && currentLocation.trim() == "")
+            if (!emptyLocError && currentLocation.trim() === "")
                 setEmptyLocError(true)
             return
         }
@@ -219,7 +219,7 @@ export default function InventoryScreen() {
             return;
         }
 
-        if (currentQuantity == 0) {
+        if (currentQuantity === 0) {
             setZeroQuantityError(true)
             return
         }
@@ -246,7 +246,7 @@ export default function InventoryScreen() {
         if (currentInventory) {
             diff = currentInventory?.totalItems - currentInventory?.countedItems;
 
-            if (diff == 0) {
+            if (diff === 0) {
                 handleCustomModal({
                     title: "Atanção",
                     message: "Realmente deseja finalizar o inventário? Após finalizar você não poderá mais adicionar novos registros",
@@ -315,7 +315,7 @@ export default function InventoryScreen() {
         }
         const res = await InventoryService.updateItem(currentItem.id, currentInventory.id, updatedItem)
 
-        if (res == "Item has already been accounted for") {
+        if (res === "Item has already been accounted for") {
             handleCustomModal(
                 {
                     title: "Error",

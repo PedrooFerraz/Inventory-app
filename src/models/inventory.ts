@@ -24,7 +24,7 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
 
     // Processamento dos itens
     const items: ImportedInventoryItem[] = parseResult.data
-      .filter(item => item['MATERIAL'] && item['MATERIAL'].trim() != '' && item['MATERIAL'] != "MATERIAL")
+      .filter(item => item['MATERIAL'] && item['MATERIAL'].trim() !== '' && item['MATERIAL'] !== "MATERIAL")
       .map(item => ({
         inventoryDocument: item["INVENTÁRIO"] || "",
         year: item["ANO"] || "",
@@ -53,7 +53,7 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
       );
 
       if (existingInventory.length > 0) {
-        throw new Error(`Já existe um inventário com o documento ${items[0].inventoryDocument} no ano ${items[0].year}`);
+        throw new Error(`Inventário com o documento ${items[0].inventoryDocument} no ano ${items[0].year} já foi inserido`);
       }
     }
 
@@ -279,25 +279,24 @@ const formatQuantity = (value: string | number): number => {
   return Math.floor(parseFloat(numericString));
 };
 
-export const getBatchesForItem = async(
-    inventoryId: number,
-    materialCode: string
-): Promise<BatchOption[]> =>{
-    try {
-        const query = `
+export const getBatchesForItem = async (
+  inventoryId: number,
+  materialCode: string
+): Promise<BatchOption[]> => {
+  try {
+    const query = `
             SELECT batch
             FROM inventory_items 
             WHERE 
                 inventory_id = ? AND 
-                code = ? AND
-                status IN (0, 1)
+                code = ?
             ORDER BY batch
         `;
-        
-        const result = await fetchAll<BatchOption>(query, [inventoryId, materialCode]);
-        return result;
-    } catch (error) {
-        console.error("Error fetching batches:", error);
-        return [];
-    }
+
+    const result = await fetchAll<BatchOption>(query, [inventoryId, materialCode]);
+    return result;
+  } catch (error) {
+    console.error("Error fetching batches:", error);
+    return [];
+  }
 }

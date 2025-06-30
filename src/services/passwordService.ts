@@ -5,7 +5,7 @@ export const hasMasterPassword = async () => {
   const result = await fetchAll<{master_password: string}>(
     'SELECT master_password FROM app_config LIMIT 1'
   );
-  if(result.length == 0){
+  if(result.length === 0){
     return false;
   }
   return result[0].master_password !== null;

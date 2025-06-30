@@ -4,7 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function FileInfoAfter({ data, otherDocument }: { data: fileInfo[], otherDocument: any }) {
 
-    if (data.length == 1) {
+    if (data.length === 1) {
         return (
             <View style={styles.fileInfo}>
                 <View style={styles.fileInfoTitleArea}>

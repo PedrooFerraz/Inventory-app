@@ -11,7 +11,7 @@ export async function exportInventoryToExcel(inventoryData: any[]) {
 
         // 1 Formata os dados para exportação
         const formattedData = inventoryData
-            .filter(item => item.status != 5)
+            .filter(item => item.status !== 5)
             .map(item => ({
             'INVENTÁRIO': item.inventoryDocument || '',
             'ANO': item.year || '',
@@ -67,7 +67,7 @@ export async function exportSurplusMaterialToExcel(inventoryData: any[]) {
 
         // 1 Formata os dados para exportação
         const formattedData = inventoryData
-            .filter(item => item.status == 5)
+            .filter(item => item.status === 5)
             .map(item => ({
             'INVENTÁRIO': item.inventoryDocument || '',
             'ANO': item.year || '',
@@ -118,7 +118,7 @@ export async function exportSurplusMaterialToExcel(inventoryData: any[]) {
 
 export function getOperatorName(operators: Operator[], id: string) {
     try {
-        const op = operators.filter(o => o.id == Number(id))
+        const op = operators.filter(o => o.id === Number(id))
         return op[0].name
     } catch {
         return ""
@@ -127,7 +127,7 @@ export function getOperatorName(operators: Operator[], id: string) {
 
 export function getOperatorCode(operators: Operator[], id: string) {
     try {
-        const op = operators.filter(o => o.id == Number(id))
+        const op = operators.filter(o => o.id === Number(id))
         return op[0].code
     } catch {
         return ""

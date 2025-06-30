@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function NumericInput({ error, onChange, ref }: { error: boolean, onChange: (e: string) => any, ref: any }) {
@@ -6,8 +6,6 @@ export default function NumericInput({ error, onChange, ref }: { error: boolean,
     const [qtyInput, onChangeQty] = useState('0');
     const [disabled, setDisabled] = useState(false)
     const [color, setColor] = useState<"#fa6060" | "#79859B">()
-
-    const inputRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
         clearInput: () => {
@@ -17,7 +15,7 @@ export default function NumericInput({ error, onChange, ref }: { error: boolean,
 
     useEffect(() => {
         onChange(qtyInput)
-        if (qtyInput == "0")
+        if (qtyInput === "0")
             setDisabled(true)
         else
             setDisabled(false)
@@ -66,11 +64,11 @@ export default function NumericInput({ error, onChange, ref }: { error: boolean,
                     onChangeText={(text) => { onChanged(text) }}
                     value={qtyInput}
                     onEndEditing={() => {
-                        if (qtyInput == "")
+                        if (qtyInput === "")
                             onChangeQty("0")
                     }}
                     onFocus={() => {
-                        if (qtyInput == "0") {
+                        if (qtyInput === "0") {
                             onChangeQty("")
                         }
                     }}

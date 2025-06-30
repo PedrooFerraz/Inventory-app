@@ -26,7 +26,7 @@ export const InventoryService = {
         try {
             const res = await fetchItemsByInventoryId(id)
             return { success: true, inventoryNumber: res[0].inventoryDocument }
-        } catch (e: any) {
+        } catch {
             return { success: false, inventoryNumber: "Undefined" }
         }
     },
@@ -78,7 +78,7 @@ export const InventoryService = {
         if (!inventory) {
             return "Inventory not found"
         }
-        if (inventory.status == 2) {
+        if (inventory.status === 2) {
             return "Inventory has already been completed"
         }
 
@@ -119,7 +119,7 @@ export const InventoryService = {
         if (!inventory) {
             return { success: false, message: "Inventory not found" }
         }
-        if (inventory.status == 2) {
+        if (inventory.status === 2) {
             return { success: false, message: "Inventory has already been completed" }
         }
         const updatedCount = inventory.countedItems + 1
@@ -145,7 +145,7 @@ export const InventoryService = {
             await updateInventoryStatus(inventoryId, 1);
 
             return { success: true, message: "Item accounted for successfully" }
-        } catch (error) {
+        } catch {
             return { success: false, message: "An error occurred while updating the item" }
         }
     },
@@ -165,7 +165,7 @@ export const InventoryService = {
         if (!inventory) {
             return { success: false, message: "Inventory not found" }
         }
-        if (inventory.status == 2) {
+        if (inventory.status === 2) {
             return { success: false, message: "Inventory has already been completed" }
         }
 
@@ -194,13 +194,13 @@ export const InventoryService = {
             return { success: false, message: "Inventory not found" }
         }
 
-        if (inventory.status == 2) {
+        if (inventory.status === 2) {
             return { success: false, message: "Inventory has already been completed" }
         }
         try {
             await updateInventoryStatus(inventoryId, 2);
             return { success: true, message: "Inventory finalized with success" }
-        } catch (e: any) {
+        } catch {
             return { success: false, message: "An error occurred while finalizing the inventory" }
         }
     },

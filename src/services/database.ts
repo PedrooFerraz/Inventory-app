@@ -10,7 +10,7 @@ export const getDatabase = async (): Promise<SQLiteDatabase> => {
   return dbInstance;
 };
 
-export const executeQuery = async <T>(sql: string, params: any[] = []): Promise<any> => {
+export const executeQuery = async (sql: string, params: any[] = []): Promise<any> => {
   try {
     const database = await getDatabase();
     return await database.runAsync(sql, params);
