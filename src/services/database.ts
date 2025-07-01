@@ -4,7 +4,7 @@ let dbInstance: SQLiteDatabase | null = null;
 
 export const getDatabase = async (): Promise<SQLiteDatabase> => {
   if (!dbInstance) {
-    dbInstance = await openDatabaseAsync('inventory.db', { useNewConnection: true });
+    dbInstance = await openDatabaseAsync('gmiinventory.db', { useNewConnection: true });
     await initDB(dbInstance);
   }
   return dbInstance;
@@ -62,7 +62,7 @@ const initDB = async (database: SQLiteDatabase) => {
     description TEXT,
     expectedQuantity INTEGER,
     unit TEXT,
-    averagePrice TEXT
+    averagePrice TEXT,
     expectedLocation TEXT,
     reportedLocation TEXT,
     reportedQuantity INTEGER,
