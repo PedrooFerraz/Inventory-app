@@ -4,14 +4,22 @@ import { executeQuery, fetchAll } from '@/services/database';
 import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption } from '@/types/types';
 
 
-export const insertInventory = async (fileUri: string, fileName: string) => {
+export const insertInventory = async (fileUri: string, fileName: string) : Promise<{
+  success: boolean;
+  inventories: Array<{
+    inventoryId: number;
+    document: string;
+    year: string;
+    itemCount: number;
+  }>;
+  message: string;
+}> => {
   try {
-    // Validação inicial do arquivo
+    // Validação do tamanho do arquivo pois a blib do expo so aceita até 6mb
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
     if (!fileInfo.exists) throw new Error('Arquivo não encontrado');
     if (fileInfo.size > 6 * 1024 * 1024) throw new Error('Arquivo muito grande (máximo 6MB)');
 
-    // Leitura e parse do CSV
     const fileContent = await FileSystem.readAsStringAsync(fileUri);
     const parseResult = await new Promise<CSVParseResult>((resolve, reject) => {
       Papa.parse(fileContent, {
@@ -41,38 +49,73 @@ export const insertInventory = async (fileUri: string, fileName: string) => {
         expectedLocation: item['POSIÇÃO NO DEPÓSITO'] || '',
       }));
 
+    if (items.length === 0) {
+      throw new Error('Nenhum item válido encontrado no arquivo');
+    }
+
     await executeQuery('BEGIN TRANSACTION');
 
-    if (items.length > 0) {
+    // Agrupar itens por inventoryDocument
+    const itemsByInventory = items.reduce((acc, item) => {
+      if (!acc[item.inventoryDocument]) {
+        acc[item.inventoryDocument] = [];
+      }
+      acc[item.inventoryDocument].push(item);
+      return acc;
+    }, {} as Record<string, ImportedInventoryItem[]>);
+
+    const inventoryResults = [];
+
+    // Processar cada grupo de inventário separadamente
+    for (const [inventoryDocument, documentItems] of Object.entries(itemsByInventory)) {
+      // Verificar se já existe inventário com este documento no mesmo ano
+      const year = documentItems[0].year;
       const existingInventory = await fetchAll<Inventory>(
         `SELECT i.* FROM inventories i
          JOIN inventory_items ii ON i.id = ii.inventory_id
          WHERE ii.inventoryDocument = ? AND ii.year = ?
          LIMIT 1;`,
-        [items[0].inventoryDocument, items[0].year]
+        [inventoryDocument, year]
       );
 
       if (existingInventory.length > 0) {
-        throw new Error(`Inventário com o documento ${items[0].inventoryDocument} no ano ${items[0].year} já foi inserido`);
+        throw new Error(`Inventário com o documento ${inventoryDocument} no ano ${year} já foi inserido`);
       }
+
+      // Criar novo inventário
+      const result = await executeQuery(
+        `INSERT INTO inventories 
+        (fileName, fileUri, importDate, totalItems, inventoryDocument) 
+        VALUES (?, ?, ?, ?, ?);`,
+        [fileName, fileUri, new Date().toLocaleDateString("pt-br"), documentItems.length, inventoryDocument]
+      );
+
+      const inventoryId = result.lastInsertRowId!;
+
+      // Inserir itens deste inventário
+      await insertItemsInBatches(inventoryId, documentItems);
+
+      inventoryResults.push({
+        inventoryId,
+        document: inventoryDocument,
+        year,
+        itemCount: documentItems.length
+      });
     }
 
-    const result = await executeQuery(
-      `INSERT INTO inventories 
-      (fileName, fileUri, importDate, totalItems, inventoryDocument) 
-      VALUES (?, ?, ?, ?, ?);`,
-      [fileName, fileUri, new Date().toLocaleDateString("pt-br"), items.length, items[0].inventoryDocument]
-    );
-
-    const inventoryId = result.lastInsertRowId!;
-
-    await insertItemsInBatches(inventoryId, items);
-
     await executeQuery('COMMIT');
-    return { success: true, inventoryId };
+
+    return {
+      success: true,
+      inventories: inventoryResults,
+      message: inventoryResults.length > 1
+        ? `Foram criados ${inventoryResults.length} inventários distintos`
+        : 'Inventário criado com sucesso'
+    };
 
   } catch (error) {
     await executeQuery('ROLLBACK');
+    console.error('Erro na importação:', error);
     throw error;
   }
 };

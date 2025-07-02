@@ -41,7 +41,7 @@ const initDB = async (database: SQLiteDatabase) => {
     CREATE TABLE IF NOT EXISTS inventories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       fileName TEXT NOT NULL,
-      fileUri TEXT NOT NULL UNIQUE,
+      fileUri TEXT NOT NULL,
       importDate TEXT NOT NULL,
       status INTEGER NOT NULL DEFAULT 0,
       totalItems INTEGER NOT NULL,
