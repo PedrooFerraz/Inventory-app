@@ -50,6 +50,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
                 </View>
                 <View style={styles.cardContent}>
                     <Text style={styles.inventarioNome}>Inventario: {item.inventoryDocument}</Text>
+                    <Text style={styles.inventarioNome}>Ano: {item.inventoryYear}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
             </View>

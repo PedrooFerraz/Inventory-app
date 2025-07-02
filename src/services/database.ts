@@ -4,7 +4,7 @@ let dbInstance: SQLiteDatabase | null = null;
 
 export const getDatabase = async (): Promise<SQLiteDatabase> => {
   if (!dbInstance) {
-    dbInstance = await openDatabaseAsync('gmiinventory.db', { useNewConnection: true });
+    dbInstance = await openDatabaseAsync('gmiinventorypro.db', { useNewConnection: true });
     await initDB(dbInstance);
   }
   return dbInstance;
@@ -31,7 +31,6 @@ export const fetchAll = async <T>(
 
 const initDB = async (database: SQLiteDatabase) => {
   await database.execAsync(`
-
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -43,6 +42,7 @@ const initDB = async (database: SQLiteDatabase) => {
       fileName TEXT NOT NULL,
       fileUri TEXT NOT NULL,
       importDate TEXT NOT NULL,
+      inventoryYear TEXT NOT NULL,
       status INTEGER NOT NULL DEFAULT 0,
       totalItems INTEGER NOT NULL,
       countedItems INTEGER DEFAULT 0,

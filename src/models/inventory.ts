@@ -85,9 +85,9 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
       // Criar novo inventário
       const result = await executeQuery(
         `INSERT INTO inventories 
-        (fileName, fileUri, importDate, totalItems, inventoryDocument) 
-        VALUES (?, ?, ?, ?, ?);`,
-        [fileName, fileUri, new Date().toLocaleDateString("pt-br"), documentItems.length, inventoryDocument]
+        (fileName, fileUri, importDate, inventoryYear, totalItems, inventoryDocument) 
+        VALUES (?, ?, ?, ?, ?, ?);`,
+        [fileName, fileUri, new Date().toLocaleDateString("pt-br"), year, documentItems.length, inventoryDocument]
       );
 
       const inventoryId = result.lastInsertRowId!;
@@ -115,7 +115,6 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
 
   } catch (error) {
     await executeQuery('ROLLBACK');
-    console.error('Erro na importação:', error);
     throw error;
   }
 };
