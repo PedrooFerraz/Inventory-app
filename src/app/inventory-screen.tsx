@@ -115,7 +115,15 @@ export default function InventoryScreen() {
                 code
             );
 
-            if (batches.length > 1) {
+            let batchQty = 0;
+
+            batches.forEach(batch => {
+                if(batch.batch !== ""){
+                    batchQty++;
+                }
+            });
+
+            if (batchQty > 1) {
                 getBatch(batches)
                 return
             }

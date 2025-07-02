@@ -15,9 +15,12 @@ export default function ItemDescription({ data, status }: { data: Partial<Item> 
                     <Text style={styles.data}>
                         Descrição: {data.description}
                     </Text>
-                    <Text style={styles.data}>
-                        Lote: {data.batch}
-                    </Text>
+                    {
+                        data.batch &&
+                        <Text style={styles.data}>
+                            Lote: {data.batch}
+                        </Text>
+                    }
                     <Text style={styles.data}>
                         Unidade: {data.unit}
                     </Text>
