@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { DrawerLayoutAndroid, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function DrawerMenu({ drawer }: { drawer: React.RefObject<DrawerLayoutAndroid | null> }) {
+export default function DrawerMenu({ drawer, finalizeInventoryFunction }: { drawer: React.RefObject<DrawerLayoutAndroid | null>, finalizeInventoryFunction: ()=>any }) {
     return (
         <View style={styles.navigationContainer}>
 
@@ -14,13 +14,15 @@ export default function DrawerMenu({ drawer }: { drawer: React.RefObject<DrawerL
             </View>
 
             <View>
-                <TouchableOpacity style={styles.menuButton} activeOpacity={0.5} onPress={()=>router.navigate("/")}>
-                    <Text style={{color:"white", fontSize: 14}}>Voltar para a Tela Inicial</Text>
+                <TouchableOpacity style={styles.menuButton} activeOpacity={0.5} onPress={() => router.navigate("/")}>
+                    <Text style={styles.buttonName}>Voltar para a Tela Inicial</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuButton} activeOpacity={0.5} onPress={() => {finalizeInventoryFunction()}}>
+                    <Text style={styles.buttonName}>Finalizar Contagem</Text>
                 </TouchableOpacity>
 
             </View>
-
-
 
         </View>
     )
@@ -49,5 +51,20 @@ const styles = StyleSheet.create({
         padding: 14,
         borderBottomWidth: 1,
         borderBottomColor: "#5B7295",
-    }
+    },
+    buttonName: {
+        fontSize: 16,
+        fontWeight: "500",
+        color: "white",
+    },
+    endButton: {
+        backgroundColor: "#8BA1C3",
+        padding: 12,
+        paddingHorizontal: 28,
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 10,
+        flexDirection: "row",
+        gap: 10
+    },
 })

@@ -12,8 +12,8 @@ export default function ItemDescription({ data, status }: { data: Partial<Item> 
                 </View>
                 <View style={{ flexDirection: "column", width: "100%", gap: 4 }}>
                     <Text style={styles.descriptionTitle}>Informações do Material</Text>
-                    <Text style={styles.data}>
-                        Descrição: {data.description}
+                    <Text style={styles.dataDescription}>
+                        {data.description}
                     </Text>
                     {
                         data.batch &&
@@ -62,14 +62,21 @@ const styles = StyleSheet.create({
 
     descriptionTitle: {
         fontWeight: "500",
-        fontSize: 14,
+        fontSize: 16,
         color: "#60a5fa"
     },
     data: {
         color: "white",
-        fontSize: 14,
+        fontSize: 16,
         flexWrap: "wrap",
         width: "85%"
+    },
+    dataDescription: {
+        color: "white",
+        fontSize: 16,
+        fontWeight: "600",
+        flexWrap: "wrap",
+        width: "86%"
     },
     descriptionArea: {
         borderWidth: 1,

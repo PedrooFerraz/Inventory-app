@@ -17,7 +17,7 @@ import { InventoryService } from "@/services/inventoryService";
 export default function InventoryScreen() {
 
     const navigationView = () => (
-        <DrawerMenu drawer={drawer}></DrawerMenu>
+        <DrawerMenu drawer={drawer} finalizeInventoryFunction={handleFinalizeInventory}></DrawerMenu>
     );
 
     const params = useLocalSearchParams();
@@ -451,11 +451,6 @@ export default function InventoryScreen() {
 
                 </View>
             </ScrollView>
-            <View style={styles.footer}>
-                <TouchableOpacity onPress={handleFinalizeInventory} style={styles.endButton}>
-                    <Text style={styles.buttonName}>Finalizar Contagem</Text>
-                </TouchableOpacity>
-            </View>
 
             {
                 showCamera &&
