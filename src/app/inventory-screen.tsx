@@ -96,6 +96,12 @@ export default function InventoryScreen() {
             handleCamView()
 
     }
+
+    const handleEditCode = (code: string) => {
+        const upperCaseCode = code.toUpperCase()
+        setCurrentCode(upperCaseCode)
+    }
+
     const handleEndEditingCode = async (code: string) => {
         setEmptyCodeError(false);
         setShowDescription(false);
@@ -119,7 +125,7 @@ export default function InventoryScreen() {
             let batchQty = 0;
 
             batches.forEach(batch => {
-                if(batch.batch !== ""){
+                if (batch.batch !== "") {
                     batchQty++;
                 }
             });
@@ -158,6 +164,10 @@ export default function InventoryScreen() {
         setShowDescription(true)
     }
 
+    const handleEditLoc = (loc: string) => {
+        const locToUpperCase = loc.toUpperCase()
+        setCurrentLocation(locToUpperCase);
+    }
 
     const handleEndEditingLoc = async (loc: string) => {
         setEmptyLocError(false)
@@ -407,7 +417,7 @@ export default function InventoryScreen() {
             <ScrollView>
 
                 <View style={styles.header} >
-                    <Text style={styles.headerTitle}>Inventário - {currentInventory?.inventoryDocument} | {currentInventory ?.inventoryYear}</Text>
+                    <Text style={styles.headerTitle}>Inventário - {currentInventory?.inventoryDocument} | {currentInventory?.inventoryYear}</Text>
                     <TouchableOpacity onPress={() => drawer.current?.openDrawer()}>
                         <Ionicons name="menu" size={32} color={"#FFF"} />
                     </TouchableOpacity>
@@ -423,13 +433,13 @@ export default function InventoryScreen() {
                     <View style={styles.form}>
 
 
-                        <QRCodeInput error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
+                        <QRCodeInput onEditing={handleEditCode} error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
 
                         {showDescription &&
                             <ItemDescription status={description.status} data={description.item} ></ItemDescription>
                         }
 
-                        <QRCodeInput error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Posição *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
+                        <QRCodeInput onEditing={handleEditLoc} error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Posição *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
 
                         <NumericInput error={zeroQuantityError} ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
 
