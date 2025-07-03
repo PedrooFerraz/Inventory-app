@@ -22,7 +22,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
     const getStatusColor = (status: number) => {
         switch (status) {
             case 0:
-                return "#E5B51F"
+                return "#EF5350"
             case 1:
                 return "#E5B51F"
             case 2:

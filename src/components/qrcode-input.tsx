@@ -17,6 +17,11 @@ export default function QRCodeInput({error, label, placeholder, iconName, onScan
         }
 
     }));
+
+    useEffect(()=>{
+        onEndEditing(text)
+    },[text])
+
     useEffect(()=>{
         if(error){
             setColor("#fa6060")
@@ -36,7 +41,6 @@ export default function QRCodeInput({error, label, placeholder, iconName, onScan
                     placeholderTextColor={"rgba(255, 255, 255, 0.3)"}
                     onChangeText={onChangeText}
                     value={text}
-                    onEndEditing={() => onEndEditing(text)}
                 />
                 <Ionicons onPress={()=>{onScanPress(label[0] as scanTypes)}} name={iconName} color={"#94A3B8"} size={32} />
             </View>

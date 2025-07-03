@@ -120,7 +120,7 @@ const InventorySelectionScreen = () => {
                 <FilterButton status={3} label="Todos" />
                 <FilterButton status={0} label="Abertos" />
                 <FilterButton status={1} label="Em Andamento" />
-                <FilterButton status={2} label="Fechados" />
+                <FilterButton status={2} label="Finalizados" />
             </View>
 
             <View style={styles.content}>

@@ -40,13 +40,13 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
         storage: item["DEPÓSITO"] || "",
         batch: item["LOTE"] || "",
         inventoryItem: item["ITEM"] || "",
-        code: item['MATERIAL']!,
+        code: item['MATERIAL']!.toUpperCase(),
         description: item['DESCRIÇÃO']!,
         expectedQuantity: formatQuantity(item['ESTOQUE'] || 0),
         unit: item["UN"] || "",
         averagePrice: item["PREÇO MÉDIO"] || "",
         currency: item["MOEDA"] || "",
-        expectedLocation: item['POSIÇÃO NO DEPÓSITO'] || '',
+        expectedLocation: (item['POSIÇÃO NO DEPÓSITO'] || '').toUpperCase(),
       }));
 
     if (items.length === 0) {

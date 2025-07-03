@@ -47,7 +47,7 @@ export default function InventoryScreen() {
     const [emptyLocError, setEmptyLocError] = useState(false);
     const [zeroQuantityError, setZeroQuantityError] = useState(false);
     const [pendingSubmit, setPendingSubmit] = useState(false);
-    const [scanInputTarget, setScanInputTarget] = useState<scanTypes>() //C - Código Material; L - Localização
+    const [scanInputTarget, setScanInputTarget] = useState<scanTypes>() //C - Código Material; L - Posição
     const [currentLocation, setCurrentLocation] = useState("");
     const [currentCode, setCurrentCode] = useState("");
     const [showDescription, setShowDescription] = useState(false);
@@ -107,12 +107,13 @@ export default function InventoryScreen() {
             return
         }
 
-        setCurrentCode(code)
+        const upperCaseCode = code.toUpperCase()
+        setCurrentCode(upperCaseCode)
 
         if (currentInventory) {
             const batches = await InventoryService.getBatchesForItem(
                 currentInventory.id,
-                code
+                upperCaseCode
             );
 
             let batchQty = 0;
@@ -128,7 +129,7 @@ export default function InventoryScreen() {
                 return
             }
         }
-        defineCurrentItem(code, false)
+        defineCurrentItem(upperCaseCode, false)
     }
 
     const getBatch = (batches: BatchOption[]) => {
@@ -165,8 +166,8 @@ export default function InventoryScreen() {
             setEmptyLocError(true)
             return
         }
-
-        setCurrentLocation(loc);
+        const locToUpperCase = loc.toUpperCase()
+        setCurrentLocation(locToUpperCase);
     }
 
     const handleOnQuantityChange = (e: any) => {
@@ -256,7 +257,7 @@ export default function InventoryScreen() {
 
             if (diff === 0) {
                 handleCustomModal({
-                    title: "Atanção",
+                    title: "Atenção",
                     message: "Realmente deseja finalizar o inventário? Após finalizar você não poderá mais adicionar novos registros",
                     onConfirm: () => { finalizeInventory() },
                     onCancel: () => { },
@@ -265,8 +266,8 @@ export default function InventoryScreen() {
             }
             if (diff > 0) {
                 handleCustomModal({
-                    title: "Atanção",
-                    message: `Ainda restam itens a serem registrados, realmente deseja finalizar o inventário?  Após finalizar você não poderá mais adicionar novos registros`,
+                    title: "Atenção",
+                    message: `Ainda restam itens a serem contados, realmente deseja finalizar o inventário? Após finalizar você não poderá adicionar novas contagens. Os materiais não contados serão considerados sem estoque.`,
                     onConfirm: () => { finalizeInventory() },
                     onCancel: () => { },
                     visible: true,
@@ -428,7 +429,7 @@ export default function InventoryScreen() {
                             <ItemDescription status={description.status} data={description.item} ></ItemDescription>
                         }
 
-                        <QRCodeInput error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Localização *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
+                        <QRCodeInput error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Posição *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
 
                         <NumericInput error={zeroQuantityError} ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
 
@@ -483,7 +484,7 @@ export default function InventoryScreen() {
 
             <CustomModal onClose={handleWrongLocation} title="Atenção" visible={wrongLocation}>
                 <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                    A localização não confere. Deseja continuar?
+                    A Posição não confere. Deseja continuar?
                 </Text>
                 <View style={{ gap: 20 }}>
                     <ButtonWithIcon
@@ -493,7 +494,7 @@ export default function InventoryScreen() {
                         onPress={() => {
                             handleWrongLocation();
                             setWrongQuantity(false)
-                            // Foca no campo de localização para correção
+                            // Foca no campo de Posição para correção
                         }}
                     />
                     <ButtonWithIcon

@@ -2,9 +2,9 @@ import * as XLSX from 'xlsx';
 import * as FileSystem from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
 import { fetchOperator } from '@/models/operators';
-import { Operator } from '@/types/types';
+import { Inventory, Item, Operator } from '@/types/types';
 
-export async function exportInventoryToExcel(inventoryData: any[]) {
+export async function exportInventoryToExcel(inventoryData: Item[]) {
     try {
 
         const operators = await fetchOperator()
@@ -13,22 +13,22 @@ export async function exportInventoryToExcel(inventoryData: any[]) {
         const formattedData = inventoryData
             .filter(item => item.status !== 5)
             .map(item => ({
-            'INVENTÁRIO': item.inventoryDocument || '',
-            'ANO': item.year || '',
-            'CENTRO': item.center || '',
-            'DEPÓSITO': item.storage || '',
-            'LOTE': item.batch || '',
-            'ITEM INVENT.': item.inventoryItem || '',
-            'MATERIAL': item.code,
-            'ESTOQUE SAP': item.expectedQuantity || "",
-            'POSIÇÃO SAP': item.expectedLocation || "",
-            'ESTOQUE FÍSICO': item.reportedQuantity || 0,
-            'POSIÇÃO FÍSICA': item.reportedLocation || item.expectedLocation || "",
-            'DATA DA CONTAGEM': item.countTime || '',
-            'MATRICULA RESP. CONTAGEM': getOperatorCode(operators, item.operator) || '',
-            'NOME RESP. CONTAGEM': getOperatorName(operators, item.operator) || '',
-            'OBSERVAÇÕES': item.observation || '',
-        }));
+                'INVENTÁRIO': item.inventoryDocument || '',
+                'ANO': item.year || '',
+                'CENTRO': item.center || '',
+                'DEPÓSITO': item.storage || '',
+                'LOTE': item.batch || '',
+                'ITEM INVENT.': item.inventoryItem || '',
+                'MATERIAL': item.code,
+                'ESTOQUE SAP': item.expectedQuantity || "",
+                'POSIÇÃO SAP': item.expectedLocation || "",
+                'ESTOQUE FÍSICO': item.reportedQuantity || 0,
+                'POSIÇÃO FÍSICA': item.reportedLocation || item.expectedLocation || "",
+                'DATA DA CONTAGEM': item.countTime || '',
+                'MATRICULA RESP. CONTAGEM': getOperatorCode(operators, item.operator) || '',
+                'NOME RESP. CONTAGEM': getOperatorName(operators, item.operator) || '',
+                'OBSERVAÇÕES': item.observation || '',
+            }));
 
         // 2 Cria a planilha
         const ws = XLSX.utils.json_to_sheet(formattedData);
@@ -42,7 +42,8 @@ export async function exportInventoryToExcel(inventoryData: any[]) {
         });
 
         // 4 Salva o arquivo
-        const fileUri = FileSystem.documentDirectory + `inventario_${Date.now()}`;
+        const fileName = `${inventoryData[0].inventoryDocument}.xlsx`;
+        const fileUri = FileSystem.documentDirectory + fileName;
         await FileSystem.writeAsStringAsync(fileUri, wbout, {
             encoding: FileSystem.EncodingType.Base64,
         });
@@ -50,7 +51,8 @@ export async function exportInventoryToExcel(inventoryData: any[]) {
         // 5 Compartilha
         await shareAsync(fileUri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'Exportar Inventário'
+            dialogTitle: 'Exportar Inventário',
+            UTI: 'com.microsoft.excel.xlsx'
         });
 
         return true;
@@ -60,7 +62,7 @@ export async function exportInventoryToExcel(inventoryData: any[]) {
     }
 }
 
-export async function exportSurplusMaterialToExcel(inventoryData: any[]) {
+export async function exportSurplusMaterialToExcel(inventoryData: Item[]) {
     try {
 
         const operators = await fetchOperator()
@@ -69,22 +71,22 @@ export async function exportSurplusMaterialToExcel(inventoryData: any[]) {
         const formattedData = inventoryData
             .filter(item => item.status === 5)
             .map(item => ({
-            'INVENTÁRIO': item.inventoryDocument || '',
-            'ANO': item.year || '',
-            'CENTRO': item.center || '',
-            'DEPÓSITO': item.storage || '',
-            'LOTE': item.batch || '',
-            'ITEM INVENT.': item.inventoryItem || '',
-            'MATERIAL': item.code,
-            'ESTOQUE SAP': item.expectedQuantity || "",
-            'POSIÇÃO SAP': item.expectedLocation || "",
-            'ESTOQUE FÍSICO': item.reportedQuantity || 0,
-            'POSIÇÃO FÍSICA': item.reportedLocation || item.expectedLocation || "",
-            'DATA DA CONTAGEM': item.countTime || '',
-            'MATRICULA RESP. CONTAGEM': getOperatorCode(operators, item.operator) || '',
-            'NOME RESP. CONTAGEM': getOperatorName(operators, item.operator) || '',
-            'OBSERVAÇÕES': item.observation || '',
-        }));
+                'INVENTÁRIO': item.inventoryDocument || '',
+                'ANO': item.year || '',
+                'CENTRO': item.center || '',
+                'DEPÓSITO': item.storage || '',
+                'LOTE': item.batch || '',
+                'ITEM INVENT.': item.inventoryItem || '',
+                'MATERIAL': item.code,
+                'ESTOQUE SAP': item.expectedQuantity || "",
+                'POSIÇÃO SAP': item.expectedLocation || "",
+                'ESTOQUE FÍSICO': item.reportedQuantity || 0,
+                'POSIÇÃO FÍSICA': (item.reportedLocation || item.expectedLocation || "").toUpperCase(),
+                'DATA DA CONTAGEM': item.countTime || '',
+                'MATRICULA RESP. CONTAGEM': getOperatorCode(operators, item.operator) || '',
+                'NOME RESP. CONTAGEM': getOperatorName(operators, item.operator) || '',
+                'OBSERVAÇÕES': item.observation || '',
+            }));
 
         // 2 Cria a planilha
         const ws = XLSX.utils.json_to_sheet(formattedData);
@@ -97,16 +99,17 @@ export async function exportSurplusMaterialToExcel(inventoryData: any[]) {
             bookType: 'xlsx'
         });
 
-        // 4 Salva o arquivo
-        const fileUri = FileSystem.documentDirectory + `inventario_${Date.now()}`;
+        // 5 Compartilha
+       const fileName = `excedente_inventario_${inventoryData[0].inventoryDocument}.xlsx`;
+        const fileUri = FileSystem.documentDirectory + fileName;
         await FileSystem.writeAsStringAsync(fileUri, wbout, {
             encoding: FileSystem.EncodingType.Base64,
         });
 
-        // 5 Compartilha
         await shareAsync(fileUri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'Exportar Inventário'
+            dialogTitle: 'Exportar Inventário',
+            UTI: 'com.microsoft.excel.xlsx'
         });
 
         return true;
@@ -137,23 +140,23 @@ export function getOperatorCode(operators: Operator[], id: string) {
 export async function exportModelSheet() {
     try {
         const modelSheet = [
-            {"INVENTÁRIO": ""},
-            {"ANO": ""},
-            {"CENTRO": ""},
-            {"DEPÓSITO": ""},
-            {"LOTE": ""},
-            {"ITEM": ""},
-            {"MATERIAL": ""},
-            {"DESCRIÇÃO": ""},
-            {"ESTOQUE": ""},
-            {"UN": ""},
-            {"PREÇO MÉDIO": ""},
-            {"POSIÇÃO NO DEPÓSITO": ""},
+            { "INVENTÁRIO": "" },
+            { "ANO": "" },
+            { "CENTRO": "" },
+            { "DEPÓSITO": "" },
+            { "LOTE": "" },
+            { "ITEM": "" },
+            { "MATERIAL": "" },
+            { "DESCRIÇÃO": "" },
+            { "ESTOQUE": "" },
+            { "UN": "" },
+            { "PREÇO MÉDIO": "" },
+            { "POSIÇÃO NO DEPÓSITO": "" },
         ]
         // 2 Cria a planilha
         const ws = XLSX.utils.json_to_sheet(modelSheet);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Planilha Modelo", );
+        XLSX.utils.book_append_sheet(wb, ws, "Planilha Modelo",);
 
         // 3 Gera o arquivo
         const wbout = XLSX.write(wb, {
@@ -161,16 +164,17 @@ export async function exportModelSheet() {
             bookType: 'xlsx'
         });
 
-        // 4 Salva o arquivo
-        const fileUri = FileSystem.documentDirectory + `planilha_modelo`;
+        // 5 Compartilha
+       const fileName = `planilha_modelo.xlsx`;
+        const fileUri = FileSystem.documentDirectory + fileName;
         await FileSystem.writeAsStringAsync(fileUri, wbout, {
             encoding: FileSystem.EncodingType.Base64,
         });
 
-        // 5 Compartilha
         await shareAsync(fileUri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'Exportar Planilha Modelo'
+            dialogTitle: 'Exportar Inventário',
+            UTI: 'com.microsoft.excel.xlsx'
         });
 
         return true;
