@@ -4,7 +4,7 @@ import { executeQuery, fetchAll } from '@/services/database';
 import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption } from '@/types/types';
 
 
-export const insertInventory = async (fileUri: string, fileName: string) : Promise<{
+export const insertInventory = async (fileUri: string, fileName: string): Promise<{
   success: boolean;
   inventories: Array<{
     inventoryId: number;
@@ -20,7 +20,13 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
     if (!fileInfo.exists) throw new Error('Arquivo não encontrado');
     if (fileInfo.size > 6 * 1024 * 1024) throw new Error('Arquivo muito grande (máximo 6MB)');
 
-    const fileContent = await FileSystem.readAsStringAsync(fileUri);
+    const base64Content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
+
+    let fileContent = atob(base64Content);
+
+    if (fileContent.includes('�'))
+      throw new Error('O arquivo parece estar com codificação inválida. Por favor, salve como CSV UTF-8.');
+
     const parseResult = await new Promise<CSVParseResult>((resolve, reject) => {
       Papa.parse(fileContent, {
         header: true,
@@ -53,6 +59,7 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
       throw new Error('Nenhum item válido encontrado no arquivo');
     }
 
+
     await executeQuery('BEGIN TRANSACTION');
 
     // Agrupar itens por inventoryDocument
@@ -66,8 +73,11 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
 
     const inventoryResults = [];
 
+
     // Processar cada grupo de inventário separadamente
     for (const [inventoryDocument, documentItems] of Object.entries(itemsByInventory)) {
+
+      console.log(JSON.stringify(documentItems, null, 2));
       // Verificar se já existe inventário com este documento no mesmo ano
       const year = documentItems[0].year;
       const existingInventory = await fetchAll<Inventory>(
@@ -103,6 +113,7 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
       });
     }
 
+
     await executeQuery('COMMIT');
 
     return {
@@ -115,7 +126,7 @@ export const insertInventory = async (fileUri: string, fileName: string) : Promi
 
   } catch (error) {
     await executeQuery('ROLLBACK');
-    throw error;
+    throw new Error("Ocorreu algum erro, tente exportar o arquivo novamente! Verifique se o arquivo CSV está em formato UTF-8");
   }
 };
 
@@ -205,24 +216,24 @@ export const insertInventoryItem = async (
 ) => {
   const result = await executeQuery(
     `INSERT INTO inventory_items (
-      inventory_id, inventoryDocument, year, center, storage, batch,
-      inventoryItem, unit, averagePrice, code, description,
-      expectedLocation, expectedQuantity, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`, // Status 0 = "Não realizado"
+    inventory_id, inventoryDocument, year, center, storage, batch,
+    inventoryItem, unit, averagePrice, code, description,
+    expectedLocation, expectedQuantity, status
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
     [
-      inventoryId,
-      item.inventoryDocument,
-      item.year,
-      item.center,
-      item.storage,
-      item.batch,
-      item.inventoryItem,
-      item.unit,
-      item.averagePrice,
-      item.code,
-      item.description,
-      item.expectedLocation,
-      item.expectedQuantity
+      String(inventoryId),
+      String(item.inventoryDocument || ''),
+      String(item.year || ''),
+      String(item.center || ''),
+      String(item.storage || ''),
+      String(item.batch || ''),
+      String(item.inventoryItem || ''),
+      String(item.unit || ''),
+      String(item.averagePrice || ''),
+      String(item.code || ''),
+      String(item.description || ''),
+      String(item.expectedLocation || ''),
+      String(item.expectedQuantity || '')
     ]
   );
   return result;

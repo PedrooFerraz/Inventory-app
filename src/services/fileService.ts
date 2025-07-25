@@ -39,7 +39,10 @@ export const generateCSVPreview = async (SelectedDocument: DocumentPickerAsset):
 
   await clearFileCache();
 
-  const fileContent = await FileSystem.readAsStringAsync(SelectedDocument.uri);
+  const base64 = await FileSystem.readAsStringAsync(SelectedDocument.uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+  const fileContent = atob(base64);
 
   let totalRows = 0;
   const locationSet = new Set<string>();
@@ -49,14 +52,14 @@ export const generateCSVPreview = async (SelectedDocument: DocumentPickerAsset):
       header: true,
       skipEmptyLines: true,
       step: (row) => {
-        
+
         const data = row.data as Record<string, any>;
-        
-        if(data["MATERIAL"] !== "" && data["MATERIAL"] !== "MATERIAL")
+
+        if (data["MATERIAL"] !== "" && data["MATERIAL"] !== "MATERIAL")
           totalRows++;
 
-        const location = data['Localização'] || data['location'] || data['POSIÇÃO NO DEPÓSITO'] || ''; // Ajuste o nome da coluna de acordo com seu CSV
-        if (location && location !== "Pos.dpst.") {
+        const location = data['POSIÇÃO NO DEPÓSITO'] || ''; // Ajuste o nome da coluna de acordo com seu CSV
+        if (location && location !== "POSIÇÃO NO DEPÓSITO") {
           locationSet.add(location.trim());
         }
 
