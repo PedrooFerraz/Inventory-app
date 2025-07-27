@@ -82,7 +82,7 @@ export default function CameraScanner({
 
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
-    
+
     // Verifica se o código está dentro da área do frame
     const isInFrame = isCodeInScanFrame(e);
     setCodeInFrame(isInFrame);
@@ -115,16 +115,13 @@ export default function CameraScanner({
 
     // Área do frame de scan (em pixels relativos à câmera)
     const cameraViewWidth = width * 0.8; // Largura da visualização da câmera
-    const cameraViewHeight = 220; // Altura da visualização da câmera
+    const cameraViewHeight = height * 0.3; // Altura da visualização da câmera
 
-    // Margens do frame de scan (centralizado)
-    const frameMarginHorizontal = cameraViewWidth * 0.1; // 10% de margem
-    const frameMarginVertical = 70; // Margem vertical em pixels
-
-    const frameLeft = frameMarginHorizontal;
-    const frameRight = cameraViewWidth - frameMarginHorizontal;
-    const frameTop = frameMarginVertical;
-    const frameBottom = cameraViewHeight - frameMarginVertical;
+    // Posição do frame (centralizado)
+    const frameLeft = (width - cameraViewWidth) / 2;
+    const frameTop = (height - cameraViewHeight) / 2;
+    const frameRight = frameLeft + cameraViewWidth;
+    const frameBottom = frameTop + cameraViewHeight;
 
     // Verifica se o código está dentro do frame
     return (
@@ -304,24 +301,6 @@ const styles = StyleSheet.create({
     color: '#FF9500',
     fontSize: 16,
     fontWeight: '500',
-  },
-  flashButton: {
-    position: 'absolute',
-    top: 140,
-    right: 20,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  flashButtonActive: {
-    backgroundColor: '#FFD700',
-  },
-  flashIcon: {
-    fontSize: 20,
   },
   cameraContainer: {
     flex: 1,
