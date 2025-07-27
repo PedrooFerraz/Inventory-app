@@ -39,10 +39,9 @@ export const generateCSVPreview = async (SelectedDocument: DocumentPickerAsset):
 
   await clearFileCache();
 
-  const base64 = await FileSystem.readAsStringAsync(SelectedDocument.uri, {
-    encoding: FileSystem.EncodingType.Base64,
+  const fileContent = await FileSystem.readAsStringAsync(SelectedDocument.uri, {
+    encoding: FileSystem.EncodingType.UTF8,
   });
-  const fileContent = atob(base64);
 
   let totalRows = 0;
   const locationSet = new Set<string>();

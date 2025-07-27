@@ -20,9 +20,7 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
     if (!fileInfo.exists) throw new Error('Arquivo não encontrado');
     if (fileInfo.size > 6 * 1024 * 1024) throw new Error('Arquivo muito grande (máximo 6MB)');
 
-    const base64Content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
-
-    let fileContent = atob(base64Content);
+    const fileContent = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
 
     if (fileContent.includes('�'))
       throw new Error('O arquivo parece estar com codificação inválida. Por favor, salve como CSV UTF-8.');
@@ -76,8 +74,6 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
 
     // Processar cada grupo de inventário separadamente
     for (const [inventoryDocument, documentItems] of Object.entries(itemsByInventory)) {
-
-      console.log(JSON.stringify(documentItems, null, 2));
       // Verificar se já existe inventário com este documento no mesmo ano
       const year = documentItems[0].year;
       const existingInventory = await fetchAll<Inventory>(
@@ -126,7 +122,7 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
 
   } catch (error) {
     await executeQuery('ROLLBACK');
-    throw new Error("Ocorreu algum erro, tente exportar o arquivo novamente! Verifique se o arquivo CSV está em formato UTF-8");
+    throw error
   }
 };
 

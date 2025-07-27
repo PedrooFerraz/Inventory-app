@@ -146,7 +146,7 @@ export default function GMIHomeScreen() {
             <Card icon={"cube-outline"} onPress={handleInventoryAccess} title='Realizar Contagem' description='Executar contagem de itens' colors={['#7f96b9', '#8fa5c7']}></Card>
 
             <View style={styles.infoCard}>
-              <Text style={styles.versionText}>Versão 1.0.0</Text>
+              <Text style={styles.versionText}>Versão 1.0.2</Text>
               <Text style={styles.copyrightText}>
                 © 2025 GMI Consultoria • Todos os direitos reservados
               </Text>
