@@ -22,6 +22,8 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
 
     const fileContent = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
 
+await executeQuery('BEGIN TRANSACTION');
+
     if (fileContent.includes('�'))
       throw new Error('O arquivo parece estar com codificação inválida. Por favor, salve como CSV UTF-8.');
 
@@ -56,9 +58,6 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
     if (items.length === 0) {
       throw new Error('Nenhum item válido encontrado no arquivo');
     }
-
-
-    await executeQuery('BEGIN TRANSACTION');
 
     // Agrupar itens por inventoryDocument
     const itemsByInventory = items.reduce((acc, item) => {
@@ -121,13 +120,14 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
     };
 
   } catch (error) {
+    
     await executeQuery('ROLLBACK');
 
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     if (errorMessage.includes('Inventário com o documento')) {
       throw new Error(errorMessage);
-    }
+   }
 
     throw new Error('Ocorreu um erro, verifique se o arquivo CSV está seguindo a planilha de modelo e se está em formato UTF-8');
   }
