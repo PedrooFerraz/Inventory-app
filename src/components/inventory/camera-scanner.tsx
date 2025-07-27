@@ -126,9 +126,6 @@ export default function CameraScanner({
     const frameTop = frameMarginVertical;
     const frameBottom = cameraViewHeight - frameMarginVertical;
 
-    console.log('Barcode coordinates: ', minX, maxX, minY, maxY);
-    console.log(frameLeft, frameRight, frameTop, frameBottom)
-
     // Verifica se o código está dentro do frame
     return (
       minX >= frameLeft &&
