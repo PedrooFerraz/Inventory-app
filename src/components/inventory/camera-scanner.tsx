@@ -104,41 +104,41 @@ export default function CameraScanner({
   };
 
   const isCodeInScanFrame = (scanResult: any) => {
-    const { bounds } = scanResult;
-    
-    if (!bounds) return false;
-    
-    // Dimensões da câmera na tela
-    const cameraWidth = width * 0.9; // 90% da largura da tela (com padding)
-    const cameraHeight = 220; // altura definida no estilo
-    
-    // Dimensões do frame de scan (80% da câmera)
-    const frameWidth = cameraWidth * 0.8;
-    const frameHeight = 180;
-    
-    // Posição do frame no centro da câmera
-    const frameLeft = (cameraWidth - frameWidth) / 2;
-    const frameTop = (cameraHeight - frameHeight) / 2;
-    const frameRight = frameLeft + frameWidth;
-    const frameBottom = frameTop + frameHeight;
-    
-    // Converte as coordenadas do código para as dimensões da tela
-    const codeLeft = bounds.origin.x * cameraWidth;
-    const codeTop = bounds.origin.y * cameraHeight;
-    const codeRight = codeLeft + (bounds.size.width * cameraWidth);
-    const codeBottom = codeTop + (bounds.size.height * cameraHeight);
-    
-    // Verifica se o código está completamente dentro do frame
-    const isInFrame = (
-      codeLeft >= frameLeft &&
-      codeTop >= frameTop &&
-      codeRight <= frameRight &&
-      codeBottom <= frameBottom
-    );
-    
-    return isInFrame;
-  };
+  const { cornerPoints } = scanResult;
+  if (!cornerPoints || cornerPoints.length === 0) return false;
 
+  // Calcula a média (centro do código)
+  const sumX = cornerPoints.reduce((sum: any, p : any) => sum + p.x, 0);
+  const sumY = cornerPoints.reduce((sum: any, p : any) => sum + p.y, 0);
+  const avgX = sumX / cornerPoints.length;
+  const avgY = sumY / cornerPoints.length;
+
+  // Dimensões da câmera
+  const cameraWidth = width * 0.9; // 90% da tela
+  const cameraHeight = 220; // mesma altura da sua câmera
+
+  // Frame central (onde você quer escanear)
+  const frameWidth = cameraWidth * 0.8;
+  const frameHeight = 180;
+
+  const frameLeft = (cameraWidth - frameWidth) / 2;
+  const frameTop = (cameraHeight - frameHeight) / 2;
+  const frameRight = frameLeft + frameWidth;
+  const frameBottom = frameTop + frameHeight;
+
+  // Como avgX/Y estão em proporção da câmera (0~1), convertemos para pixels
+  const codeX = avgX * cameraWidth;
+  const codeY = avgY * cameraHeight;
+
+  const isInside = (
+    codeX >= frameLeft &&
+    codeX <= frameRight &&
+    codeY >= frameTop &&
+    codeY <= frameBottom
+  );
+
+  return isInside;
+};
   const toggleScanning = () => {
     setIsScanning(!isScanning);
   };
