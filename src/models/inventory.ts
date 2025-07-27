@@ -122,7 +122,14 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
 
   } catch (error) {
     await executeQuery('ROLLBACK');
-    throw error
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    if (errorMessage.includes('Inventário com o documento')) {
+      throw new Error(errorMessage);
+    }
+
+    throw new Error('Ocorreu um erro, verifique se o arquivo CSV está seguindo a planilha de modelo e se está em formato UTF-8');
   }
 };
 
