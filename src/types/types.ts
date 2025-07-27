@@ -82,4 +82,4 @@ export interface BatchOption {
   id: number;
 }
 
-export type scanTypes = "C" | "L" //C- Código Material; L- Localização
+export type scanTypes = "C" | "P" //C- Código Material; P- Posição

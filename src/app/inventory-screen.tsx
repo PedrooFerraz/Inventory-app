@@ -47,7 +47,7 @@ export default function InventoryScreen() {
     const [emptyLocError, setEmptyLocError] = useState(false);
     const [zeroQuantityError, setZeroQuantityError] = useState(false);
     const [pendingSubmit, setPendingSubmit] = useState(false);
-    const [scanInputTarget, setScanInputTarget] = useState<scanTypes>() //C - Código Material; L - Posição
+    const [scanInputTarget, setScanInputTarget] = useState<scanTypes>() //C - Código Material; P - Posição
     const [currentLocation, setCurrentLocation] = useState("");
     const [currentCode, setCurrentCode] = useState("");
     const [showDescription, setShowDescription] = useState(false);
@@ -80,6 +80,7 @@ export default function InventoryScreen() {
 
         setShowCamera(!showCamera)
     }
+    
     const onScan = (e: any) => {
         if (scanInputTarget === "C" && e.data !== undefined) {
             handleEndEditingCode(e.data)
@@ -87,7 +88,7 @@ export default function InventoryScreen() {
         }
 
 
-        if (scanInputTarget === "L" && e.data !== undefined) {
+        if (scanInputTarget === "P" && e.data !== undefined) {
             handleEndEditingLoc(e.data)
             qrCodeInputRefLoc.current?.setValue(e.data);
         }
