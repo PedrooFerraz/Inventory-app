@@ -23,6 +23,7 @@ export default function CameraScanner({
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
+  const [codeInFrame, setCodeInFrame] = useState(false);
   
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
@@ -82,7 +83,16 @@ export default function CameraScanner({
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
     
+    // Verifica se o código está dentro da área do frame
+    const isInFrame = isCodeInScanFrame(e);
+    setCodeInFrame(isInFrame);
+    
+    if (!isInFrame) {
+      return; // Ignora códigos fora da área de scan
+    }
+    
     cooldownRef.current = true;
+    setCodeInFrame(false);
     setScanStatus('Código detectado!');
     
     onScan(e);
@@ -91,6 +101,42 @@ export default function CameraScanner({
       cooldownRef.current = false;
       setScanStatus('');
     }, 2000);
+  };
+
+  const isCodeInScanFrame = (scanResult: any) => {
+    const { bounds } = scanResult;
+    
+    if (!bounds) return false;
+    
+    // Dimensões da câmera na tela
+    const cameraWidth = width * 0.9; // 90% da largura da tela (com padding)
+    const cameraHeight = 220; // altura definida no estilo
+    
+    // Dimensões do frame de scan (80% da câmera)
+    const frameWidth = cameraWidth * 0.8;
+    const frameHeight = 180;
+    
+    // Posição do frame no centro da câmera
+    const frameLeft = (cameraWidth - frameWidth) / 2;
+    const frameTop = (cameraHeight - frameHeight) / 2;
+    const frameRight = frameLeft + frameWidth;
+    const frameBottom = frameTop + frameHeight;
+    
+    // Converte as coordenadas do código para as dimensões da tela
+    const codeLeft = bounds.origin.x * cameraWidth;
+    const codeTop = bounds.origin.y * cameraHeight;
+    const codeRight = codeLeft + (bounds.size.width * cameraWidth);
+    const codeBottom = codeTop + (bounds.size.height * cameraHeight);
+    
+    // Verifica se o código está completamente dentro do frame
+    const isInFrame = (
+      codeLeft >= frameLeft &&
+      codeTop >= frameTop &&
+      codeRight <= frameRight &&
+      codeBottom <= frameBottom
+    );
+    
+    return isInFrame;
   };
 
   const toggleScanning = () => {
@@ -134,22 +180,23 @@ export default function CameraScanner({
         {/* Scanning Frame */}
         <View style={styles.scanFrame}>
           {/* Corner indicators */}
-          <View style={[styles.corner, styles.topLeft]} />
-          <View style={[styles.corner, styles.topRight]} />
-          <View style={[styles.corner, styles.bottomLeft]} />
-          <View style={[styles.corner, styles.bottomRight]} />
+          <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
+          <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
+          <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
+          <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
           
           {/* Scanning line */}
           {isScanning && (
             <Animated.View
               style={[
                 styles.scanLine,
+                codeInFrame && styles.scanLineActive,
                 {
                   transform: [
                     {
                       translateY: scanLineAnim.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [-90, 90],
+                        outputRange: [-80, 80],
                       }),
                     },
                   ],
@@ -258,9 +305,27 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   statusText: {
-    color: '#FFF',
+    color: '#FF9500',
     fontSize: 16,
     fontWeight: '500',
+  },
+  flashButton: {
+    position: 'absolute',
+    top: 140,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  flashButtonActive: {
+    backgroundColor: '#FFD700',
+  },
+  flashIcon: {
+    fontSize: 20,
   },
   cameraContainer: {
     flex: 1,
@@ -269,14 +334,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   camera: {
-    width: '100%',
-    height: 200,
+    width: '90%',
+    height: 220,
     borderRadius: 20,
     overflow: 'hidden',
   },
   scanFrame: {
     position: 'absolute',
-    width: '90%',
+    width: '80%',
     height: 180,
     justifyContent: 'center',
     alignItems: 'center',
@@ -287,6 +352,17 @@ const styles = StyleSheet.create({
     height: 25,
     borderColor: '#FFF',
     borderWidth: 3,
+  },
+  cornerActive: {
+    borderColor: '#FFD700',
+    shadowColor: '#FFD700',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 4,
   },
   topLeft: {
     top: 0,
@@ -326,6 +402,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 4,
     elevation: 4,
+  },
+  scanLineActive: {
+    backgroundColor: '#FFD700',
+    shadowColor: '#FFD700',
+    height: 3,
+  },
+  instructionsContainer: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    margin: 20,
+    padding: 16,
+    borderRadius: 12,
+  },
+  instructionsTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  instructionsText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    lineHeight: 20,
   },
   controlsContainer: {
     flexDirection: 'row',
