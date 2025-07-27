@@ -119,7 +119,7 @@ export default function CameraScanner({
 
     // Margens do frame de scan (centralizado)
     const frameMarginHorizontal = cameraViewWidth * 0.1; // 10% de margem
-    const frameMarginVertical = 70; // Margem vertical em pixels
+    const frameMarginVertical = 90; // Margem vertical em pixels
 
     const frameLeft = frameMarginHorizontal;
     const frameRight = cameraViewWidth - frameMarginHorizontal;
