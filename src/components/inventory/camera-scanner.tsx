@@ -1,11 +1,11 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRef, useState, useEffect } from 'react';
-import { 
-  Button, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View, 
+import {
+  Button,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
   Animated,
   Dimensions,
   StatusBar
@@ -13,18 +13,18 @@ import {
 
 const { width, height } = Dimensions.get('window');
 
-export default function CameraScanner({ 
-  onScan, 
-  onButtonPress 
-}: { 
-  onScan: (e: any) => any, 
-  onButtonPress: () => any 
+export default function CameraScanner({
+  onScan,
+  onButtonPress
+}: {
+  onScan: (e: any) => any,
+  onButtonPress: () => any
 }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
   const [codeInFrame, setCodeInFrame] = useState(false);
-  
+
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
 
@@ -57,7 +57,7 @@ export default function CameraScanner({
   }, [isScanning]);
 
   if (!permission) return <View style={styles.container} />;
-  
+
   if (!permission.granted) {
     return (
       <View style={styles.container}>
@@ -67,8 +67,8 @@ export default function CameraScanner({
             <Text style={styles.message}>
               Precisamos de permissão para acessar sua câmera
             </Text>
-            <TouchableOpacity 
-              style={styles.permissionButton} 
+            <TouchableOpacity
+              style={styles.permissionButton}
               onPress={requestPermission}
               activeOpacity={0.8}
             >
@@ -82,19 +82,19 @@ export default function CameraScanner({
 
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
-    
+    console.log('Barcode coordinates:', e.cornerPoints);
     // Verifica se o código está dentro da área do frame
     const isInFrame = isCodeInScanFrame(e);
     setCodeInFrame(isInFrame);
-    
+
     if (!isInFrame) {
       return; // Ignora códigos fora da área de scan
     }
-    
+
     cooldownRef.current = true;
     setCodeInFrame(false);
     setScanStatus('Código detectado!');
-    
+
     onScan(e);
 
     setTimeout(() => {
@@ -104,41 +104,37 @@ export default function CameraScanner({
   };
 
   const isCodeInScanFrame = (scanResult: any) => {
-  const { cornerPoints } = scanResult;
-  if (!cornerPoints || cornerPoints.length === 0) return false;
+    const { cornerPoints } = scanResult;
+    if (!cornerPoints || cornerPoints.length === 0) return false;
 
-  // Calcula a média (centro do código)
-  const sumX = cornerPoints.reduce((sum: any, p : any) => sum + p.x, 0);
-  const sumY = cornerPoints.reduce((sum: any, p : any) => sum + p.y, 0);
-  const avgX = sumX / cornerPoints.length;
-  const avgY = sumY / cornerPoints.length;
+    // Calcula o retângulo delimitador do código
+    const minX = Math.min(...cornerPoints.map((p: any) => p.x));
+    const maxX = Math.max(...cornerPoints.map((p: any) => p.x));
+    const minY = Math.min(...cornerPoints.map((p: any) => p.y));
+    const maxY = Math.max(...cornerPoints.map((p: any) => p.y));
 
-  // Dimensões da câmera
-  const cameraWidth = width * 0.9; // 90% da tela
-  const cameraHeight = 220; // mesma altura da sua câmera
+    // Área do frame de scan (em pixels relativos à câmera)
+    const cameraViewWidth = width * 0.9; // Largura da visualização da câmera
+    const cameraViewHeight = 220; // Altura da visualização da câmera
 
-  // Frame central (onde você quer escanear)
-  const frameWidth = cameraWidth * 0.8;
-  const frameHeight = 180;
+    // Margens do frame de scan (centralizado)
+    const frameMarginHorizontal = cameraViewWidth * 0.1; // 10% de margem
+    const frameMarginVertical = 20; // Margem vertical em pixels
 
-  const frameLeft = (cameraWidth - frameWidth) / 2;
-  const frameTop = (cameraHeight - frameHeight) / 2;
-  const frameRight = frameLeft + frameWidth;
-  const frameBottom = frameTop + frameHeight;
+    const frameLeft = frameMarginHorizontal;
+    const frameRight = cameraViewWidth - frameMarginHorizontal;
+    const frameTop = frameMarginVertical;
+    const frameBottom = cameraViewHeight - frameMarginVertical;
 
-  // Como avgX/Y estão em proporção da câmera (0~1), convertemos para pixels
-  const codeX = avgX * cameraWidth;
-  const codeY = avgY * cameraHeight;
+    // Verifica se o código está dentro do frame
+    return (
+      minX >= frameLeft &&
+      maxX <= frameRight &&
+      minY >= frameTop &&
+      maxY <= frameBottom
+    );
+  };
 
-  const isInside = (
-    codeX >= frameLeft &&
-    codeX <= frameRight &&
-    codeY >= frameTop &&
-    codeY <= frameBottom
-  );
-
-  return isInside;
-};
   const toggleScanning = () => {
     setIsScanning(!isScanning);
   };
@@ -146,7 +142,7 @@ export default function CameraScanner({
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Scanner de Código</Text>
@@ -176,7 +172,7 @@ export default function CameraScanner({
           }}
           onBarcodeScanned={handleBarcodeScanned}
         />
-        
+
         {/* Scanning Frame */}
         <View style={styles.scanFrame}>
           {/* Corner indicators */}
@@ -184,7 +180,7 @@ export default function CameraScanner({
           <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
           <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
           <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
-          
+
           {/* Scanning line */}
           {isScanning && (
             <Animated.View
@@ -209,9 +205,9 @@ export default function CameraScanner({
 
       {/* Controls */}
       <View style={styles.controlsContainer}>
-        <TouchableOpacity 
-          onPress={onButtonPress} 
-          style={styles.backButton} 
+        <TouchableOpacity
+          onPress={onButtonPress}
+          style={styles.backButton}
           activeOpacity={0.8}
         >
           <Text style={styles.backButtonText}>Voltar</Text>
