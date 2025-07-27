@@ -82,7 +82,7 @@ export default function CameraScanner({
 
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
-    console.log('Barcode coordinates:', e.cornerPoints);
+    
     // Verifica se o código está dentro da área do frame
     const isInFrame = isCodeInScanFrame(e);
     setCodeInFrame(isInFrame);
@@ -108,23 +108,26 @@ export default function CameraScanner({
     if (!cornerPoints || cornerPoints.length === 0) return false;
 
     // Calcula o retângulo delimitador do código
-    const minX = Math.min(...cornerPoints.map((p: any) => p.x));
-    const maxX = Math.max(...cornerPoints.map((p: any) => p.x));
-    const minY = Math.min(...cornerPoints.map((p: any) => p.y));
-    const maxY = Math.max(...cornerPoints.map((p: any) => p.y));
+    const minX = Math.floor(Math.min(...cornerPoints.map((p: any) => p.x)));
+    const maxX = Math.floor(Math.max(...cornerPoints.map((p: any) => p.x)));
+    const minY = Math.floor(Math.min(...cornerPoints.map((p: any) => p.y)));
+    const maxY = Math.floor(Math.max(...cornerPoints.map((p: any) => p.y)));
 
     // Área do frame de scan (em pixels relativos à câmera)
-    const cameraViewWidth = width * 0.9; // Largura da visualização da câmera
+    const cameraViewWidth = width * 0.8; // Largura da visualização da câmera
     const cameraViewHeight = 220; // Altura da visualização da câmera
 
     // Margens do frame de scan (centralizado)
     const frameMarginHorizontal = cameraViewWidth * 0.1; // 10% de margem
-    const frameMarginVertical = 20; // Margem vertical em pixels
+    const frameMarginVertical = 70; // Margem vertical em pixels
 
     const frameLeft = frameMarginHorizontal;
     const frameRight = cameraViewWidth - frameMarginHorizontal;
     const frameTop = frameMarginVertical;
     const frameBottom = cameraViewHeight - frameMarginVertical;
+
+    console.log('Barcode coordinates: ', minX, maxX, minY, maxY);
+    console.log(frameLeft, frameRight, frameTop, frameBottom)
 
     // Verifica se o código está dentro do frame
     return (
