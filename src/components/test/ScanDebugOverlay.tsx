@@ -1,22 +1,35 @@
+// ScanDebugOverlay.tsx
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, Dimensions, StyleSheet } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-type CornerPoint = { x: number; y: number };
 type Props = {
-  cornerPoints?: CornerPoint[];
+  bounds?: {
+    origin: { x: number; y: number };
+    size: { width: number; height: number };
+  };
 };
 
-export const ScanDebugOverlay = ({ cornerPoints }: Props) => {
+export const ScanDebugOverlay = ({ bounds }: Props) => {
   const frameWidth = screenWidth * 0.8;
   const frameHeight = screenHeight * 0.3;
   const frameLeft = (screenWidth - frameWidth) / 2;
   const frameTop = (screenHeight - frameHeight) / 2;
 
+  const boxStyle = bounds
+    ? {
+        left: bounds.origin.x,
+        top: bounds.origin.y,
+        width: bounds.size.width,
+        height: bounds.size.height,
+        borderColor: 'red',
+      }
+    : null;
+
   return (
     <View style={StyleSheet.absoluteFill}>
-      {/* Área de leitura central */}
+      {/* Frame de leitura desejado */}
       <View
         style={{
           position: 'absolute',
@@ -24,27 +37,23 @@ export const ScanDebugOverlay = ({ cornerPoints }: Props) => {
           top: frameTop,
           width: frameWidth,
           height: frameHeight,
-          borderColor: 'lime',
           borderWidth: 2,
+          borderColor: 'lime',
           borderRadius: 6,
         }}
       />
 
-      {/* Pontos vermelhos nas extremidades do código */}
-      {cornerPoints?.map((point, index) => (
+      {/* Retângulo do código detectado */}
+      {boxStyle && (
         <View
-          key={index}
           style={{
             position: 'absolute',
-            left: point.x - 4,
-            top: point.y - 4,
-            width: 8,
-            height: 8,
-            backgroundColor: 'red',
+            ...boxStyle,
+            borderWidth: 2,
             borderRadius: 4,
           }}
         />
-      ))}
+      )}
     </View>
   );
 };

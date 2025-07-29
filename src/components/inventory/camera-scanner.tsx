@@ -87,6 +87,7 @@ export default function CameraScanner({
 
     // Verifica se o código está dentro da área do frame
     const isInFrame = isCodeInScanFrame(e);
+    setBounds(e.bounds);
     setCodeInFrame(isInFrame);
 
     if (!isInFrame) {
@@ -107,7 +108,6 @@ export default function CameraScanner({
 
   const isCodeInScanFrame = (scanResult: any) => {
     const { cornerPoints } = scanResult;
-    setBounds(cornerPoints);
     if (!cornerPoints || cornerPoints.length === 0) return false;
 
     // Calcula o retângulo delimitador do código
@@ -144,7 +144,7 @@ export default function CameraScanner({
 
   return (
     <View style={styles.container}>
-      <ScanDebugOverlay cornerPoints={bounds}></ScanDebugOverlay>
+      <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
