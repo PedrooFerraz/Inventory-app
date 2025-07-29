@@ -144,7 +144,7 @@ export default function CameraScanner({
 
   return (
     <View style={styles.container}>
-      <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay>
+      <ScanDebugOverlay cornerPoints={bounds}></ScanDebugOverlay>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
