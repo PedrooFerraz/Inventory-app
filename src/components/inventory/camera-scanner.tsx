@@ -1,6 +1,5 @@
 import { CameraView, Point, useCameraPermissions } from 'expo-camera';
 import { useRef, useState, useEffect } from 'react';
-import { findNodeHandle, UIManager } from 'react-native';
 
 import {
   StyleSheet,
@@ -8,7 +7,6 @@ import {
   TouchableOpacity,
   View,
   Animated,
-  Dimensions,
   StatusBar
 } from 'react-native';
 import { ScanDebugOverlay } from '../test/ScanDebugOverlay';
@@ -151,7 +149,10 @@ export default function CameraScanner({
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={getLayoutOnScreen}
+    >
       {/* <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay> */}
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
@@ -172,47 +173,57 @@ export default function CameraScanner({
         paddingHorizontal: 20,
       }}
         ref={scanFrameRef}
-        onLayout={getLayoutOnScreen}
       >
-        <CameraView
-          style={styles.camera}
-          facing="back"
-          barcodeScannerSettings={{
-            barcodeTypes: ['code39', 'code128', 'code93', 'qr', 'ean13', 'ean8'],
+        <View
+          style={{
+            position: 'absolute',
+            width: "100%",
+            top: scanFrameLayout?.pageX,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 20,
           }}
-          onBarcodeScanned={handleBarcodeScanned}
-        />
+        >
+          <CameraView
+            style={styles.camera}
+            facing="back"
+            barcodeScannerSettings={{
+              barcodeTypes: ['code39', 'code128', 'code93', 'qr', 'ean13', 'ean8'],
+            }}
+            onBarcodeScanned={handleBarcodeScanned}
+          />
+          <View
+            style={styles.scanFrame}
+          >
+            {/* Corner indicators */}
+            <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
+            <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
+            <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
+            <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
+
+            {/* Scanning line */}
+            {isScanning && (
+              <Animated.View
+                style={[
+                  styles.scanLine,
+                  codeInFrame && styles.scanLineActive,
+                  {
+                    transform: [
+                      {
+                        translateY: scanLineAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-80, 80],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            )}
+          </View>
+        </View>
 
         {/* Scanning Frame */}
-        <View
-          style={styles.scanFrame}
-        >
-          {/* Corner indicators */}
-          <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
-          <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
-          <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
-          <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
-
-          {/* Scanning line */}
-          {isScanning && (
-            <Animated.View
-              style={[
-                styles.scanLine,
-                codeInFrame && styles.scanLineActive,
-                {
-                  transform: [
-                    {
-                      translateY: scanLineAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-80, 80],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            />
-          )}
-        </View>
       </View>
 
       {/* Controls */}
