@@ -88,6 +88,7 @@ export default function CameraScanner({
     // Verifica se o código está dentro da área do frame
     const isInFrame = isCodeInScanFrame(e);
     setBounds(e.bounds);
+    console.log(e.bounds)
     setCodeInFrame(isInFrame);
 
     if (!isInFrame) {
