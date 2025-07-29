@@ -178,7 +178,7 @@ export default function CameraScanner({
           style={{
             position: 'absolute',
             width: "100%",
-            top: scanFrameLayout?.pageX,
+            top: scanFrameLayout?.pageY,
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 20,
