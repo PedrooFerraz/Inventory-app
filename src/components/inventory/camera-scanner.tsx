@@ -1,7 +1,6 @@
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, Point, useCameraPermissions } from 'expo-camera';
 import { useRef, useState, useEffect } from 'react';
 import {
-  Button,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -85,13 +84,20 @@ export default function CameraScanner({
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
 
+    const scannableArea = {
+      x: 35,
+      y: 80 ,
+      width: 250,
+      height: 60
+    }
     // Verifica se o código está dentro da área do frame
-    const isInFrame = isCodeInScanFrame(e);
+    const isInScannableArea = isWithinScannableArea(e.cornerPoints, scannableArea);
     setBounds(e.bounds);
-    console.log(e.bounds)
-    setCodeInFrame(isInFrame);
+    console.log(e.cornerPoints)
+    console.log(width)
+    setCodeInFrame(isInScannableArea);
 
-    if (!isInFrame) {
+    if (!isInScannableArea) {
       return; // Ignora códigos fora da área de scan
     }
 
@@ -107,36 +113,19 @@ export default function CameraScanner({
     }, 2000);
   };
 
-  const isCodeInScanFrame = (scanResult: any) => {
-    const { cornerPoints } = scanResult;
-    if (!cornerPoints || cornerPoints.length === 0) return false;
-
-    // Calcula o retângulo delimitador do código
-    const minX = Math.floor(Math.min(...cornerPoints.map((p: any) => p.x)));
-    const maxX = Math.floor(Math.max(...cornerPoints.map((p: any) => p.x)));
-    const minY = Math.floor(Math.min(...cornerPoints.map((p: any) => p.y)));
-    const maxY = Math.floor(Math.max(...cornerPoints.map((p: any) => p.y)));
-
-    // Área do frame de scan (em pixels relativos à câmera)
-    const cameraViewWidth = width * 0.8; // Largura da visualização da câmera
-    const cameraViewHeight = 220; // Altura da visualização da câmera
-
-    // Margens do frame de scan (centralizado)
-    const frameMarginHorizontal = cameraViewWidth * 0.1; // 10% de margem
-    const frameMarginVertical = 90; // Margem vertical em pixels
-
-    const frameLeft = frameMarginHorizontal;
-    const frameRight = cameraViewWidth - frameMarginHorizontal;
-    const frameTop = frameMarginVertical;
-    const frameBottom = cameraViewHeight - frameMarginVertical;
-
-    // Verifica se o código está dentro do frame
-    return (
-      minX >= frameLeft &&
-      maxX <= frameRight &&
-      minY >= frameTop &&
-      maxY <= frameBottom
-    );
+  const isWithinScannableArea = (
+    cornerPoints: Point[],
+    scannableArea: { x: number; y: number; width: number; height: number }
+  ) => {
+    return cornerPoints.every((point) => {
+      const isWithinXRange =
+        point.x >= scannableArea.x &&
+        point.x <= scannableArea.x + scannableArea.width;
+      const isWithinYRange =
+        point.y >= scannableArea.y &&
+        point.y <= scannableArea.y + scannableArea.height;
+      return isWithinXRange && isWithinYRange;
+    });
   };
 
   const toggleScanning = () => {
@@ -149,23 +138,25 @@ export default function CameraScanner({
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Scanner de Código</Text>
-        <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
+      <View>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Scanner de Código</Text>
+          <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
+        </View>
+
+        {/* Status Message */}
+        {scanStatus ? (
+          <View style={styles.statusContainer}>
+            <Text style={styles.statusText}>Scanner pausado</Text>
+          </View>
+        ) : null}
+
+        {!isScanning && (
+          <View style={styles.statusContainer}>
+            <Text style={styles.statusText}>Scanner pausado</Text>
+          </View>
+        )}
       </View>
-
-      {/* Status Message */}
-      {scanStatus ? (
-        <View style={styles.statusContainer}>
-          <Text style={styles.statusText}>Scanner pausado</Text>
-        </View>
-      ) : null}
-
-      {!isScanning && (
-        <View style={styles.statusContainer}>
-          <Text style={styles.statusText}>Scanner pausado</Text>
-        </View>
-      )}
 
       {/* Camera Container */}
       <View style={styles.cameraContainer}>
@@ -208,28 +199,30 @@ export default function CameraScanner({
         </View>
       </View>
 
-      {/* Controls */}
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity
-          onPress={onButtonPress}
-          style={styles.backButton}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.backButtonText}>Voltar</Text>
-        </TouchableOpacity>
+      <View>
+        {/* Controls */}
+        <View style={styles.controlsContainer}>
+          <TouchableOpacity
+            onPress={onButtonPress}
+            style={styles.backButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={toggleScanning}
-          style={[
-            styles.scanButton,
-            !isScanning && styles.scanButtonPaused
-          ]}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.scanButtonText}>
-            {isScanning ? 'Pausar' : 'Iniciar'}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={toggleScanning}
+            style={[
+              styles.scanButton,
+              !isScanning && styles.scanButtonPaused
+            ]}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.scanButtonText}>
+              {isScanning ? 'Pausar' : 'Iniciar'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -241,6 +234,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     flex: 1,
+    justifyContent: 'space-between',
     backgroundColor: '#3A5073',
   },
   modalOverlay: {
@@ -310,26 +304,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  flashButton: {
-    position: 'absolute',
-    top: 140,
-    right: 20,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  flashButtonActive: {
-    backgroundColor: '#FFD700',
-  },
-  flashIcon: {
-    fontSize: 20,
-  },
   cameraContainer: {
-    flex: 1,
+    position: 'absolute',
+    width: "100%",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,

@@ -19,29 +19,16 @@ export const ScanDebugOverlay = ({ bounds }: Props) => {
 
   const boxStyle = bounds
     ? {
-        left: bounds.origin.x,
-        top: bounds.origin.y,
-        width: bounds.size.width,
-        height: bounds.size.height,
+        left: bounds.origin.y,
+        top: bounds.origin.x,
+        width: bounds.size.height,
+        height: bounds.size.width,
         borderColor: 'red',
       }
     : null;
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      {/* Frame de leitura desejado */}
-      <View
-        style={{
-          position: 'absolute',
-          left: frameLeft,
-          top: frameTop,
-          width: frameWidth,
-          height: frameHeight,
-          borderWidth: 2,
-          borderColor: 'lime',
-          borderRadius: 6,
-        }}
-      />
 
       {/* Retângulo do código detectado */}
       {boxStyle && (
