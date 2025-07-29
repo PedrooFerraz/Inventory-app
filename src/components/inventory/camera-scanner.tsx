@@ -101,8 +101,6 @@ export default function CameraScanner({
       height: scanFrameLayout.height
     };
 
-    console.log(scannableArea)
-
     const isInScannableArea = isWithinScannableArea(e.cornerPoints, scannableArea);
     setBounds(e.bounds);
     setCodeInFrame(isInScannableArea);
@@ -124,11 +122,9 @@ export default function CameraScanner({
   const getLayoutOnScreen = () => {
 
     const viewRef = scanFrameRef.current;
-    console.log(viewRef)
 
     if (viewRef && typeof viewRef.measureInWindow === 'function') {
       viewRef.measureInWindow((x, y, width, height) => {
-        console.log(viewRef)
         setScanFrameLayout({ pageX: x, pageY: y, width, height });
       });
     }
@@ -166,25 +162,18 @@ export default function CameraScanner({
           <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
         </View>
 
-        {/* Status */}
-        {scanStatus ? (
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>Scanner Pausado</Text>
-          </View>
-        ) : null}
-
-        {!isScanning && (
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>Scanner Pausado</Text>
-          </View>
-        )
-
-        }
-
       </View>
 
       {/* Camera Container */}
-      <View style={styles.cameraContainer}>
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+      }}
+        ref={scanFrameRef}
+        onLayout={getLayoutOnScreen}
+      >
         <CameraView
           style={styles.camera}
           facing="back"
@@ -195,10 +184,8 @@ export default function CameraScanner({
         />
 
         {/* Scanning Frame */}
-        <View 
-          ref={scanFrameRef}
+        <View
           style={styles.scanFrame}
-          onLayout={getLayoutOnScreen}
         >
           {/* Corner indicators */}
           <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
@@ -330,12 +317,6 @@ const styles = StyleSheet.create({
     color: '#FF9500',
     fontSize: 16,
     fontWeight: '500',
-  },
-  cameraContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
   },
   camera: {
     width: '90%',
