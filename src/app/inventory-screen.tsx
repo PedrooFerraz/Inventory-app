@@ -10,7 +10,7 @@ import { BatchOption, ErrorModalProps, Inventory, Item, scanTypes } from "@/type
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert } from "react-native";
+import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert, KeyboardAvoidingView } from "react-native";
 import { InventoryService } from "@/services/inventoryService";
 
 
@@ -80,7 +80,7 @@ export default function InventoryScreen() {
 
         setShowCamera(!showCamera)
     }
-    
+
     const onScan = (e: any) => {
         if (scanInputTarget === "C" && e.data !== undefined) {
             handleEndEditingCode(e.data)
@@ -414,224 +414,226 @@ export default function InventoryScreen() {
                     <ActivityIndicator size={"large"} color={"#60A5FA"} style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
                 </View>
             }
+            <KeyboardAvoidingView>
+                <ScrollView>
 
-            <ScrollView>
-
-                <View style={styles.header} >
-                    <Text style={styles.headerTitle}>Inventário - {currentInventory?.inventoryDocument} | {currentInventory?.inventoryYear}</Text>
-                    <TouchableOpacity onPress={() => drawer.current?.openDrawer()}>
-                        <Ionicons name="menu" size={32} color={"#FFF"} />
-                    </TouchableOpacity>
-                </View>
-
-                {
-                    currentInventory &&
-                    <InventoryProgress key={progress} totalItems={currentInventory.totalItems} countedItems={currentInventory.countedItems}></InventoryProgress>
-                }
-
-                <View style={styles.content}>
-
-                    <View style={styles.form}>
-
-
-                        <QRCodeInput onEditing={handleEditCode} error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
-
-                        {showDescription &&
-                            <ItemDescription status={description.status} data={description.item} ></ItemDescription>
-                        }
-
-                        <QRCodeInput onEditing={handleEditLoc} error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Posição *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
-
-                        <NumericInput error={zeroQuantityError} ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
-
-                        <View style={{ gap: 10 }}>
-                            <Text style={styles.label}>Observação</Text>
-                            <TextInput
-                                style={styles.observationInput}
-                                value={observation}
-                                onChangeText={(text) => setObservation(text)}
-                            >
-                            </TextInput>
-                        </View>
-
+                    <View style={styles.header} >
+                        <Text style={styles.headerTitle}>Inventário - {currentInventory?.inventoryDocument} | {currentInventory?.inventoryYear}</Text>
+                        <TouchableOpacity onPress={() => drawer.current?.openDrawer()}>
+                            <Ionicons name="menu" size={32} color={"#FFF"} />
+                        </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.nextButton} activeOpacity={0.5} onPress={handleSubmit}>
-                        <Ionicons name="checkmark-circle-outline" size={20} color={"white"} />
-                        <Text style={styles.buttonName}>Confirmar & Próximo</Text>
-                    </TouchableOpacity>
+                    {
+                        currentInventory &&
+                        <InventoryProgress key={progress} totalItems={currentInventory.totalItems} countedItems={currentInventory.countedItems}></InventoryProgress>
+                    }
 
-                </View>
-            </ScrollView>
+                    <View style={styles.content}>
 
-            {
-                showCamera &&
-                <CameraScanner onButtonPress={handleCamView} onScan={onScan}></CameraScanner>
-            }
+                        <View style={styles.form}>
 
-            <CustomModal onClose={handleWrongQuantity} title="Atenção" visible={wrongQuantity}>
-                <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                    A quantidade contada não confere. Deseja aprovar?
-                </Text>
-                <View style={{ gap: 20 }}>
-                    <ButtonWithIcon
-                        color="#7F95B9"
-                        icon="close-outline"
-                        label="Reavaliar"
-                        onPress={() => handleWrongQuantity()}
-                    />
-                    <ButtonWithIcon
-                        color="#5A7BA1"
-                        icon="checkmark-outline"
-                        label="Aprovar"
-                        onPress={async () => {
-                            setUserChoices(prev => ({ ...prev, ignoreQuantity: true }));
-                            handleWrongQuantity();
-                            await confirmItem();
-                        }}
-                    />
-                </View>
-            </CustomModal>
 
-            <CustomModal onClose={handleWrongLocation} title="Atenção" visible={wrongLocation}>
-                <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                    A Posição não confere. Deseja continuar?
-                </Text>
-                <View style={{ gap: 20 }}>
-                    <ButtonWithIcon
-                        color="#7F95B9"
-                        icon="close-outline"
-                        label="Reavaliar"
-                        onPress={() => {
-                            handleWrongLocation();
-                            setWrongQuantity(false)
-                            // Foca no campo de Posição para correção
-                        }}
-                    />
-                    <ButtonWithIcon
-                        color="#5A7BA1"
-                        icon="checkmark-outline"
-                        label="Confirmar"
-                        onPress={async () => {
-                            await handleConfirmWrongLocation()
-                        }}
-                    />
-                </View>
-            </CustomModal>
+                            <QRCodeInput onEditing={handleEditCode} error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
 
-            <CustomModal onClose={handleItemNotFound} title="Atenção" visible={itemNotFound}>
-                <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                    Este item não consta na lista, deseja adicionar?
-                </Text>
-                <View style={{ gap: 20 }}>
-                    <ButtonWithIcon
-                        color="#7F95B9"
-                        icon="close-outline"
-                        label="Cancelar"
-                        onPress={() => {
-                            handleItemNotFound()
-                            restartForm()
-                        }}
-                    />
-                    <ButtonWithIcon
-                        color="#5A7BA1"
-                        icon="add-outline"
-                        label="Adicionar"
-                        onPress={async () => {
-                            await addNewItem();
-                            handleItemNotFound();
-                        }}
-                    />
-                </View>
-            </CustomModal>
+                            {showDescription &&
+                                <ItemDescription status={description.status} data={description.item} ></ItemDescription>
+                            }
 
-            <CustomModal onClose={handleSuccess} title="Sucesso" visible={success}>
-                <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                    Item inserido com sucesso!
-                </Text>
-                <View style={{ gap: 20 }}>
-                    <ButtonWithIcon
-                        color="#5A7BA1"
-                        icon="checkmark-outline"
-                        label="Ok"
-                        onPress={handleSuccess}
-                    />
+                            <QRCodeInput onEditing={handleEditLoc} error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Posição *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
 
-                </View>
-            </CustomModal>
-            {
-                errorModal.visible &&
-                <CustomModal
-                    onClose={() => handleCustomModal({ ...errorModal, visible: false })}
-                    title={errorModal.title}
-                    visible={errorModal.visible}
-                >
+                            <NumericInput error={zeroQuantityError} ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
+
+                            <View style={{ gap: 10 }}>
+                                <Text style={styles.label}>Observação</Text>
+                                <TextInput
+                                    style={styles.observationInput}
+                                    value={observation}
+                                    onChangeText={(text) => setObservation(text)}
+                                >
+                                </TextInput>
+                            </View>
+
+                        </View>
+
+                        <TouchableOpacity style={styles.nextButton} activeOpacity={0.5} onPress={handleSubmit}>
+                            <Ionicons name="checkmark-circle-outline" size={20} color={"white"} />
+                            <Text style={styles.buttonName}>Confirmar & Próximo</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                </ScrollView>
+
+                {
+                    showCamera &&
+                    <CameraScanner onButtonPress={handleCamView} onScan={onScan}></CameraScanner>
+                }
+
+                <CustomModal onClose={handleWrongQuantity} title="Atenção" visible={wrongQuantity}>
                     <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                        {errorModal.message}
+                        A quantidade contada não confere. Deseja aprovar?
                     </Text>
                     <View style={{ gap: 20 }}>
                         <ButtonWithIcon
-                            color="#5A7BA1"
-                            icon="checkmark-outline"
-                            label="Confirmar"
-                            onPress={() => {
-                                errorModal.onConfirm();
-                                handleCustomModal({ ...errorModal, visible: false });
-                            }}
-                        />
-                        <ButtonWithIcon
                             color="#7F95B9"
                             icon="close-outline"
-                            label="Cancelar"
-                            onPress={() => {
-                                errorModal.onCancel();
-                                restartForm()
-                                handleCustomModal({ ...errorModal, visible: false });
+                            label="Reavaliar"
+                            onPress={() => handleWrongQuantity()}
+                        />
+                        <ButtonWithIcon
+                            color="#5A7BA1"
+                            icon="checkmark-outline"
+                            label="Aprovar"
+                            onPress={async () => {
+                                setUserChoices(prev => ({ ...prev, ignoreQuantity: true }));
+                                handleWrongQuantity();
+                                await confirmItem();
                             }}
                         />
                     </View>
                 </CustomModal>
 
+                <CustomModal onClose={handleWrongLocation} title="Atenção" visible={wrongLocation}>
+                    <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+                        A Posição não confere. Deseja continuar?
+                    </Text>
+                    <View style={{ gap: 20 }}>
+                        <ButtonWithIcon
+                            color="#7F95B9"
+                            icon="close-outline"
+                            label="Reavaliar"
+                            onPress={() => {
+                                handleWrongLocation();
+                                setWrongQuantity(false)
+                                // Foca no campo de Posição para correção
+                            }}
+                        />
+                        <ButtonWithIcon
+                            color="#5A7BA1"
+                            icon="checkmark-outline"
+                            label="Confirmar"
+                            onPress={async () => {
+                                await handleConfirmWrongLocation()
+                            }}
+                        />
+                    </View>
+                </CustomModal>
 
-            }
+                <CustomModal onClose={handleItemNotFound} title="Atenção" visible={itemNotFound}>
+                    <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+                        Este item não consta na lista, deseja adicionar?
+                    </Text>
+                    <View style={{ gap: 20 }}>
+                        <ButtonWithIcon
+                            color="#7F95B9"
+                            icon="close-outline"
+                            label="Cancelar"
+                            onPress={() => {
+                                handleItemNotFound()
+                                restartForm()
+                            }}
+                        />
+                        <ButtonWithIcon
+                            color="#5A7BA1"
+                            icon="add-outline"
+                            label="Adicionar"
+                            onPress={async () => {
+                                await addNewItem();
+                                handleItemNotFound();
+                            }}
+                        />
+                    </View>
+                </CustomModal>
 
-            <CustomModal
-                onClose={() => setShowBatchSelection(false)}
-                title="Selecione o Lote"
-                visible={showBatchSelection}
-            >
+                <CustomModal onClose={handleSuccess} title="Sucesso" visible={success}>
+                    <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+                        Item inserido com sucesso!
+                    </Text>
+                    <View style={{ gap: 20 }}>
+                        <ButtonWithIcon
+                            color="#5A7BA1"
+                            icon="checkmark-outline"
+                            label="Ok"
+                            onPress={handleSuccess}
+                        />
 
-                <ScrollView style={{ maxHeight: 300 }}>
-                    {batchOptions.map((batch) => (
-                        <TouchableOpacity
-                            key={batch.batch}
-                            style={[
-                                styles.batchOption,
-                                selectedBatch === batch.batch && styles.selectedBatchOption
-                            ]}
-                            onPress={() => setSelectedBatch(batch.batch)}
-                        >
-                            <Text style={styles.batchText}>Lote: {batch.batch}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                    </View>
+                </CustomModal>
+                {
+                    errorModal.visible &&
+                    <CustomModal
+                        onClose={() => handleCustomModal({ ...errorModal, visible: false })}
+                        title={errorModal.title}
+                        visible={errorModal.visible}
+                    >
+                        <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+                            {errorModal.message}
+                        </Text>
+                        <View style={{ gap: 20 }}>
+                            <ButtonWithIcon
+                                color="#5A7BA1"
+                                icon="checkmark-outline"
+                                label="Confirmar"
+                                onPress={() => {
+                                    errorModal.onConfirm();
+                                    handleCustomModal({ ...errorModal, visible: false });
+                                }}
+                            />
+                            <ButtonWithIcon
+                                color="#7F95B9"
+                                icon="close-outline"
+                                label="Cancelar"
+                                onPress={() => {
+                                    errorModal.onCancel();
+                                    restartForm()
+                                    handleCustomModal({ ...errorModal, visible: false });
+                                }}
+                            />
+                        </View>
+                    </CustomModal>
 
-                <View style={{ marginTop: 20 }}>
-                    <ButtonWithIcon
-                        color="#5A7BA1"
-                        icon="checkmark-outline"
-                        label="Confirmar Lote"
-                        onPress={() => {
-                            if (!selectedBatch) {
-                                Alert.alert("Atenção", "Por favor, selecione um lote");
-                                return;
-                            }
-                            defineCurrentItem(currentCode, true)
-                            setShowBatchSelection(false);
-                        }}
-                    />
-                </View>
-            </CustomModal>
+
+                }
+
+                <CustomModal
+                    onClose={() => setShowBatchSelection(false)}
+                    title="Selecione o Lote"
+                    visible={showBatchSelection}
+                >
+
+                    <ScrollView style={{ maxHeight: 300 }}>
+                        {batchOptions.map((batch) => (
+                            <TouchableOpacity
+                                key={batch.batch}
+                                style={[
+                                    styles.batchOption,
+                                    selectedBatch === batch.batch && styles.selectedBatchOption
+                                ]}
+                                onPress={() => setSelectedBatch(batch.batch)}
+                            >
+                                <Text style={styles.batchText}>Lote: {batch.batch}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+
+
+                    <View style={{ marginTop: 20 }}>
+                        <ButtonWithIcon
+                            color="#5A7BA1"
+                            icon="checkmark-outline"
+                            label="Confirmar Lote"
+                            onPress={() => {
+                                if (!selectedBatch) {
+                                    Alert.alert("Atenção", "Por favor, selecione um lote");
+                                    return;
+                                }
+                                defineCurrentItem(currentCode, true)
+                                setShowBatchSelection(false);
+                            }}
+                        />
+                    </View>
+                </CustomModal>
+            </KeyboardAvoidingView>
 
         </DrawerLayoutAndroid>
     )
