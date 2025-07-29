@@ -101,6 +101,8 @@ export default function CameraScanner({
       height: scanFrameLayout.height
     };
 
+    console.log(scannableArea)
+
     const isInScannableArea = isWithinScannableArea(e.cornerPoints, scannableArea);
     setBounds(e.bounds);
     setCodeInFrame(isInScannableArea);
@@ -120,10 +122,13 @@ export default function CameraScanner({
   };
 
   const getLayoutOnScreen = () => {
+
     const viewRef = scanFrameRef.current;
+    console.log(viewRef)
 
     if (viewRef && typeof viewRef.measureInWindow === 'function') {
       viewRef.measureInWindow((x, y, width, height) => {
+        console.log(viewRef)
         setScanFrameLayout({ pageX: x, pageY: y, width, height });
       });
     }
@@ -150,9 +155,7 @@ export default function CameraScanner({
   };
 
   return (
-    <View style={styles.container}
-      onLayout={() => { getLayoutOnScreen(); }}
-    >
+    <View style={styles.container}>
       {/* <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay> */}
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
@@ -164,11 +167,20 @@ export default function CameraScanner({
         </View>
 
         {/* Status */}
-        {scanStatus || !isScanning ? (
+        {scanStatus ? (
           <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>Scanner pausado</Text>
+            <Text style={styles.statusText}>Scanner Pausado</Text>
           </View>
         ) : null}
+
+        {!isScanning && (
+          <View style={styles.statusContainer}>
+            <Text style={styles.statusText}>Scanner Pausado</Text>
+          </View>
+        )
+
+        }
+
       </View>
 
       {/* Camera Container */}
@@ -183,7 +195,11 @@ export default function CameraScanner({
         />
 
         {/* Scanning Frame */}
-        <View style={styles.scanFrame}>
+        <View 
+          ref={scanFrameRef}
+          style={styles.scanFrame}
+          onLayout={getLayoutOnScreen}
+        >
           {/* Corner indicators */}
           <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
           <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
