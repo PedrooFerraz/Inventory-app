@@ -10,6 +10,7 @@ import {
   Dimensions,
   StatusBar
 } from 'react-native';
+import { ScanDebugOverlay } from '../test/ScanDebugOverlay';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,6 +25,7 @@ export default function CameraScanner({
   const [isScanning, setIsScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
   const [codeInFrame, setCodeInFrame] = useState(false);
+  const [bounds, setBounds] = useState<any>(null);
 
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
@@ -82,7 +84,7 @@ export default function CameraScanner({
 
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
-    
+
     // Verifica se o código está dentro da área do frame
     const isInFrame = isCodeInScanFrame(e);
     setCodeInFrame(isInFrame);
@@ -105,6 +107,7 @@ export default function CameraScanner({
 
   const isCodeInScanFrame = (scanResult: any) => {
     const { cornerPoints } = scanResult;
+    setBounds(cornerPoints);
     if (!cornerPoints || cornerPoints.length === 0) return false;
 
     // Calcula o retângulo delimitador do código
@@ -141,6 +144,7 @@ export default function CameraScanner({
 
   return (
     <View style={styles.container}>
+      <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
