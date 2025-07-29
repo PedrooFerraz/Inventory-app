@@ -254,10 +254,15 @@ export const insertNewInventoryItem = async (
     countTime: string;
   }
 ) => {
+
+  const inventoryItems = await fetchItemsByInventoryId(inventoryId)
+  const lastItem = Math.max(...inventoryItems.map((i: any) => Number(i.inventoryItem)))
+
   const result = await executeQuery(
-    `INSERT INTO inventory_items (inventory_id, code, reportedQuantity, reportedLocation, observation, operator, status, countTime) VALUES(?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO inventory_items (inventory_id, inventoryItem, code, reportedQuantity, reportedLocation, observation, operator, status, countTime) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       inventoryId,
+      Number(lastItem) + 1,
       data.code,
       data.reportedQuantity,
       data.reportedLocation,
