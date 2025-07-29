@@ -1,5 +1,7 @@
 import { CameraView, Point, useCameraPermissions } from 'expo-camera';
 import { useRef, useState, useEffect } from 'react';
+import { findNodeHandle, UIManager } from 'react-native';
+
 import {
   StyleSheet,
   Text,
@@ -10,8 +12,6 @@ import {
   StatusBar
 } from 'react-native';
 import { ScanDebugOverlay } from '../test/ScanDebugOverlay';
-
-const { width, height } = Dimensions.get('window');
 
 export default function CameraScanner({
   onScan,
@@ -25,9 +25,19 @@ export default function CameraScanner({
   const [scanStatus, setScanStatus] = useState('');
   const [codeInFrame, setCodeInFrame] = useState(false);
   const [bounds, setBounds] = useState<any>(null);
+  const scanFrameRef = useRef<View>(null);
+  const [scanFrameLayout, setScanFrameLayout] = useState<{
+    pageX: number;
+    pageY: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    setTimeout(getLayoutOnScreen, 500);
+  }, [isScanning]);
 
   useEffect(() => {
     // Animação da linha de scan
@@ -82,22 +92,20 @@ export default function CameraScanner({
   }
 
   const handleBarcodeScanned = (e: any) => {
-    if (cooldownRef.current || !isScanning) return;
+    if (cooldownRef.current || !isScanning || !scanFrameLayout) return;
 
     const scannableArea = {
-      x: 35,
-      y: 80 ,
-      width: 250,
-      height: 60
-    }
-    // Verifica se o código está dentro da área do frame
+      x: scanFrameLayout.pageX,
+      y: scanFrameLayout.pageY,
+      width: scanFrameLayout.width,
+      height: scanFrameLayout.height
+    };
+
     const isInScannableArea = isWithinScannableArea(e.cornerPoints, scannableArea);
     setBounds(e.bounds);
     setCodeInFrame(isInScannableArea);
 
-    if (!isInScannableArea) {
-      return; // Ignora códigos fora da área de scan
-    }
+    if (!isInScannableArea) return;
 
     cooldownRef.current = true;
     setCodeInFrame(false);
@@ -110,6 +118,17 @@ export default function CameraScanner({
       setScanStatus('');
     }, 2000);
   };
+
+  const getLayoutOnScreen = () => {
+    const viewRef = scanFrameRef.current;
+
+    if (viewRef && typeof viewRef.measureInWindow === 'function') {
+      viewRef.measureInWindow((x, y, width, height) => {
+        setScanFrameLayout({ pageX: x, pageY: y, width, height });
+      });
+    }
+  };
+
 
   const isWithinScannableArea = (
     cornerPoints: Point[],
@@ -131,7 +150,9 @@ export default function CameraScanner({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container}
+      onLayout={() => { getLayoutOnScreen(); }}
+    >
       {/* <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay> */}
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
@@ -142,18 +163,12 @@ export default function CameraScanner({
           <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
         </View>
 
-        {/* Status Message */}
-        {scanStatus ? (
+        {/* Status */}
+        {scanStatus || !isScanning ? (
           <View style={styles.statusContainer}>
             <Text style={styles.statusText}>Scanner pausado</Text>
           </View>
         ) : null}
-
-        {!isScanning && (
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>Scanner pausado</Text>
-          </View>
-        )}
       </View>
 
       {/* Camera Container */}
@@ -197,30 +212,28 @@ export default function CameraScanner({
         </View>
       </View>
 
-      <View>
-        {/* Controls */}
-        <View style={styles.controlsContainer}>
-          <TouchableOpacity
-            onPress={onButtonPress}
-            style={styles.backButton}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.backButtonText}>Voltar</Text>
-          </TouchableOpacity>
+      {/* Controls */}
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity
+          onPress={onButtonPress}
+          style={styles.backButton}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.backButtonText}>Voltar</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={toggleScanning}
-            style={[
-              styles.scanButton,
-              !isScanning && styles.scanButtonPaused
-            ]}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.scanButtonText}>
-              {isScanning ? 'Pausar' : 'Iniciar'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={toggleScanning}
+          style={[
+            styles.scanButton,
+            !isScanning && styles.scanButtonPaused
+          ]}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.scanButtonText}>
+            {isScanning ? 'Pausar' : 'Iniciar'}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -303,11 +316,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   cameraContainer: {
-    position: 'absolute',
-    width: "100%",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
