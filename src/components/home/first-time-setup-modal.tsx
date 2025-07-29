@@ -1,5 +1,6 @@
 // src/components/home/first-time-setup-modal.tsx
 import React, { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
 import { Modal, View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 
 interface FirstTimeSetupModalProps {
@@ -11,6 +12,7 @@ export default function FirstTimeSetupModal({ visible, onSubmit }: FirstTimeSetu
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = () => {
     if (!password || !confirmPassword) {
@@ -37,7 +39,7 @@ export default function FirstTimeSetupModal({ visible, onSubmit }: FirstTimeSetu
       animationType="fade"
       transparent={true}
       visible={visible}
-      onRequestClose={() => {}}
+      onRequestClose={() => { }}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
@@ -46,23 +48,48 @@ export default function FirstTimeSetupModal({ visible, onSubmit }: FirstTimeSetu
             Este é o primeiro acesso. Por favor, defina uma senha master para administração do sistema.
           </Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Nova senha"
-            placeholderTextColor="#94A3B8"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.passwordInputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nova senha"
+              placeholderTextColor="#94A3B8"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color="#94A3B8"
+              />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.passwordInputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirme a senha"
+              placeholderTextColor="#94A3B8"
+              secureTextEntry={!showPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirme a senha"
-            placeholderTextColor="#94A3B8"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color="#94A3B8"
+              />
+            </TouchableOpacity>
+          </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -111,8 +138,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#3A5074',
     color: '#FFFFFF',
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingRight: 48,
     marginBottom: 16,
+    fontSize: 16,
   },
   errorText: {
     color: '#E27E85',
@@ -132,5 +162,15 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#3A5073',
     fontWeight: 'bold',
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 12,
+    top: -12,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  passwordInputContainer: {
+    position: 'relative',
   },
 });
