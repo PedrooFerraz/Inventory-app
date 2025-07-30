@@ -10,7 +10,6 @@ import {
   StatusBar,
   Dimensions
 } from 'react-native';
-import { ScanDebugOverlay } from '../test/ScanDebugOverlay';
 
 export default function CameraScanner({
   onScan,
@@ -22,19 +21,15 @@ export default function CameraScanner({
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [codeInFrame, setCodeInFrame] = useState(false);
-  const [bounds, setBounds] = useState()
+  const [x, setX] = useState()
+  const [y, setY] = useState()
+  const [width, setWidth] = useState()
+  const [height, setHeight] = useState()
 
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
 
   const { height: windowHeight, width: windowWidth } = Dimensions.get('window');
-
-  const viewFinderBounds = {
-    height: 200,
-    width: windowWidth * 0.9,
-    x: (windowWidth - windowWidth * 0.9) / 2,
-    y: (windowHeight - 200) / 2,
-  };
 
   useEffect(() => {
     // Animação da linha de scan
@@ -91,33 +86,27 @@ export default function CameraScanner({
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
 
-    setBounds(e.bounds)
-    const isInScannableArea = isWithinScannableArea(e.cornerPoints);
+    setX(e.bounds.origin.x)
+    setY(e.bounds.origin.y)
+    setWidth(e.bounds.size.width)
+    setHeight(e.bounds.size.height)
+
+    const isIn = isInScannableArea();
     setCodeInFrame(isInScannableArea);
 
     if (!isInScannableArea) return;
 
     cooldownRef.current = true;
     setCodeInFrame(false);
-    onScan(e);
+    //onScan(e);
 
     setTimeout(() => {
       cooldownRef.current = false;
     }, 2000);
   };
 
-  const isWithinScannableArea = (
-    cornerPoints: Point[]
-  ) =>{
-    return cornerPoints.every((point) => {
-      const isWithinXRange =
-        point.x >= viewFinderBounds.x &&
-        point.x <= viewFinderBounds.x + viewFinderBounds.width;
-      const isWithinYRange =
-        point.y >= viewFinderBounds.y &&
-        point.y <= viewFinderBounds.y + viewFinderBounds.height;
-      return isWithinXRange && isWithinYRange;
-    });
+  const isInScannableArea = () =>{
+    return true
   };
 
   const toggleScanning = () => {
@@ -126,7 +115,6 @@ export default function CameraScanner({
 
   return (
     <View style={styles.container}>
-      <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
