@@ -93,10 +93,10 @@ export default function CameraScanner({
     setWidth(size.width)
     setHeight(size.height)
 
-    const isIn = isInScannableArea();
-    setCodeInFrame(isInScannableArea);
+    const isIn = isInScannableArea({origin, size});
+    setCodeInFrame(isIn);
 
-    if (!isInScannableArea) return;
+    if (!isIn) return;
 
     cooldownRef.current = true;
     setCodeInFrame(false);
@@ -107,8 +107,17 @@ export default function CameraScanner({
     }, 2000);
   };
 
-  const isInScannableArea = () =>{
-    return true
+  const isInScannableArea = ({ origin, size }: { origin: any, size: any }) => {
+    const minY = origin.y;
+    const maxY = minY + size.height;
+    const minX = origin.x
+    const maxX = minX + size.width
+
+    if (minY >= 25 && maxY <= 330 && minX >= 67 && maxX <= 135) {
+      return true
+    } else {
+      return false
+    }
   };
 
   const toggleScanning = () => {
@@ -118,7 +127,7 @@ export default function CameraScanner({
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
-      <View style={{position: 'absolute', top: y, left: x, width: width, height: height}}>
+      <View style={{ position: 'absolute', top: y, left: x, width: width, height: height }}>
 
       </View>
       {/* Header */}
