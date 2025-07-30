@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   View,
   Animated,
-  StatusBar
+  StatusBar,
+  Dimensions
 } from 'react-native';
 import { ScanDebugOverlay } from '../test/ScanDebugOverlay';
 
@@ -23,17 +24,32 @@ export default function CameraScanner({
   const [codeInFrame, setCodeInFrame] = useState(false);
   const scanFrameRef = useRef<View>(null);
   const [scanFrameLayout, setScanFrameLayout] = useState<{
-    pageX: number;
-    pageY: number;
+    x: number;
+    y: number;
     width: number;
     height: number;
   } | null>(null);
 
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
+
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+  const frameWidth = screenWidth * 0.8;
+  const frameHeight = 180;
+  const frameX = screenWidth * 0.1;
+  const frameY = (screenHeight - 500) / 2; // Centralizado verticalmente
+
   useEffect(() => {
-    setTimeout(getLayoutOnScreen, 500);
-  }, [isScanning]);
+    // Definir layout fixo imediatamente
+    setScanFrameLayout({
+      x: frameX,
+      y: frameY,
+      width: frameWidth,
+      height: frameHeight
+    });
+  }, []);
+
 
   useEffect(() => {
     // Animação da linha de scan
@@ -90,43 +106,18 @@ export default function CameraScanner({
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning || !scanFrameLayout) return;
 
-    const scannableArea = {
-      x: scanFrameLayout.pageX,
-      y: scanFrameLayout.pageY,
-      width: scanFrameLayout.width,
-      height: scanFrameLayout.height
-    };
-
-    const isInScannableArea = isWithinScannableArea(e.cornerPoints, scannableArea);
+    const isInScannableArea = isWithinScannableArea(e.cornerPoints, scanFrameLayout);
     setCodeInFrame(isInScannableArea);
 
     if (!isInScannableArea) return;
 
     cooldownRef.current = true;
     setCodeInFrame(false);
-
     onScan(e);
 
     setTimeout(() => {
       cooldownRef.current = false;
-
     }, 2000);
-  };
-
-  const getLayoutOnScreen = () => {
-    const viewRef = scanFrameRef.current;
-
-    if (viewRef) {
-      // Usar measure para obter coordenadas relativas ao container pai
-      viewRef.measure((x, y, width, height, pageX, pageY) => {
-        setScanFrameLayout({
-          pageX,
-          pageY: pageY + (StatusBar.currentHeight || 0), // Ajuste para StatusBar
-          width,
-          height
-        });
-      });
-    }
   };
 
   const isWithinScannableArea = (
@@ -160,13 +151,10 @@ export default function CameraScanner({
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
-      <View>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Scanner de Código</Text>
           <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
         </View>
-
-      </View>
 
       {/* Camera Container */}
       <View style={styles.cameraContainer}>
@@ -181,7 +169,6 @@ export default function CameraScanner({
         <View
           ref={scanFrameRef}
           style={styles.scanFrame}
-          onLayout={getLayoutOnScreen}
         >
 
           {/* Indicadores de canto */}
@@ -208,6 +195,21 @@ export default function CameraScanner({
             />
           )}
         </View>
+        {scanFrameLayout && (
+          <View
+            style={{
+              position: 'absolute',
+              left: scanFrameLayout.x,
+              top: scanFrameLayout.y,
+              width: scanFrameLayout.width,
+              height: scanFrameLayout.height,
+              borderWidth: 2,
+              borderColor: 'red',
+              backgroundColor: 'rgba(255,0,0,0.2)',
+              zIndex: 100,
+            }}
+          />
+        )}
       </View>
 
       {/* Controles */}
@@ -323,6 +325,7 @@ const styles = StyleSheet.create({
     height: 180,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
   corner: {
     position: 'absolute',
