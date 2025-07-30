@@ -20,9 +20,7 @@ export default function CameraScanner({
 }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
-  const [scanStatus, setScanStatus] = useState('');
   const [codeInFrame, setCodeInFrame] = useState(false);
-  const [bounds, setBounds] = useState<any>(null);
   const scanFrameRef = useRef<View>(null);
   const [scanFrameLayout, setScanFrameLayout] = useState<{
     pageX: number;
@@ -100,48 +98,56 @@ export default function CameraScanner({
     };
 
     const isInScannableArea = isWithinScannableArea(e.cornerPoints, scannableArea);
-    setBounds(e.bounds);
     setCodeInFrame(isInScannableArea);
 
     if (!isInScannableArea) return;
 
     cooldownRef.current = true;
     setCodeInFrame(false);
-    setScanStatus('Código detectado!');
 
     onScan(e);
 
     setTimeout(() => {
       cooldownRef.current = false;
-      setScanStatus('');
+
     }, 2000);
   };
 
   const getLayoutOnScreen = () => {
-
     const viewRef = scanFrameRef.current;
 
-    if (viewRef && typeof viewRef.measureInWindow === 'function') {
-      viewRef.measureInWindow((x, y, width, height) => {
-        setScanFrameLayout({ pageX: x, pageY: y, width, height });
+    if (viewRef) {
+      // Usar measure para obter coordenadas relativas ao container pai
+      viewRef.measure((x, y, width, height, pageX, pageY) => {
+        setScanFrameLayout({
+          pageX,
+          pageY: pageY + (StatusBar.currentHeight || 0), // Ajuste para StatusBar
+          width,
+          height
+        });
       });
     }
   };
-
 
   const isWithinScannableArea = (
     cornerPoints: Point[],
     scannableArea: { x: number; y: number; width: number; height: number }
   ) => {
-    return cornerPoints.every((point) => {
-      const isWithinXRange =
+    // Verificar se pelo menos 3 pontos estão dentro da área
+    let pointsInside = 0;
+
+    cornerPoints.forEach((point) => {
+      if (
         point.x >= scannableArea.x &&
-        point.x <= scannableArea.x + scannableArea.width;
-      const isWithinYRange =
+        point.x <= scannableArea.x + scannableArea.width &&
         point.y >= scannableArea.y &&
-        point.y <= scannableArea.y + scannableArea.height;
-      return isWithinXRange && isWithinYRange;
+        point.y <= scannableArea.y + scannableArea.height
+      ) {
+        pointsInside++;
+      }
     });
+
+    return pointsInside >= 3;
   };
 
   const toggleScanning = () => {
@@ -149,10 +155,7 @@ export default function CameraScanner({
   };
 
   return (
-    <View
-      style={styles.container}
-      onLayout={getLayoutOnScreen}
-    >
+    <View style={styles.container}>
       {/* <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay> */}
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
@@ -166,83 +169,56 @@ export default function CameraScanner({
       </View>
 
       {/* Camera Container */}
-      <View style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-      }}
-        ref={scanFrameRef}
-      >
-        <View
-          style={{
-            position: 'absolute',
-            width: "100%",
-            top: scanFrameLayout?.pageY,
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 20,
+      <View style={styles.cameraContainer}>
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          barcodeScannerSettings={{
+            barcodeTypes: ['code39', 'code128', 'code93', 'qr', 'ean13', 'ean8'],
           }}
+          onBarcodeScanned={handleBarcodeScanned}
+        />
+        <View
+          ref={scanFrameRef}
+          style={styles.scanFrame}
+          onLayout={getLayoutOnScreen}
         >
-          <CameraView
-            style={styles.camera}
-            facing="back"
-            barcodeScannerSettings={{
-              barcodeTypes: ['code39', 'code128', 'code93', 'qr', 'ean13', 'ean8'],
-            }}
-            onBarcodeScanned={handleBarcodeScanned}
-          />
-          <View
-            style={styles.scanFrame}
-          >
-            {/* Corner indicators */}
-            <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
-            <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
-            <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
-            <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
 
-            {/* Scanning line */}
-            {isScanning && (
-              <Animated.View
-                style={[
-                  styles.scanLine,
-                  codeInFrame && styles.scanLineActive,
-                  {
-                    transform: [
-                      {
-                        translateY: scanLineAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-80, 80],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              />
-            )}
-          </View>
+          {/* Indicadores de canto */}
+          <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
+          <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
+          <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
+          <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
+
+          {/* Linha de leitura animada */}
+          {isScanning && scanFrameLayout && (
+            <Animated.View
+              style={[
+                styles.scanLine,
+                codeInFrame && styles.scanLineActive,
+                {
+                  transform: [{
+                    translateY: scanLineAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-90, scanFrameLayout.height - 100],
+                    }),
+                  }],
+                },
+              ]}
+            />
+          )}
         </View>
-
-        {/* Scanning Frame */}
       </View>
 
-      {/* Controls */}
+      {/* Controles */}
       <View style={styles.controlsContainer}>
-        <TouchableOpacity
-          onPress={onButtonPress}
-          style={styles.backButton}
-          activeOpacity={0.8}
-        >
+        <TouchableOpacity onPress={onButtonPress} style={styles.backButton}>
           <Text style={styles.backButtonText}>Voltar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={toggleScanning}
-          style={[
-            styles.scanButton,
-            !isScanning && styles.scanButtonPaused
-          ]}
-          activeOpacity={0.8}
+          style={[styles.scanButton, !isScanning && styles.scanButtonPaused]}
         >
           <Text style={styles.scanButtonText}>
             {isScanning ? 'Pausar' : 'Iniciar'}
@@ -328,6 +304,12 @@ const styles = StyleSheet.create({
     color: '#FF9500',
     fontSize: 16,
     fontWeight: '500',
+  },
+  cameraContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative', // Importante para posicionamento absoluto do frame
   },
   camera: {
     width: '90%',
