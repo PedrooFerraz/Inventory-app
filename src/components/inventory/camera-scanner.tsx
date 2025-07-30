@@ -1,5 +1,6 @@
 import { CameraView, Point, useCameraPermissions } from 'expo-camera';
 import { useRef, useState, useEffect } from 'react';
+
 import {
   StyleSheet,
   Text,
@@ -20,20 +21,18 @@ export default function CameraScanner({
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [codeInFrame, setCodeInFrame] = useState(false);
+  const [x, setX] = useState(0)
+  const [y, setY] = useState(0)
+  const [width, setWidth] = useState(0)
+  const [height, setHeight] = useState(0)
 
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
+
   const { height: windowHeight, width: windowWidth } = Dimensions.get('window');
 
-  // Área de scaneamento relativa (adaptável a diferentes telas)
-  const SCAN_AREA = {
-    x: windowWidth * 0.1,    // 10% da largura
-    y: windowHeight * 0.3,   // 30% da altura
-    width: windowWidth * 0.8, // 80% da largura
-    height: windowHeight * 0.2 // 20% da altura
-  };
-
   useEffect(() => {
+    // Animação da linha de scan
     const scanAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(scanLineAnim, {
@@ -53,10 +52,11 @@ export default function CameraScanner({
       scanAnimation.start();
     } else {
       scanAnimation.stop();
-      setCodeInFrame(false);
     }
 
-    return () => scanAnimation.stop();
+    return () => {
+      scanAnimation.stop();
+    };
   }, [isScanning]);
 
   if (!permission) return <View style={styles.container} />;
@@ -86,13 +86,20 @@ export default function CameraScanner({
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
 
-    const { origin, size } = e.bounds;
-    const isIn = isInScannableArea(origin, size);
+    const {origin, size} = e.bounds
+
+    setX(origin.x)
+    setY(origin.y)
+    setWidth(size.width)
+    setHeight(size.height)
+
+    const isIn = isInScannableArea({origin, size});
     setCodeInFrame(isIn);
 
     if (!isIn) return;
 
     cooldownRef.current = true;
+    setCodeInFrame(false);
     onScan(e);
 
     setTimeout(() => {
@@ -100,29 +107,34 @@ export default function CameraScanner({
     }, 2000);
   };
 
-  // Função corrigida para verificação de área
-  const isInScannableArea = (origin: Point, size: { width: number; height: number }) => {
-    const codeRight = origin.x + size.width;
-    const codeBottom = origin.y + size.height;
+  const isInScannableArea = ({ origin, size }: { origin: any, size: any }) => {
+    const minY = origin.y;
+    const maxY = minY + size.height;
+    const minX = width - origin.x
+    const maxX = minX - size.width
 
-    return (
-      origin.x >= SCAN_AREA.x &&
-      codeRight <= SCAN_AREA.x + SCAN_AREA.width &&
-      origin.y >= SCAN_AREA.y &&
-      codeBottom <= SCAN_AREA.y + SCAN_AREA.height
-    );
+    if (minY >= 25 && maxY <= 400 && minX >= 67 && maxX <= 135) {
+      return true
+    } else {
+      return false
+    }
   };
 
-  const toggleScanning = () => setIsScanning(!isScanning);
+  const toggleScanning = () => {
+    setIsScanning(!isScanning);
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
-      
+      <View style={{ position: 'absolute', top: y, left: x, width: width, height: height, borderWidth: 2, borderColor: "red" }}>
+
+      </View>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Scanner de Código</Text>
         <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
+        <Text>X:{x} - Y:{y} - Width:{width} - Heigth:{height}</Text>
       </View>
 
       {/* Camera Container */}
@@ -135,14 +147,10 @@ export default function CameraScanner({
           }}
           onBarcodeScanned={handleBarcodeScanned}
         />
-        
-        {/* Área de scaneamento visual */}
-        <View style={[styles.scanFrame, {
-          top: SCAN_AREA.y,
-          left: SCAN_AREA.x,
-          width: SCAN_AREA.width,
-          height: SCAN_AREA.height
-        }]}>
+        <View
+          style={styles.scanFrame}
+        >
+
           {/* Indicadores de canto */}
           <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
           <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
@@ -159,7 +167,7 @@ export default function CameraScanner({
                   transform: [{
                     translateY: scanLineAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0, SCAN_AREA.height],
+                      outputRange: [-90, windowHeight / 11],
                     }),
                   }],
                 },
