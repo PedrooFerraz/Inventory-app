@@ -86,7 +86,7 @@ export default function CameraScanner({
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
 
-    const [origin, size] = e.bounds
+    const {origin, size} = e.bounds
 
     setX(origin.x)
     setY(origin.y)
@@ -100,7 +100,7 @@ export default function CameraScanner({
 
     cooldownRef.current = true;
     setCodeInFrame(false);
-    //onScan(e);
+    onScan(e);
 
     setTimeout(() => {
       cooldownRef.current = false;
