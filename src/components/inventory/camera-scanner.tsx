@@ -116,7 +116,9 @@ export default function CameraScanner({
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
+      <View style={{position: 'absolute', top: y, left: x, width: width, height: height}}>
 
+      </View>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Scanner de Código</Text>
