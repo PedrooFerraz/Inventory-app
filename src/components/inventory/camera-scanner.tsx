@@ -83,54 +83,16 @@ export default function CameraScanner({
     );
   }
 
-  const SCAN_AREA = {
-    // valores relativos à área da câmera (% da área visível da camera)
-    x: 0.1, // 10% da esquerda
-    y: 0.1, // 10% do topo
-    width: 0.8, // 80% largura
-    height: 0.8, // 80% altura
-  };
-
-
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
-
-    if (!isCodeInsideScanArea(e)) return;
-
     cooldownRef.current = true;
-    setCodeInFrame(true);
+    setCodeInFrame(false);
     onScan(e);
 
     setTimeout(() => {
       cooldownRef.current = false;
     }, 2000);
   };
-
-  function isCodeInsideScanArea(e: any) {
-    if (!e?.bounds?.origin || !e.bounds.size) return false;
-
-    const cameraWidth = windowWidth * 0.9; // largura da camera
-    const cameraHeight = 220; // altura fixa usada no estilo
-
-    const scanX = SCAN_AREA.x * cameraWidth;
-    const scanY = SCAN_AREA.y * cameraHeight;
-    const scanW = SCAN_AREA.width * cameraWidth;
-    const scanH = SCAN_AREA.height * cameraHeight;
-
-    const codeX = e.bounds.origin.x;
-    const codeY = e.bounds.origin.y;
-    const codeW = e.bounds.size.width;
-    const codeH = e.bounds.size.height;
-
-    const isInside =
-      codeX >= scanX &&
-      codeY >= scanY &&
-      codeX + codeW <= scanX + scanW &&
-      codeY + codeH <= scanY + scanH;
-
-    return isInside;
-  }
-
 
   const toggleScanning = () => {
     setIsScanning(!isScanning);
