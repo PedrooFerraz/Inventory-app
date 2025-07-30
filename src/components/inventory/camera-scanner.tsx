@@ -113,7 +113,7 @@ export default function CameraScanner({
     const minX = origin.x
     const maxX = minX + size.width
 
-    if (minY >= 25 && maxY <= 330 && minX >= 67 && maxX <= 135) {
+    if (minY >= 25 && maxY <= 400 && minX >= 67 && maxX <= 135) {
       return true
     } else {
       return false
@@ -127,13 +127,14 @@ export default function CameraScanner({
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
-      <View style={{ position: 'absolute', top: y, left: x, width: width, height: height }}>
+      <View style={{ position: 'absolute', top: y, left: x, width: width, height: height, borderWidth: 2, borderColor: "red" }}>
 
       </View>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Scanner de Código</Text>
         <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
+        <Text>X:{x} - Y:{y} - Width:{width} - Heigth:{height}</Text>
       </View>
 
       {/* Camera Container */}
