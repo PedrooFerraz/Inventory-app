@@ -37,8 +37,8 @@ export default function CameraScanner({
 
   const frameWidth = screenWidth * 0.8;
   const frameHeight = 180;
-  const frameX = screenWidth * 0.1;
-  const frameY = (screenHeight - 500) / 2; // Centralizado verticalmente
+  const frameX = (screenWidth - frameWidth) / 2;
+  const frameY = screenHeight * 0.20 // Centralizado verticalmente
 
   useEffect(() => {
     // Definir layout fixo imediatamente
@@ -124,21 +124,21 @@ export default function CameraScanner({
     cornerPoints: Point[],
     scannableArea: { x: number; y: number; width: number; height: number }
   ) => {
-    // Verificar se pelo menos 3 pontos estão dentro da área
+    // Verificar se pelo menos 2 pontos estão dentro da área (mais tolerante)
     let pointsInside = 0;
 
     cornerPoints.forEach((point) => {
       if (
-        point.x >= scannableArea.x &&
-        point.x <= scannableArea.x + scannableArea.width &&
-        point.y >= scannableArea.y &&
-        point.y <= scannableArea.y + scannableArea.height
+        point.x >= scannableArea.x - 10 && // 10px de margem
+        point.x <= scannableArea.x + scannableArea.width + 10 &&
+        point.y >= scannableArea.y - 10 &&
+        point.y <= scannableArea.y + scannableArea.height + 10
       ) {
         pointsInside++;
       }
     });
 
-    return pointsInside >= 3;
+    return pointsInside >= 2; // Requer apenas 2 pontos dentro da área
   };
 
   const toggleScanning = () => {
@@ -151,10 +151,10 @@ export default function CameraScanner({
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Scanner de Código</Text>
-          <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Scanner de Código</Text>
+        <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
+      </View>
 
       {/* Camera Container */}
       <View style={styles.cameraContainer}>
@@ -196,19 +196,21 @@ export default function CameraScanner({
           )}
         </View>
         {scanFrameLayout && (
-          <View
-            style={{
-              position: 'absolute',
-              left: scanFrameLayout.x,
-              top: scanFrameLayout.y,
-              width: scanFrameLayout.width,
-              height: scanFrameLayout.height,
-              borderWidth: 2,
-              borderColor: 'red',
-              backgroundColor: 'rgba(255,0,0,0.2)',
-              zIndex: 100,
-            }}
-          />
+          <View style={{
+            position: 'absolute',
+            left: scanFrameLayout.x,
+            top: scanFrameLayout.y,
+            width: scanFrameLayout.width,
+            height: scanFrameLayout.height,
+            borderWidth: 2,
+            borderColor: 'red',
+            backgroundColor: 'rgba(255,0,0,0.2)',
+            zIndex: 100,
+          }}>
+            <Text style={{ color: 'white', fontSize: 10 }}>
+              {`X: ${scanFrameLayout.x}, Y: ${scanFrameLayout.y}`}
+            </Text>
+          </View>
         )}
       </View>
 
