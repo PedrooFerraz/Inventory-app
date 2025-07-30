@@ -22,34 +22,19 @@ export default function CameraScanner({
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [codeInFrame, setCodeInFrame] = useState(false);
-  const scanFrameRef = useRef<View>(null);
-  const [scanFrameLayout, setScanFrameLayout] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
+  const [bounds, setBounds] = useState()
 
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
 
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  const { height: windowHeight, width: windowWidth } = Dimensions.get('window');
 
-  const frameWidth = screenWidth * 0.8;
-  const frameHeight = 180;
-  const frameX = (screenWidth - frameWidth) / 2;
-  const frameY = screenHeight * 0.20 // Centralizado verticalmente
-
-  useEffect(() => {
-    // Definir layout fixo imediatamente
-    setScanFrameLayout({
-      x: frameX,
-      y: frameY,
-      width: frameWidth,
-      height: frameHeight
-    });
-  }, []);
-
+  const viewFinderBounds = {
+    height: 200,
+    width: windowWidth * 0.9,
+    x: (windowWidth - windowWidth * 0.9) / 2,
+    y: (windowHeight - 200) / 2,
+  };
 
   useEffect(() => {
     // Animação da linha de scan
@@ -104,9 +89,10 @@ export default function CameraScanner({
   }
 
   const handleBarcodeScanned = (e: any) => {
-    if (cooldownRef.current || !isScanning || !scanFrameLayout) return;
+    if (cooldownRef.current || !isScanning) return;
 
-    const isInScannableArea = isWithinScannableArea(e.cornerPoints, scanFrameLayout);
+    setBounds(e.bounds)
+    const isInScannableArea = isWithinScannableArea(e.cornerPoints);
     setCodeInFrame(isInScannableArea);
 
     if (!isInScannableArea) return;
@@ -121,24 +107,17 @@ export default function CameraScanner({
   };
 
   const isWithinScannableArea = (
-    cornerPoints: Point[],
-    scannableArea: { x: number; y: number; width: number; height: number }
-  ) => {
-    // Verificar se pelo menos 2 pontos estão dentro da área (mais tolerante)
-    let pointsInside = 0;
-
-    cornerPoints.forEach((point) => {
-      if (
-        point.x >= scannableArea.x - 10 && // 10px de margem
-        point.x <= scannableArea.x + scannableArea.width + 10 &&
-        point.y >= scannableArea.y - 10 &&
-        point.y <= scannableArea.y + scannableArea.height + 10
-      ) {
-        pointsInside++;
-      }
+    cornerPoints: Point[]
+  ) =>{
+    return cornerPoints.every((point) => {
+      const isWithinXRange =
+        point.x >= viewFinderBounds.x &&
+        point.x <= viewFinderBounds.x + viewFinderBounds.width;
+      const isWithinYRange =
+        point.y >= viewFinderBounds.y &&
+        point.y <= viewFinderBounds.y + viewFinderBounds.height;
+      return isWithinXRange && isWithinYRange;
     });
-
-    return pointsInside >= 2; // Requer apenas 2 pontos dentro da área
   };
 
   const toggleScanning = () => {
@@ -147,7 +126,7 @@ export default function CameraScanner({
 
   return (
     <View style={styles.container}>
-      {/* <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay> */}
+      <ScanDebugOverlay bounds={bounds}></ScanDebugOverlay>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
 
       {/* Header */}
@@ -167,7 +146,6 @@ export default function CameraScanner({
           onBarcodeScanned={handleBarcodeScanned}
         />
         <View
-          ref={scanFrameRef}
           style={styles.scanFrame}
         >
 
@@ -178,7 +156,7 @@ export default function CameraScanner({
           <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
 
           {/* Linha de leitura animada */}
-          {isScanning && scanFrameLayout && (
+          {isScanning && (
             <Animated.View
               style={[
                 styles.scanLine,
@@ -187,7 +165,7 @@ export default function CameraScanner({
                   transform: [{
                     translateY: scanLineAnim.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [-90, scanFrameLayout.height - 100],
+                      outputRange: [-90, windowHeight / 11],
                     }),
                   }],
                 },
@@ -195,23 +173,6 @@ export default function CameraScanner({
             />
           )}
         </View>
-        {scanFrameLayout && (
-          <View style={{
-            position: 'absolute',
-            left: scanFrameLayout.x,
-            top: scanFrameLayout.y,
-            width: scanFrameLayout.width,
-            height: scanFrameLayout.height,
-            borderWidth: 2,
-            borderColor: 'red',
-            backgroundColor: 'rgba(255,0,0,0.2)',
-            zIndex: 100,
-          }}>
-            <Text style={{ color: 'white', fontSize: 10 }}>
-              {`X: ${scanFrameLayout.x}, Y: ${scanFrameLayout.y}`}
-            </Text>
-          </View>
-        )}
       </View>
 
       {/* Controles */}
