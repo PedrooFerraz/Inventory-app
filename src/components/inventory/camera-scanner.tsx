@@ -21,10 +21,10 @@ export default function CameraScanner({
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [codeInFrame, setCodeInFrame] = useState(false);
-  const [x, setX] = useState()
-  const [y, setY] = useState()
-  const [width, setWidth] = useState()
-  const [height, setHeight] = useState()
+  const [x, setX] = useState(0)
+  const [y, setY] = useState(0)
+  const [width, setWidth] = useState(0)
+  const [height, setHeight] = useState(0)
 
   const cooldownRef = useRef(false);
   const scanLineAnim = useRef(new Animated.Value(0)).current;
@@ -86,10 +86,12 @@ export default function CameraScanner({
   const handleBarcodeScanned = (e: any) => {
     if (cooldownRef.current || !isScanning) return;
 
-    setX(e.bounds.origin.x)
-    setY(e.bounds.origin.y)
-    setWidth(e.bounds.size.width)
-    setHeight(e.bounds.size.height)
+    const [origin, size] = e.bounds
+
+    setX(origin.x)
+    setY(origin.y)
+    setWidth(size.width)
+    setHeight(size.height)
 
     const isIn = isInScannableArea();
     setCodeInFrame(isInScannableArea);
