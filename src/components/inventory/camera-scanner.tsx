@@ -61,10 +61,10 @@ export default function CameraScanner({
     if (bounds?.origin) {
       const { x, y } = bounds.origin;
       if (
-        x >= (windowWidth - scanBoxWidth) / 2 &&
-        x <= (windowWidth + scanBoxWidth) / 2 &&
-        y >= (windowHeight - scanBoxHeight) / 2 &&
-        y <= (windowHeight + scanBoxHeight) / 2
+        y >= (windowWidth - scanBoxWidth) / 2 &&
+        y <= (windowWidth + scanBoxWidth) / 2 &&
+        x >= (windowHeight - scanBoxHeight) / 2 &&
+        x <= (windowHeight + scanBoxHeight) / 2
       ) {
         setCodeInFrame(true);
         cooldownRef.current = true;
