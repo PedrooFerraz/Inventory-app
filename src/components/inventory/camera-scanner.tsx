@@ -1,6 +1,5 @@
-import { CameraView, Point, useCameraPermissions } from 'expo-camera';
-import { useRef, useState, useEffect } from 'react';
-
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +9,10 @@ import {
   StatusBar,
   Dimensions
 } from 'react-native';
+
+const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+const scanBoxWidth = 300; // Largura maior
+const scanBoxHeight = 120; // Altura menor
 
 export default function CameraScanner({
   onScan,
@@ -21,19 +24,12 @@ export default function CameraScanner({
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(false);
   const [codeInFrame, setCodeInFrame] = useState(false);
-  const [x, setX] = useState(0)
-  const [y, setY] = useState(0)
-  const [width, setWidth] = useState(0)
-  const [height, setHeight] = useState(0)
-
   const cooldownRef = useRef(false);
+
   const scanLineAnim = useRef(new Animated.Value(0)).current;
 
-  const { height: windowHeight, width: windowWidth } = Dimensions.get('window');
-
   useEffect(() => {
-    // Animação da linha de scan
-    const scanAnimation = Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(scanLineAnim, {
           toValue: 1,
@@ -49,15 +45,38 @@ export default function CameraScanner({
     );
 
     if (isScanning) {
-      scanAnimation.start();
+      animation.start();
     } else {
-      scanAnimation.stop();
+      animation.stop();
     }
 
-    return () => {
-      scanAnimation.stop();
-    };
+    return () => animation.stop();
   }, [isScanning]);
+
+  const handleBarcodeScanned = (e: any) => {
+    if (cooldownRef.current || !isScanning) return;
+
+    // Verifica se o código está dentro da área do scanBox
+    const { bounds } = e;
+    if (bounds?.origin) {
+      const { x, y } = bounds.origin;
+      if (
+        x >= (windowWidth - scanBoxWidth) / 2 &&
+        x <= (windowWidth + scanBoxWidth) / 2 &&
+        y >= (windowHeight - scanBoxHeight) / 2 &&
+        y <= (windowHeight + scanBoxHeight) / 2
+      ) {
+        setCodeInFrame(true);
+        cooldownRef.current = true;
+        onScan(e);
+
+        setTimeout(() => {
+          cooldownRef.current = false;
+          setCodeInFrame(false);
+        }, 2000);
+      }
+    }
+  };
 
   if (!permission) return <View style={styles.container} />;
 
@@ -65,96 +84,82 @@ export default function CameraScanner({
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
-        <View style={styles.modalOverlay}>
-          <View style={styles.messageContainer}>
-            <Text style={styles.message}>
-              Precisamos de permissão para acessar sua câmera
-            </Text>
-            <TouchableOpacity
-              style={styles.permissionButton}
-              onPress={requestPermission}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.permissionButtonText}>Permitir</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <Text style={styles.message}>Precisamos de permissão para usar a câmera</Text>
+        <TouchableOpacity onPress={requestPermission} style={styles.permissionButton}>
+          <Text style={styles.permissionButtonText}>Permitir</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  const handleBarcodeScanned = (e: any) => {
-    if (cooldownRef.current || !isScanning) return;
-    cooldownRef.current = true;
-    setCodeInFrame(false);
-    onScan(e);
-
-    setTimeout(() => {
-      cooldownRef.current = false;
-    }, 2000);
-  };
-
-  const toggleScanning = () => {
-    setIsScanning(!isScanning);
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#3A5073" />
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Scanner de Código</Text>
-        <Text style={styles.headerSubtitle}>Posicione o código dentro do quadro</Text>
-      </View>
 
-      {/* Camera Container */}
-      <View style={styles.cameraContainer}>
-        <CameraView
-          style={styles.camera}
-          facing="back"
-          barcodeScannerSettings={{
-            barcodeTypes: ['code39', 'code128', 'code93', 'qr', 'ean13', 'ean8'],
-          }}
-          onBarcodeScanned={handleBarcodeScanned}
-        />
-        <View
-          style={styles.scanFrame}
-        >
+      <CameraView
+        style={StyleSheet.absoluteFillObject}
+        facing="back"
+        onBarcodeScanned={handleBarcodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: ['code39', 'code128', 'code93', 'qr', 'ean13', 'ean8'],
+        }}
+      />
 
-          {/* Indicadores de canto */}
-          <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
-          <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
-          <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
-          <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
+      {/* Overlay de escurecimento */}
+      <View style={styles.overlay}>
+        <View style={[styles.mask, { height: (windowHeight - scanBoxHeight) / 2 }]} />
 
-          {/* Linha de leitura animada */}
-          {isScanning && (
-            <Animated.View
-              style={[
-                styles.scanLine,
-                codeInFrame && styles.scanLineActive,
-                {
-                  transform: [{
-                    translateY: scanLineAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [-90, windowHeight / 11],
-                    }),
-                  }],
-                },
-              ]}
-            />
-          )}
+        <View style={styles.centerRow}>
+          <View style={styles.mask} />
+
+          {/* Scan Box */}
+          <View style={styles.scanBox}>
+            {/* Canto decorativo */}
+            <View style={[styles.corner, styles.topLeft, codeInFrame && styles.cornerActive]} />
+            <View style={[styles.corner, styles.topRight, codeInFrame && styles.cornerActive]} />
+            <View style={[styles.corner, styles.bottomLeft, codeInFrame && styles.cornerActive]} />
+            <View style={[styles.corner, styles.bottomRight, codeInFrame && styles.cornerActive]} />
+
+            {/* Linha animada */}
+            {isScanning && (
+              <Animated.View
+                style={[
+                  styles.scanLine,
+                  codeInFrame && styles.scanLineActive,
+                  {
+                    transform: [{
+                      translateY: scanLineAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-55, scanBoxHeight - 60], // ajuste da linha animada
+                      }),
+                    }],
+                  },
+                ]}
+              />
+            )}
+          </View>
+
+          <View style={styles.mask} />
         </View>
+
+        <View style={[styles.mask, { height: (windowHeight - scanBoxHeight) / 2 }]} />
       </View>
 
-      {/* Controles */}
+      {/* Instruções */}
+      <View style={styles.instructionsContainer}>
+        <Text style={styles.headerSubtitle}>
+          Posicione o código dentro do quadro e toque em iniciar
+        </Text>
+      </View>
+
+      {/* Botões */}
       <View style={styles.controlsContainer}>
         <TouchableOpacity onPress={onButtonPress} style={styles.backButton}>
           <Text style={styles.backButtonText}>Voltar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={toggleScanning}
+          onPress={() => setIsScanning(!isScanning)}
           style={[styles.scanButton, !isScanning && styles.scanButtonPaused]}
         >
           <Text style={styles.scanButtonText}>
@@ -169,98 +174,42 @@ export default function CameraScanner({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
+    top: 0,
     width: "100%",
     height: "100%",
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     backgroundColor: '#3A5073',
   },
-  modalOverlay: {
-    flex: 1,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+  },
+  mask: {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  messageContainer: {
-    backgroundColor: '#4E6B92',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  message: {
-    textAlign: 'center',
-    color: 'white',
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  permissionButton: {
-    backgroundColor: '#5a7fac',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  permissionButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: 'white',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    marginHorizontal: 20,
-    marginBottom: 20,
-  },
-  statusIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  statusText: {
-    color: '#FF9500',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  cameraContainer: {
     flex: 1,
+  },
+  centerRow: {
+    flexDirection: 'row',
+  },
+  scanBox: {
+    width: scanBoxWidth,
+    height: scanBoxHeight,
+    position: 'relative',
+    borderColor: 'white',
+    borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative', // Importante para posicionamento absoluto do frame
   },
-  camera: {
-    width: '90%',
-    height: 220,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  scanFrame: {
+  scanLine: {
     position: 'absolute',
-    width: '80%',
-    height: 180,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
+    width: '100%',
+    height: 2,
+    backgroundColor: '#fff',
+  },
+  scanLineActive: {
+    backgroundColor: '#FFD700',
+    height: 3,
   },
   corner: {
     position: 'absolute',
@@ -272,10 +221,6 @@ const styles = StyleSheet.create({
   cornerActive: {
     borderColor: '#FFD700',
     shadowColor: '#FFD700',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
     shadowOpacity: 0.8,
     shadowRadius: 4,
     elevation: 4,
@@ -304,57 +249,27 @@ const styles = StyleSheet.create({
     borderLeftWidth: 0,
     borderTopWidth: 0,
   },
-  scanLine: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: '#FFF',
-    shadowColor: '#FFF',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  scanLineActive: {
-    backgroundColor: '#FFD700',
-    shadowColor: '#FFD700',
-    height: 3,
-  },
   instructionsContainer: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    margin: 20,
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: '#3A5073',
+    padding: 20,
+    alignItems: 'center',
   },
-  instructionsTitle: {
-    color: 'white',
+  headerSubtitle: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  instructionsText: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-    lineHeight: 20,
+    textAlign: 'center',
   },
   controlsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    paddingTop: 20,
+    justifyContent: 'space-around',
+    padding: 20,
+    backgroundColor: '#3A5073',
   },
   backButton: {
     backgroundColor: '#5A7FAC',
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 25,
-    minWidth: 120,
-    alignItems: 'center',
   },
   backButtonText: {
     fontSize: 16,
@@ -363,18 +278,34 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     backgroundColor: '#5A7FAC',
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 25,
-    minWidth: 120,
-    alignItems: 'center',
   },
   scanButtonPaused: {
-    backgroundColor: '#5A7FAC',
+    opacity: 1,
   },
   scanButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: 'white',
+  },
+  message: {
+    color: 'white',
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  permissionButton: {
+    backgroundColor: '#5a7fac',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  permissionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
