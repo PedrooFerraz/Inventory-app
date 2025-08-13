@@ -23,7 +23,7 @@ export async function exportInventoryToExcel(inventoryData: Item[]) {
                 'ESTOQUE SAP': item.expectedQuantity || "",
                 'POSIÇÃO SAP': item.expectedLocation || "",
                 'ESTOQUE FÍSICO': item.reportedQuantity || 0,
-                'POSIÇÃO FÍSICA': item.reportedLocation || item.expectedLocation || "",
+                'POSIÇÃO FÍSICA': item.reportedLocation || "",
                 'DATA DA CONTAGEM': item.countTime || '',
                 'MATRICULA RESP. CONTAGEM': getOperatorCode(operators, item.operator) || '',
                 'NOME RESP. CONTAGEM': getOperatorName(operators, item.operator) || '',

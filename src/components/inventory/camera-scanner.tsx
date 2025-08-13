@@ -63,8 +63,8 @@ export default function CameraScanner({
       if (
         y >= (windowWidth - scanBoxWidth) / 2 &&
         y <= (windowWidth + scanBoxWidth) / 2 &&
-        x >= (windowHeight - scanBoxHeight) / 2 &&
-        x <= (windowHeight + scanBoxHeight) / 2
+        x >= (windowHeight - scanBoxHeight) / 2.5 &&
+        x <= (windowHeight + scanBoxHeight) / 2.5
       ) {
         setCodeInFrame(true);
         cooldownRef.current = true;
