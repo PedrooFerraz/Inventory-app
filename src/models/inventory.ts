@@ -3,7 +3,6 @@ import * as Papa from 'papaparse';
 import { executeQuery, fetchAll } from '@/services/database';
 import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption } from '@/types/types';
 
-
 export const insertInventory = async (fileUri: string, fileName: string): Promise<{
   success: boolean;
   inventories: Array<{
@@ -15,14 +14,28 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
   message: string;
 }> => {
   try {
-    // Validação do tamanho do arquivo pois a blib do expo so aceita até 6mb
-    const fileInfo = await FileSystem.getInfoAsync(fileUri);
+    // Valida se o arquivo existe e seu tamanho
+    const file = new FileSystem.File(fileUri);
+    let fileInfo: FileSystem.FileInfo;
+    try {
+      fileInfo = await file.info(); // Troca do getInfoAsync
+    } catch (error) {
+      throw new Error(`Erro ao obter informações do arquivo: ${error}`);
+    }
+
     if (!fileInfo.exists) throw new Error('Arquivo não encontrado');
-    if (fileInfo.size > 6 * 1024 * 1024) throw new Error('Arquivo muito grande (máximo 6MB)');
+    if (fileInfo.size && fileInfo.size > 6 * 1024 * 1024)
+      throw new Error('Arquivo muito grande (máximo 6MB)');
 
-    const fileContent = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+    // Lendo arquivo CSV
+    let fileContent: string;
+    try {
+      fileContent = await file.text(); // Troca readAsStringAsync
+    } catch (error) {
+      throw new Error(`Erro ao ler o arquivo CSV: ${error}`);
+    }
 
-await executeQuery('BEGIN TRANSACTION');
+    await executeQuery('BEGIN TRANSACTION');
 
     if (fileContent.includes('�'))
       throw new Error('O arquivo parece estar com codificação inválida. Por favor, salve como CSV UTF-8.');
@@ -32,26 +45,26 @@ await executeQuery('BEGIN TRANSACTION');
         header: true,
         skipEmptyLines: true,
         complete: resolve,
-        error: reject
+        error: reject,
       });
     });
 
-    // Processamento dos itens
+    // Processando items
     const items: ImportedInventoryItem[] = parseResult.data
-      .filter(item => item['MATERIAL'] && item['MATERIAL'].trim() !== '' && item['MATERIAL'] !== "MATERIAL")
+      .filter(item => item['MATERIAL'] && item['MATERIAL'].trim() !== '' && item['MATERIAL'] !== 'MATERIAL')
       .map(item => ({
-        inventoryDocument: item["INVENTÁRIO"] || "",
-        year: item["ANO"] || "",
-        center: item["CENTRO"] || "",
-        storage: item["DEPÓSITO"] || "",
-        batch: item["LOTE"] || "",
-        inventoryItem: item["ITEM"] || "",
+        inventoryDocument: item['INVENTÁRIO'] || '',
+        year: item['ANO'] || '',
+        center: item['CENTRO'] || '',
+        storage: item['DEPÓSITO'] || '',
+        batch: item['LOTE'] || '',
+        inventoryItem: item['ITEM'] || '',
         code: item['MATERIAL']!.toUpperCase(),
         description: item['DESCRIÇÃO']!,
         expectedQuantity: formatQuantity(item['ESTOQUE'] || 0),
-        unit: item["UN"] || "",
-        averagePrice: item["PREÇO MÉDIO"] || "",
-        currency: item["MOEDA"] || "",
+        unit: item['UN'] || '',
+        averagePrice: item['PREÇO MÉDIO'] || '',
+        currency: item['MOEDA'] || '',
         expectedLocation: (item['POSIÇÃO NO DEPÓSITO'] || '').toUpperCase(),
       }));
 
@@ -59,7 +72,7 @@ await executeQuery('BEGIN TRANSACTION');
       throw new Error('Nenhum item válido encontrado no arquivo');
     }
 
-    // Agrupar itens por inventoryDocument
+    // Agrupa itens por inventário
     const itemsByInventory = items.reduce((acc, item) => {
       if (!acc[item.inventoryDocument]) {
         acc[item.inventoryDocument] = [];
@@ -68,12 +81,16 @@ await executeQuery('BEGIN TRANSACTION');
       return acc;
     }, {} as Record<string, ImportedInventoryItem[]>);
 
-    const inventoryResults = [];
+    const inventoryResults: Array<{
+      inventoryId: number;
+      document: string;
+      year: string;
+      itemCount: number;
+    }> = [];
 
-
-    // Processar cada grupo de inventário separadamente
+    // Processa cada inventário separadamente
     for (const [inventoryDocument, documentItems] of Object.entries(itemsByInventory)) {
-      // Verificar se já existe inventário com este documento no mesmo ano
+      // Checha se o inventario já existe com base no mesmo numero e ano
       const year = documentItems[0].year;
       const existingInventory = await fetchAll<Inventory>(
         `SELECT i.* FROM inventories i
@@ -87,27 +104,26 @@ await executeQuery('BEGIN TRANSACTION');
         throw new Error(`Inventário com o documento ${inventoryDocument} no ano ${year} já foi inserido`);
       }
 
-      // Criar novo inventário
+      // Cria um novo inventario
       const result = await executeQuery(
         `INSERT INTO inventories 
         (fileName, fileUri, importDate, inventoryYear, totalItems, inventoryDocument) 
         VALUES (?, ?, ?, ?, ?, ?);`,
-        [fileName, fileUri, new Date().toLocaleDateString("pt-br"), year, documentItems.length, inventoryDocument]
+        [fileName, fileUri, new Date().toLocaleDateString('pt-BR'), year, documentItems.length, inventoryDocument]
       );
 
       const inventoryId = result.lastInsertRowId!;
 
-      // Inserir itens deste inventário
+      // Insere itens no inventário em lotes para melhor performance
       await insertItemsInBatches(inventoryId, documentItems);
 
       inventoryResults.push({
         inventoryId,
         document: inventoryDocument,
         year,
-        itemCount: documentItems.length
+        itemCount: documentItems.length,
       });
     }
-
 
     await executeQuery('COMMIT');
 
@@ -116,113 +132,78 @@ await executeQuery('BEGIN TRANSACTION');
       inventories: inventoryResults,
       message: inventoryResults.length > 1
         ? `Foram criados ${inventoryResults.length} inventários distintos`
-        : 'Inventário criado com sucesso'
+        : 'Inventário criado com sucesso',
     };
-
   } catch (error) {
-    
     await executeQuery('ROLLBACK');
-
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     if (errorMessage.includes('Inventário com o documento')) {
       throw new Error(errorMessage);
-   }
+    }
 
     throw new Error('Ocorreu um erro, verifique se o arquivo CSV está seguindo a planilha de modelo e se está em formato UTF-8');
   }
 };
 
-export const fetchInventories = async () => {
-  return await fetchAll<Inventory>(
-    'SELECT * FROM inventories ORDER BY importDate DESC;'
-  );
+export const fetchInventories = async (): Promise<Inventory[]> => {
+  return await fetchAll<Inventory>('SELECT * FROM inventories ORDER BY importDate DESC;');
 };
 
-export const fetchOpenInventories = async () => {
-  return await fetchAll<Inventory>(
-    'SELECT * FROM inventories WHERE status IS NOT 2 ORDER BY importDate DESC;'
-  );
+export const fetchOpenInventories = async (): Promise<Inventory[]> => {
+  return await fetchAll<Inventory>('SELECT * FROM inventories WHERE status IS NOT 2 ORDER BY importDate DESC;');
 };
 
 const BATCH_SIZE = 50; // Processa 50 itens por vez
 
-const insertItemsInBatches = async (inventoryId: number, items: ImportedInventoryItem[]) => {
+const insertItemsInBatches = async (inventoryId: number, items: ImportedInventoryItem[]): Promise<void> => {
   for (let i = 0; i < items.length; i += BATCH_SIZE) {
     const batch = items.slice(i, i + BATCH_SIZE);
     await Promise.all(batch.map(item => insertInventoryItem(inventoryId, item)));
   }
 };
 
-
 export const updateItemCount = async (
   itemId: number,
   item: {
-    reportedQuantity: number,
-    reportedLocation: string,
-    observation: string,
-    operator: string,
-    status: number,
-    countTime: string
+    reportedQuantity: number;
+    reportedLocation: string;
+    observation: string;
+    operator: string;
+    status: number;
+    countTime: string;
   }
-) => {
-  return await executeQuery(
+): Promise<void> => {
+  await executeQuery(
     `UPDATE inventory_items SET reportedQuantity = ?, reportedLocation = ?, observation = ?, operator = ?, status = ?, countTime = ? WHERE id = ?;`,
     [item.reportedQuantity, item.reportedLocation, item.observation, item.operator, item.status, item.countTime, itemId]
   );
 };
 
-export const updateInventoryStatus = async (
-  id: number,
-  status: number
-) => {
-  const result = await executeQuery(
-    'UPDATE inventories SET status = ? WHERE id = ?;',
-    [status, id]
-  );
-  return result;
+export const updateInventoryStatus = async (id: number, status: number): Promise<void> => {
+  await executeQuery('UPDATE inventories SET status = ? WHERE id = ?;', [status, id]);
 };
 
-export const updateInventoryCountedItems = async (
-  inventoryID: number,
-  counted: number
-) => {
-  const result = await executeQuery(
-    `UPDATE inventories SET countedItems = ? WHERE id = ?`,
-    [counted, inventoryID])
-  return result
-}
+export const updateInventoryCountedItems = async (inventoryID: number, counted: number): Promise<void> => {
+  await executeQuery(`UPDATE inventories SET countedItems = ? WHERE id = ?`, [counted, inventoryID]);
+};
 
-export const updateInventoryTotalItems = async (
-  inventoryID: number,
-  total: number
-) => {
-  const result = await executeQuery(
-    `UPDATE inventories SET totalItems = ? WHERE id = ?`,
-    [total, inventoryID])
-  return result
-}
+export const updateInventoryTotalItems = async (inventoryID: number, total: number): Promise<void> => {
+  await executeQuery(`UPDATE inventories SET totalItems = ? WHERE id = ?`, [total, inventoryID]);
+};
 
-export const fetchInventoryById = async (
-  id: number
-): Promise<Inventory | null> => {
-  const result = await fetchAll<Inventory>(
-    'SELECT * FROM inventories WHERE id = ?;',
-    [id]
-  );
+export const fetchInventoryById = async (id: number): Promise<Inventory | null> => {
+  const result = await fetchAll<Inventory>('SELECT * FROM inventories WHERE id = ?;', [id]);
   return result[0] || null;
 };
 
-export const insertInventoryItem = async (
-  inventoryId: number,
-  item: ImportedInventoryItem
-) => {
-  const result = await executeQuery(
+export const insertInventoryItem = async (inventoryId: number, item: ImportedInventoryItem): Promise<void> => {
+  await executeQuery(
     `INSERT INTO inventory_items (
-    inventory_id, inventoryDocument, year, center, storage, batch,
-    inventoryItem, unit, averagePrice, code, description,
-    expectedLocation, expectedQuantity, status
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
+      inventory_id, inventoryDocument, year, center, storage, batch,
+      inventoryItem, unit, averagePrice, code, description,
+      expectedLocation, expectedQuantity, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);`,
     [
       String(inventoryId),
       String(item.inventoryDocument || ''),
@@ -236,10 +217,9 @@ export const insertInventoryItem = async (
       String(item.code || ''),
       String(item.description || ''),
       String(item.expectedLocation || ''),
-      String(item.expectedQuantity || '')
+      String(item.expectedQuantity || ''),
     ]
   );
-  return result;
 };
 
 export const insertNewInventoryItem = async (
@@ -253,12 +233,11 @@ export const insertNewInventoryItem = async (
     status: number;
     countTime: string;
   }
-) => {
+): Promise<void> => {
+  const inventoryItems = await fetchItemsByInventoryId(inventoryId);
+  const lastItem = Math.max(...inventoryItems.map((i: any) => Number(i.inventoryItem)));
 
-  const inventoryItems = await fetchItemsByInventoryId(inventoryId)
-  const lastItem = Math.max(...inventoryItems.map((i: any) => Number(i.inventoryItem)))
-
-  const result = await executeQuery(
+  await executeQuery(
     `INSERT INTO inventory_items (inventory_id, inventoryItem, code, reportedQuantity, reportedLocation, observation, operator, status, countTime) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       inventoryId,
@@ -272,13 +251,9 @@ export const insertNewInventoryItem = async (
       data.countTime,
     ]
   );
-  return result;
 };
 
-export const fetchItemByCode = async (
-  inventoryId: number,
-  materialCode: string
-): Promise<Item[]> => {
+export const fetchItemByCode = async (inventoryId: number, materialCode: string): Promise<Item[]> => {
   return await fetchAll<Item>(
     `SELECT * FROM inventory_items WHERE inventory_id = ? AND code = ? LIMIT 1;`,
     [inventoryId, materialCode]
@@ -303,36 +278,34 @@ export const fetchItemsByInventoryId = async (inventoryId: number): Promise<Item
   );
 };
 
-export const fetchItemById = async (inventoryId: number, itemId: number) => {
+export const fetchItemById = async (inventoryId: number, itemId: number): Promise<Item[]> => {
   return await fetchAll<Item>(
     `SELECT * FROM inventory_items WHERE inventory_id = ? AND id = ?`,
-    [inventoryId, itemId])
-}
+    [inventoryId, itemId]
+  );
+};
 
-export const fetchDescriptionByCode = async (inventoryId: number, code: string) => {
-  const res = await fetchAll<Item>(
+export const fetchDescriptionByCode = async (inventoryId: number, code: string): Promise<Item[]> => {
+  return await fetchAll<Item>(
     `SELECT description, batch, unit FROM inventory_items WHERE inventory_id = ? AND code = ? LIMIT 1;`,
     [inventoryId, code]
-  )
-  return res
-}
+  );
+};
 
-export const deleteInventory = async (inventoryId: number) => {
-  const result = await executeQuery(
+export const deleteInventory = async (inventoryId: number): Promise<void> => {
+  await executeQuery(
     `
     DELETE FROM inventories WHERE id = ?;
     DELETE FROM inventory_items WHERE inventory_id = ?
     `,
     [inventoryId, inventoryId]
-  )
-  return result;
-}
-
+  );
+};
 
 const formatQuantity = (value: string | number): number => {
-  if (typeof value === 'number') return Math.floor(value); // If already a number, take all
+  if (typeof value === 'number') return Math.floor(value);
 
-  // remove dots and commas
+  // Substitui pontos por nada e vírgulas por pontos
   const numericString = value
     .replace(/\./g, '')
     .replace(/,/g, '.');
@@ -340,24 +313,19 @@ const formatQuantity = (value: string | number): number => {
   return Math.floor(parseFloat(numericString));
 };
 
-export const getBatchesForItem = async (
-  inventoryId: number,
-  materialCode: string
-): Promise<BatchOption[]> => {
+export const getBatchesForItem = async (inventoryId: number, materialCode: string): Promise<BatchOption[]> => {
   try {
     const query = `
-            SELECT batch
-            FROM inventory_items 
-            WHERE 
-                inventory_id = ? AND 
-                code = ?
-            ORDER BY batch
-        `;
-
-    const result = await fetchAll<BatchOption>(query, [inventoryId, materialCode]);
-    return result;
+      SELECT batch
+      FROM inventory_items 
+      WHERE 
+        inventory_id = ? AND 
+        code = ?
+      ORDER BY batch
+    `;
+    return await fetchAll<BatchOption>(query, [inventoryId, materialCode]);
   } catch (error) {
-    console.error("Error fetching batches:", error);
+    console.error('Error fetching batches:', error);
     return [];
   }
-}
+};

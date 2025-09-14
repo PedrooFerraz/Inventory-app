@@ -2,13 +2,13 @@ import { router } from "expo-router";
 import HowToUse from "@/components/master/import-sheet/how-to-use";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import DataPreview from "@/components/master/import-sheet/data-preview";
-import { formatSizeUnits, generateCSVPreview, saveSelectedFileInfo, clearFileCache } from "@/services/fileService";
+import { formatSizeUnits, generateCSVPreview, saveSelectedFileInfo, clearFileCache, loadCSVPreview } from "@/services/fileService";
 import * as DocumentPicker from 'expo-document-picker';
 import FileInfoAfter from "@/components/master/import-sheet/file-info-after";
 import ButtonWithIcon from "@/components/button-with-icon";
 import FileInfoBefore from "@/components/master/import-sheet/file-info-before";
 import { View, StyleSheet, Text, ScrollView, ActivityIndicator } from "react-native"
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Loading from "@/components/master/import-sheet/loading-preview";
 import { insertInventory } from "@/models/inventory";
 import { exportModelSheet } from "@/services/xlsxService";
@@ -31,8 +31,12 @@ export default function ImportScreen() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<{ message: string, visible: boolean }>({ message: "", visible: false })
 
-  useEffect(() => {
-  }, [error])
+  const resetState = () => {
+    setShowInfo(false);
+    setFileInfoList([]);
+    setShowPreview(false);
+    clearFileCache();
+  };
 
   const getDoc = async () => {
     try {
@@ -47,13 +51,10 @@ export default function ImportScreen() {
 
       if (selectedDocs.assets) {
         const infos: fileInfo[] = [];
-
         for (const file of selectedDocs.assets) {
           await saveSelectedFileInfo(file.uri, file.name);
-
           let date = new Date();
           let MBSize = typeof file.size === "number" ? formatSizeUnits(file.size) : "0MB";
-
           infos.push({
             name: file.name,
             size: MBSize,
@@ -61,52 +62,35 @@ export default function ImportScreen() {
             uri: file.uri
           });
         }
-
         setFileInfoList(infos);
         setShowInfo(true);
         loadPreview(selectedDocs.assets);
       }
     } catch (err: any) {
-      console.log("Erro ao selecionar documentos:", err);
+      setError({
+        message: err.message || "Erro ao selecionar documentos",
+        visible: true,
+      });
     }
   };
 
   const handleSelectOtherDocument = () => {
-    setShowInfo(false);
-    setFileInfoList([]);
-    setShowPreview(false);
-    clearFileCache();
+    resetState();
   };
-  const loadPreview = async (infos: DocumentPicker.DocumentPickerAsset[]) => {
-    setShowPreview(true)
-    setIsLoading(true)
-    let totalRows = 0;
-    let uniqueLocs = 0;
 
-    for (const info of infos) {
-      const res = await generateCSVPreview(info);
-      totalRows += res.totalRows;
-      uniqueLocs += res.uniqueLocations;
-
-      setIsLoading(false);
-      const preview: dataPreview = {
-        localizations: uniqueLocs,
-        qty: totalRows,
-        fileQuantity: infos.length
-      };
-
-      setDataPreview(preview);
-    };
-  }
-
+  const loadPreview = async (assets: DocumentPicker.DocumentPickerAsset[]) => {
+    setShowPreview(true);
+    setIsLoading(true);
+    const preview = await loadCSVPreview(assets);
+    setDataPreview(preview);
+    setIsLoading(false);
+  };
 
   const handleSubmit = async () => {
     await clearFileCache();
-
     if (!fileInfoList.length) return;
 
     setSaving(true);
-
     try {
       for (const file of fileInfoList) {
         await insertInventory(file.uri, file.name);
@@ -115,11 +99,14 @@ export default function ImportScreen() {
       router.navigate("/master-acess-screen");
     }
     catch (e: any) {
-      setSaving(false)
-      handleSelectOtherDocument()
+      console.error("Import error:", e); // Log para debuggar
+      setSaving(false);
+      resetState();
       setError({
-        message: e.message || "Erro desconhecido ao importar inventário",
-        visible: true
+        message: e.message.includes("database")
+          ? "Erro ao salvar no banco de dados"
+          : "Erro ao processar o arquivo CSV",
+        visible: true,
       });
     }
 
@@ -147,11 +134,11 @@ export default function ImportScreen() {
         {
           error.visible &&
           <CustomModal onClose={() => setError({ message: "", visible: false })} title="Error" visible={error.visible} showCloseButton >
-            <View style={{gap: 14}}>
+            <View style={{ gap: 14 }}>
               <Text style={styles.errorMessage}>
                 {error.message}
               </Text>
-              <ButtonWithIcon color={"#5A7BA1"} icon={"return-down-back-outline"} label="Retornar" onPress={()=>{setError({ message: "", visible: false })}}></ButtonWithIcon>
+              <ButtonWithIcon color={"#5A7BA1"} icon={"return-down-back-outline"} label="Retornar" onPress={() => { setError({ message: "", visible: false }) }}></ButtonWithIcon>
             </View>
           </CustomModal>
         }
@@ -174,7 +161,7 @@ export default function ImportScreen() {
               </Text>
             </View>
             {
-              showInfo && fileInfoList ?
+              showInfo ?
                 <FileInfoAfter data={fileInfoList} otherDocument={handleSelectOtherDocument}></FileInfoAfter>
                 :
                 <FileInfoBefore onPress={getDoc}></FileInfoBefore>

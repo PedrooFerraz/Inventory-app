@@ -8,40 +8,61 @@ interface CSVPreviewResult {
   uniqueLocations: number;
 }
 
-// Apenas salva o fileUri e o nome do arquivo
-export const saveSelectedFileInfo = async (fileUri: string, fileName: string) => {
+interface FileInfo {
+  fileUri: string;
+  fileName: string;
+}
+
+// Salva o nome e URI do arquivo selecionado no AsyncStorage
+export const saveSelectedFileInfo = async (fileUri: string, fileName: string): Promise<void> => {
   try {
-    const info = { fileUri, fileName };
+    const info: FileInfo = { fileUri, fileName };
     await AsyncStorage.setItem('selectedFile', JSON.stringify(info));
   } catch (error) {
-    throw new Error('Erro ao salvar o arquivo selecionado:' + error);
+    throw new Error(`Erro ao salvar o arquivo selecionado: ${error}`);
   }
 };
 
-export const getSelectedFileInfo = async () => {
+// Recupera o nome e URI do arquivo selecionado do AsyncStorage
+export const getSelectedFileInfo = async (): Promise<FileInfo | null> => {
   try {
     const jsonValue = await AsyncStorage.getItem('selectedFile');
     return jsonValue != null ? JSON.parse(jsonValue) : null;
   } catch (error) {
-    throw new Error('Erro ao carregar o arquivo selecionado:' + error);
+    throw new Error(`Erro ao carregar o arquivo selecionado: ${error}`);
   }
 };
 
-export const clearFileCache = async () => {
+// Clears file cache from AsyncStorage
+export const clearFileCache = async (): Promise<void> => {
   try {
     await AsyncStorage.removeItem('selectedFile');
   } catch (error) {
-    throw new Error('Erro ao limpar cache do arquivo:' + error);
+    throw new Error(`Erro ao limpar cache do arquivo: ${error}`);
   }
 };
 
-export const generateCSVPreview = async (SelectedDocument: DocumentPickerAsset): Promise<CSVPreviewResult> => {
+// Gera 
+export const generateCSVPreview = async (selectedDocument: DocumentPickerAsset): Promise<CSVPreviewResult> => {
+  // Valida URI e tipo do arquivo
+  if (!selectedDocument.uri) {
+    throw new Error('URI do arquivo não fornecido');
+  }
+  if (!selectedDocument.name?.toLowerCase().endsWith('.csv')) {
+    throw new Error('Arquivo selecionado não é um CSV');
+  }
 
+  // Limpa cache antes de processar novo arquivo
   await clearFileCache();
 
-  const fileContent = await FileSystem.readAsStringAsync(SelectedDocument.uri, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
+  // Lê o conteúdo do arquivo CSV
+  let fileContent: string;
+  try {
+    const file = new FileSystem.File(selectedDocument.uri);
+    fileContent = await file.text(); // Troca o readAsStringAsync
+  } catch (error) {
+    throw new Error(`Erro ao ler o arquivo CSV: ${error}`);
+  }
 
   let totalRows = 0;
   const locationSet = new Set<string>();
@@ -51,39 +72,60 @@ export const generateCSVPreview = async (SelectedDocument: DocumentPickerAsset):
       header: true,
       skipEmptyLines: true,
       step: (row) => {
-
         const data = row.data as Record<string, any>;
 
-        if (data["MATERIAL"] !== "" && data["MATERIAL"] !== "MATERIAL")
+        // Pula linhas inválidas ou cabeçalhos
+        if (data['MATERIAL'] && data['MATERIAL'] !== 'MATERIAL') {
           totalRows++;
-
-        const location = data['POSIÇÃO NO DEPÓSITO'] || ''; // Ajuste o nome da coluna de acordo com seu CSV
-        if (location && location !== "POSIÇÃO NO DEPÓSITO") {
-          locationSet.add(location.trim());
         }
 
+        const location = data['POSIÇÃO NO DEPÓSITO'] || '';
+        if (location && location !== 'POSIÇÃO NO DEPÓSITO') {
+          locationSet.add(location.trim());
+        }
       },
       complete: async () => {
-        // Salva apenas a referência ao arquivo no AsyncStorage
-        await saveSelectedFileInfo(SelectedDocument.uri, SelectedDocument.name ?? 'arquivo.csv');
-
-        resolve({
-          totalRows,
-          uniqueLocations: locationSet.size
-        });
+        try {
+          // Salva informações do arquivo processado
+          await saveSelectedFileInfo(
+            selectedDocument.uri,
+            selectedDocument.name ?? 'arquivo.csv'
+          );
+          resolve({
+            totalRows,
+            uniqueLocations: locationSet.size,
+          });
+        } catch (error) {
+          reject(new Error(`Erro ao salvar informações do arquivo: ${error}`));
+        }
       },
-      error: (error: any) => reject(error),
+      error: (error: any) => reject(new Error(`Erro ao processar o CSV: ${error.message}`)),
     });
   });
 };
 
-export const formatSizeUnits = (bytes: number) => {
-  let res;
-  if (bytes >= 1073741824) { res = (bytes / 1073741824).toFixed(2) + ' GB'; }
-  else if (bytes >= 1048576) { res = (bytes / 1048576).toFixed(2) + ' MB'; }
-  else if (bytes >= 1024) { res = (bytes / 1024).toFixed(2) + ' KB'; }
-  else if (bytes > 1) { res = bytes + ' bytes'; }
-  else if (bytes === 1) { res = bytes + ' byte'; }
-  else { res = '0 bytes'; }
-  return res;
+// Carrega a pré-visualização dos dados de múltiplos arquivos CSV
+export const loadCSVPreview = async (assets: DocumentPickerAsset[]): Promise<{
+  qty: number;
+  localizations: number;
+  fileQuantity: number;
+}> => {
+  try {
+    const results = await Promise.all(assets.map(asset => generateCSVPreview(asset)));
+    const totalRows = results.reduce((sum, res) => sum + res.totalRows, 0);
+    const uniqueLocs = results.reduce((sum, res) => sum + res.uniqueLocations, 0);
+    return { qty: totalRows, localizations: uniqueLocs, fileQuantity: assets.length };
+  } catch (error) {
+    throw new Error(`Erro ao carregar visualização dos CSVs: ${error}`);
+  }
+};
+
+// Forma o tamanho do arquivo em unidades legíveis
+export const formatSizeUnits = (bytes: number): string => {
+  if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(2)} GB`;
+  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(2)} MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+  if (bytes > 1) return `${bytes} bytes`;
+  if (bytes === 1) return `${bytes} byte`;
+  return '0 bytes';
 };

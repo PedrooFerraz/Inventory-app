@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         borderStyle: "solid",
         gap: 15,
-        padding: 20,
+        padding: 25,
         boxSizing: "border-box"
     },
     howToUseTitle: {
