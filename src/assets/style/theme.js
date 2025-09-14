@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-// Color palette extracted from GMIHomeScreen.tsx
+// Color palette
 export const COLORS = {
   primaryDark: '#3a5073',
   primary: '#4f6a92',
@@ -14,9 +14,33 @@ export const COLORS = {
   border: 'rgba(51, 65, 85, 0.42)',
   textSecondary: 'rgba(255, 255, 255, 0.65)',
   cardBackground: 'rgba(58, 80, 115, 0.85)',
+  filterButton: '#607EA8', // From InventorySelectionScreen
+  filterText: '#CBD5E1', // From InventorySelectionScreen
 };
 
-// Typography constants
+// Spacing constants
+export const SPACING = {
+  small: 8,
+  medium: 16,
+  large: 24,
+  extraLarge: 32,
+  paddingHorizontal: 20, // Updated from 24 to match InventorySelectionScreen
+  paddingVerticalHeader: 16, // From InventorySelectionScreen
+  paddingVerticalFilter: 10, // From InventorySelectionScreen
+};
+
+// Common shadow styles
+export const SHADOWS = {
+  card: {
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+};
+
+// Typography styles (type-safe)
 export const FONTS = StyleSheet.create({
   title: {
     fontSize: 32,
@@ -36,28 +60,20 @@ export const FONTS = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
   },
-});
-
-// Spacing constants
-export const SPACING = {
-  small: 8,
-  medium: 16,
-  large: 24,
-  extraLarge: 32,
-  paddingHorizontal: 24,
-  paddingVerticalHeader: 64,
-};
-
-// Common shadow styles
-export const SHADOWS = {
-  card: {
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.white,
   },
-};
+  filterButtonText: {
+    color: COLORS.filterText,
+    fontWeight: '500',
+  },
+  activeFilterText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
+});
 
 // Common styles for layouts
 export const commonStyles = StyleSheet.create({
@@ -79,7 +95,19 @@ export const commonStyles = StyleSheet.create({
   },
 });
 
-// Hexagon styles (reusable for decorative backgrounds)
+// Button styles (for filter buttons)
+export const buttonStyles = StyleSheet.create({
+  filterButton: {
+    paddingVertical: SPACING.paddingVerticalFilter,
+    paddingHorizontal: SPACING.medium,
+    borderRadius: 20,
+  },
+  activeFilter: {
+    backgroundColor: COLORS.filterButton,
+  },
+});
+
+// Hexagon styles (unchanged)
 export const hexagonStyles = StyleSheet.create({
   group: {
     position: 'absolute',
