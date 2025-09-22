@@ -14,6 +14,7 @@ import { insertInventory } from "@/models/inventory";
 import { exportModelSheet } from "@/services/xlsxService";
 import { fileInfo } from "@/types/types";
 import { CustomModal } from "@/components/master/custom-modal";
+import SelectInventoryCard from "@/components/inventory/select-inventory-card";
 
 export interface dataPreview {
   qty: number,
@@ -29,6 +30,7 @@ export default function ImportScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [dataPreview, setDataPreview] = useState<dataPreview>()
   const [saving, setSaving] = useState(false)
+  const [inventoryType, setInventoryType] = useState<0 | 1 | 2>(0) //0 - Não escolhido, 1 - Código, 2 - Posição
   const [error, setError] = useState<{ message: string, visible: boolean }>({ message: "", visible: false })
 
   const resetState = () => {
@@ -96,7 +98,7 @@ export default function ImportScreen() {
         await insertInventory(file.uri, file.name);
       }
       setSaving(false);
-      router.navigate("/master-acess-screen");
+      router.navigate('/master-access-screen');
     }
     catch (e: any) {
       console.error("Import error:", e); // Log para debuggar
@@ -181,6 +183,16 @@ export default function ImportScreen() {
                 dataPreview && (
                   <View style={{ gap: 28 }}>
                     <DataPreview data={dataPreview} />
+
+                    <View style={styles.selectInventoryType}>
+                      <View style={styles.inventoryTypeButton}>
+                        <ButtonWithIcon color={"#5A7BA2"} onPress={() => { }} label="Código" icon={"barcode-outline"}></ButtonWithIcon>
+                      </View>
+                      <View style={styles.inventoryTypeButton}>
+                        <ButtonWithIcon color={"#5A7BA2"} onPress={() => { }} label="Posição" icon={"compass-outline"}></ButtonWithIcon>
+                      </View>
+                    </View>
+
                     <ButtonWithIcon color={"#5A7BA2"} onPress={handleSubmit} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon>
                   </View>
                 )
@@ -258,6 +270,15 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "500"
+  },
+  selectInventoryType: {
+    flexDirection: "row",
+    flex: 1,
+    alignItems: "center",
+    gap: 20
+  },
+  inventoryTypeButton: {
+    flex: 1
   }
 
 })

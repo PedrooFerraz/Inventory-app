@@ -202,6 +202,7 @@ export default function GMIHomeScreen() {
 
 const styles = StyleSheet.create({
   background: {
+    paddingTop: 30,
     flex: 1,
   },
   header: {
