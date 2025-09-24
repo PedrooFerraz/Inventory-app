@@ -14,6 +14,7 @@ export type Inventory = {
   totalItems: number;
   countedItems: number;
   inventoryDocument: string;
+  countType: number; //1-Contagem Barra 2-Contagem Posição
 };
 
 export type InventoryLocation = {

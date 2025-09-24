@@ -4,7 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ProgressBar from "../progress-bar";
 import { Inventory } from "@/types/types";
 
-export default function SelectInventoryCard({ item, onPress }: { item: Inventory, onPress: (id: number) => any }) {
+export default function SelectInventoryCard({ item, onPress }: { item: Inventory, onPress: (id: number, countType: number) => any }) {
 
 
     const getStatus = (status: number) => {
@@ -36,7 +36,7 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
         <TouchableOpacity
             style={styles.inventarioCard}
             activeOpacity={0.7}
-            onPress={() => onPress(item.id)}
+            onPress={() => onPress(item.id, item.countType)}
         >
 
             <View style={styles.cardHeader}>

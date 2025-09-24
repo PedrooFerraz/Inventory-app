@@ -40,8 +40,8 @@ export default function InventorySelectionScreen() {
         </TouchableOpacity>
     );
 
-    const handleSelect = (id: number) => {
-        router.navigate(`/inventory-positions-screen?id=${id}&operator=${params.operator}`)
+    const handleSelect = (id: number, countType: number) => {
+        router.navigate(`/inventory-positions-screen?id=${id}&operator=${params.operator}&countType=${countType}`)
     }
 
 

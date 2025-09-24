@@ -4,7 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ProgressBar from "../progress-bar";
 import { InventoryLocation } from "@/types/types";
 
-export default function SelectPositionCard({ item, onPress }: { item: InventoryLocation, onPress: (id: number) => any }) {
+export default function SelectPositionCard({ item, onPress }: { item: InventoryLocation, onPress: (id: number, locationId: number) => any }) {
 
 
     const getStatus = (status: number) => {
@@ -36,7 +36,7 @@ export default function SelectPositionCard({ item, onPress }: { item: InventoryL
         <TouchableOpacity
             style={styles.positionCard}
             activeOpacity={0.7}
-            onPress={() => onPress(item.id)}
+            onPress={() => onPress(item.inventory_id, item.id)}
         >
 
             <View style={styles.cardHeader}>
@@ -49,7 +49,13 @@ export default function SelectPositionCard({ item, onPress }: { item: InventoryL
                     </LinearGradient>
                 </View>
                 <View style={styles.cardContent}>
-                    <Text style={styles.posicaoNome}>Posição: {item.location}</Text>
+                    {
+                        item.location === "" ?
+                            <Text style={styles.posicaoNome}>Itens sem posição {item.location}</Text>
+                            :
+
+                            <Text style={styles.posicaoNome}>Posição: {item.location}</Text>
+                    }
                 </View>
                 <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
             </View>
@@ -61,7 +67,7 @@ export default function SelectPositionCard({ item, onPress }: { item: InventoryL
                     <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
                     <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatus(item.status)}</Text>
                 </View>
-                
+
                 <View style={styles.progressContainer}>
                     <View style={styles.progressHeader}>
                         <Text style={styles.progressLabel}>Progresso</Text>

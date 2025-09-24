@@ -1,4 +1,3 @@
-import SelectInventoryCard from '@/components/inventory/select-inventory-card';
 import SelectPositionCard from '@/components/inventory/select-inventory-position-card';
 import { useDatabase } from '@/hooks/useDatabase';
 import { InventoryLocation } from '@/types/types';
@@ -16,15 +15,17 @@ import {
 export default function InventorySelectionScreen() {
 
     const params = useLocalSearchParams();
+
+    console.log(params)
     const { locations } = useDatabase(params.id ? { inventoryId: Number(params.id) } : {})
-    const [filter, setFilter] = useState<0 | 1 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
+    const [filter, setFilter] = useState<0 | 1 | 2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
 
     const filteredLocations = locations.filter(location => {
         if (filter === 3) return true;
         return location.status === filter;
     });
 
-    const FilterButton = ({ status, label }: { status: 0 | 1 | 3, label: string }) => (
+    const FilterButton = ({ status, label }: { status: 0 | 1 | 2 | 3, label: string }) => (
         <TouchableOpacity
             style={[
                 styles.filterButton,
@@ -41,13 +42,15 @@ export default function InventorySelectionScreen() {
         </TouchableOpacity>
     );
 
-    const handleSelect = (id: number) => {
-        router.navigate(`/inventory-positions-screen?id=${id}&operator=${params.operator}`)
+    const handleSelect = (id: number, locationId: number) => {
+
+
+        router.navigate(`/inventory-positions-screen?id=${id}&operator=${params.operator}&location=${locationId}`)
     }
 
 
     const renderInventarioItem = ({ item }: { item: InventoryLocation }) => (
-        <SelectPositionCard item={item} onPress={()=>{}} key={item.id}></SelectPositionCard>
+        <SelectPositionCard item={item} onPress={handleSelect} key={item.id}></SelectPositionCard>
     );
 
     return (
@@ -61,7 +64,7 @@ export default function InventorySelectionScreen() {
                     <Ionicons name="arrow-back" size={24} color="#FFF" />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>Selecione a posição</Text>
+                    <Text style={styles.headerTitle}>Selecionar posição</Text>
                 </View>
             </View>
 
@@ -69,6 +72,7 @@ export default function InventorySelectionScreen() {
                 <FilterButton status={3} label="Todos" />
                 <FilterButton status={0} label="Abertos" />
                 <FilterButton status={1} label="Em Andamento" />
+                <FilterButton status={2} label="Finalizados" />
             </View>
 
             <View style={styles.content}>
