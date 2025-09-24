@@ -1,4 +1,5 @@
 import SelectInventoryCard from '@/components/inventory/select-inventory-card';
+import SelectPositionCard from '@/components/inventory/select-inventory-position-card';
 import { useDatabase } from '@/hooks/useDatabase';
 import { InventoryLocation } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -46,9 +47,7 @@ export default function InventorySelectionScreen() {
 
 
     const renderInventarioItem = ({ item }: { item: InventoryLocation }) => (
-        <View>
-            <Text>{item.location}</Text>
-        </View>
+        <SelectPositionCard item={item} onPress={()=>{}} key={item.id}></SelectPositionCard>
     );
 
     return (

@@ -28,7 +28,7 @@ export const fetchAll = async <T>(
   const result = await database.getAllAsync(sql, params);
   return result as T[];
 };
-
+//countType: -- 1: Codigo de barras, 2: Posição
 const initDB = async (database: SQLiteDatabase) => {
   await database.execAsync(`
   
@@ -48,7 +48,7 @@ const initDB = async (database: SQLiteDatabase) => {
       totalItems INTEGER NOT NULL,
       countedItems INTEGER DEFAULT 0,
       inventoryDocument TEXT,
-      countType INTEGER NOT NULL, -- 1: Codigo de barras, 2: Posição
+      countType INTEGER NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS inventory_items (

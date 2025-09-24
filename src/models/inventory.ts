@@ -110,7 +110,7 @@ export const insertInventory = async (fileUri: string, fileName: string, coutTyp
         `INSERT INTO inventories 
         (fileName, fileUri, importDate, inventoryYear, totalItems, inventoryDocument, countType) 
         VALUES (?, ?, ?, ?, ?, ?, ?);`,
-        [fileName, fileUri, new Date().toLocaleDateString('pt-BR'), year, documentItems.length, inventoryDocument]
+        [fileName, fileUri, new Date().toLocaleDateString('pt-BR'), year, documentItems.length, inventoryDocument, coutType]
       );
 
       const inventoryId = result.lastInsertRowId!;

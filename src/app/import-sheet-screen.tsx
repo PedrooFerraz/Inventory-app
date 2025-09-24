@@ -96,7 +96,7 @@ export default function ImportScreen() {
     try {
       if(inventoryType === 0)
         throw new Error("Selecione um modelo de contagem antes de importar.");
-
+      
       for (const file of fileInfoList) {
         await insertInventory(file.uri, file.name, inventoryType);
       }

@@ -12,7 +12,7 @@ import { deleteOperator, fetchOperatorById, insertOperator, updateOperator } fro
 
 export default function MasterAcessScreen() {
 
-    const { operators, refresh } = useDatabase();
+    const { operators, refresh } = useDatabase({});
 
     const [operatorsModalVisible, setOperatorsModalVisible] = useState(false);
     const [operatorFormModalVisible, setOperatorFormModalVisible] = useState(false);
