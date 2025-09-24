@@ -1,6 +1,6 @@
 import SelectInventoryCard from '@/components/inventory/select-inventory-card';
 import { useDatabase } from '@/hooks/useDatabase';
-import { Inventory } from '@/types/types';
+import { InventoryLocation } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
@@ -14,13 +14,13 @@ import {
 
 export default function InventorySelectionScreen() {
 
-    const { inventories } = useDatabase({})
     const params = useLocalSearchParams();
+    const { locations } = useDatabase(params.id ? { inventoryId: Number(params.id) } : {})
     const [filter, setFilter] = useState<0 | 1 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
 
-    const filteredInventories = inventories.filter(inventories => {
+    const filteredLocations = locations.filter(location => {
         if (filter === 3) return true;
-        return inventories.status === filter;
+        return location.status === filter;
     });
 
     const FilterButton = ({ status, label }: { status: 0 | 1 | 3, label: string }) => (
@@ -45,8 +45,10 @@ export default function InventorySelectionScreen() {
     }
 
 
-    const renderInventarioItem = ({ item }: { item: Inventory }) => (
-        <SelectInventoryCard item={item} onPress={handleSelect}></SelectInventoryCard>
+    const renderInventarioItem = ({ item }: { item: InventoryLocation }) => (
+        <View>
+            <Text>{item.location}</Text>
+        </View>
     );
 
     return (
@@ -60,7 +62,7 @@ export default function InventorySelectionScreen() {
                     <Ionicons name="arrow-back" size={24} color="#FFF" />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>Selecionar Inventário</Text>
+                    <Text style={styles.headerTitle}>Selecione a posição</Text>
                 </View>
             </View>
 
@@ -72,7 +74,7 @@ export default function InventorySelectionScreen() {
 
             <View style={styles.content}>
                 <FlatList
-                    data={filteredInventories}
+                    data={filteredLocations}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderInventarioItem}
                     showsVerticalScrollIndicator={false}

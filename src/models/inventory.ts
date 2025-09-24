@@ -1,7 +1,8 @@
 import * as FileSystem from 'expo-file-system';
 import * as Papa from 'papaparse';
-import { executeQuery, fetchAll } from '@/services/database';
-import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption } from '@/types/types';
+import { executeQuery, fetchAll, getDatabase } from '@/services/database';
+import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption, InventoryLocation } from '@/types/types';
+import { SQLiteDatabase } from 'expo-sqlite';
 
 export const insertInventory = async (fileUri: string, fileName: string, coutType: 1 | 2): Promise<{
   success: boolean;
@@ -152,6 +153,51 @@ export const fetchInventories = async (): Promise<Inventory[]> => {
 
 export const fetchOpenInventories = async (): Promise<Inventory[]> => {
   return await fetchAll<Inventory>('SELECT * FROM inventories WHERE status IS NOT 2 ORDER BY importDate DESC;');
+};
+
+export const fetchAllLocationsFromInventory = async (inventoryId: number): Promise<InventoryLocation[]> => {
+  try {
+    const database: SQLiteDatabase = await getDatabase();
+
+    // Consulta SQL para agrupar por localização
+    const sql = `
+      SELECT 
+        MIN(id) AS id, -- Usa MIN(id) para garantir um id único por localização
+        inventory_id,
+        COALESCE(reportedLocation, expectedLocation) AS location,
+        COUNT(*) AS totalItems,
+        SUM(CASE WHEN reportedQuantity IS NOT NULL THEN 1 ELSE 0 END) AS countedItems,
+        CASE 
+          -- Status 0: Não iniciada (nenhum item contado)
+          WHEN SUM(CASE WHEN reportedQuantity IS NOT NULL THEN 1 ELSE 0 END) = 0 THEN 0
+          -- Status 2: Finalizada (todos os itens contados)
+          WHEN SUM(CASE WHEN reportedQuantity IS NOT NULL THEN 1 ELSE 0 END) = COUNT(*) THEN 2
+          -- Status 1: Em andamento (alguns itens contados, mas nem todos)
+          ELSE 1
+        END AS status
+      FROM inventory_items
+      WHERE inventory_id = ?
+      GROUP BY COALESCE(reportedLocation, expectedLocation)
+    `;
+
+    // Executa a consulta com o inventoryId como parâmetro
+    const result = await database.getAllAsync(sql, [inventoryId]);
+
+    // Mapeia o resultado para o tipo InventoryLocation
+    const locations: InventoryLocation[] = result.map((row: any) => ({
+      id: row.id,
+      inventory_id: row.inventory_id,
+      location: row.location,
+      status: row.status,
+      totalItems: row.totalItems,
+      countedItems: row.countedItems,
+    }));
+
+    return locations;
+  } catch (error) {
+    console.error('Erro ao buscar localizações do inventário:', error);
+    throw error;
+  }
 };
 
 const BATCH_SIZE = 50; // Processa 50 itens por vez

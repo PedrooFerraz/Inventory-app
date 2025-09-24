@@ -8,7 +8,7 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native
 
 export default function UserSelectScreen() {
 
-    const { operators } = useDatabase();
+    const { operators } = useDatabase({});
     const selectOperator = (id: number) => {
 
 

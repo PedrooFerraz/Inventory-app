@@ -14,7 +14,7 @@ import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollVi
 import { InventoryService } from "@/services/inventoryService";
 
 
-export default function InventoryScreen() {
+export default function InventoryByCodeScreen() {
 
     const navigationView = () => (
         <DrawerMenu drawer={drawer} finalizeInventoryFunction={handleFinalizeInventory}></DrawerMenu>

@@ -16,6 +16,15 @@ export type Inventory = {
   inventoryDocument: string;
 };
 
+export type InventoryLocation = {
+  id: number;
+  inventory_id: number;
+  location: string;
+  status: number;
+  totalItems: number;
+  countedItems: number;
+};
+
 export type CSVParseResult = {
   data: any[];
   errors: any[];

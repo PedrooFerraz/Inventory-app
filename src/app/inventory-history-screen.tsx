@@ -26,7 +26,7 @@ interface DatabaseHook {
 }
 
 const InventorySelectionScreen = () => {
-  const { inventories, refresh }: DatabaseHook = useDatabase();
+  const { inventories, refresh }: DatabaseHook = useDatabase({});
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedInventory, setSelectedInventory] = useState<number | undefined>(undefined);
   const [filter, setFilter] = useState<0 | 1 | 2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
