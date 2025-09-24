@@ -3,7 +3,7 @@ import * as Papa from 'papaparse';
 import { executeQuery, fetchAll } from '@/services/database';
 import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption } from '@/types/types';
 
-export const insertInventory = async (fileUri: string, fileName: string): Promise<{
+export const insertInventory = async (fileUri: string, fileName: string, coutType: 1 | 2): Promise<{
   success: boolean;
   inventories: Array<{
     inventoryId: number;
@@ -107,8 +107,8 @@ export const insertInventory = async (fileUri: string, fileName: string): Promis
       // Cria um novo inventario
       const result = await executeQuery(
         `INSERT INTO inventories 
-        (fileName, fileUri, importDate, inventoryYear, totalItems, inventoryDocument) 
-        VALUES (?, ?, ?, ?, ?, ?);`,
+        (fileName, fileUri, importDate, inventoryYear, totalItems, inventoryDocument, countType) 
+        VALUES (?, ?, ?, ?, ?, ?, ?);`,
         [fileName, fileUri, new Date().toLocaleDateString('pt-BR'), year, documentItems.length, inventoryDocument]
       );
 

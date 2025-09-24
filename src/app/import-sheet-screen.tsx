@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import HowToUse from "@/components/master/import-sheet/how-to-use";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import DataPreview from "@/components/master/import-sheet/data-preview";
-import { formatSizeUnits, generateCSVPreview, saveSelectedFileInfo, clearFileCache, loadCSVPreview } from "@/services/fileService";
+import { formatSizeUnits, saveSelectedFileInfo, clearFileCache, loadCSVPreview } from "@/services/fileService";
 import * as DocumentPicker from 'expo-document-picker';
 import FileInfoAfter from "@/components/master/import-sheet/file-info-after";
 import ButtonWithIcon from "@/components/button-with-icon";
@@ -14,7 +14,6 @@ import { insertInventory } from "@/models/inventory";
 import { exportModelSheet } from "@/services/xlsxService";
 import { fileInfo } from "@/types/types";
 import { CustomModal } from "@/components/master/custom-modal";
-import SelectInventoryCard from "@/components/inventory/select-inventory-card";
 
 export interface dataPreview {
   qty: number,
@@ -38,6 +37,7 @@ export default function ImportScreen() {
     setFileInfoList([]);
     setShowPreview(false);
     clearFileCache();
+    setInventoryType(0);
   };
 
   const getDoc = async () => {
@@ -94,8 +94,11 @@ export default function ImportScreen() {
 
     setSaving(true);
     try {
+      if(inventoryType === 0)
+        throw new Error("Selecione um modelo de contagem antes de importar.");
+
       for (const file of fileInfoList) {
-        await insertInventory(file.uri, file.name);
+        await insertInventory(file.uri, file.name, inventoryType);
       }
       setSaving(false);
       router.navigate('/master-access-screen');
@@ -105,9 +108,7 @@ export default function ImportScreen() {
       setSaving(false);
       resetState();
       setError({
-        message: e.message.includes("database")
-          ? "Erro ao salvar no banco de dados"
-          : "Erro ao processar o arquivo CSV",
+        message: e.message,
         visible: true,
       });
     }
@@ -183,17 +184,39 @@ export default function ImportScreen() {
                 dataPreview && (
                   <View style={{ gap: 28 }}>
                     <DataPreview data={dataPreview} />
-
+                    <View style={styles.subTopicTitle}>
+                      <Text style={styles.subTopicFont}>Selecione um modelo de contagem</Text>
+                    </View>
                     <View style={styles.selectInventoryType}>
                       <View style={styles.inventoryTypeButton}>
-                        <ButtonWithIcon color={"#5A7BA2"} onPress={() => { }} label="Código" icon={"barcode-outline"}></ButtonWithIcon>
+                        <ButtonWithIcon
+                          color={inventoryType === 1 ? "#5A7BA2" : "#5a7aa223"}
+                          onPress={() => setInventoryType(1)}
+                          label="Código"
+                          icon="barcode-outline"
+                          disabled={inventoryType !== 1}
+                        />
                       </View>
                       <View style={styles.inventoryTypeButton}>
-                        <ButtonWithIcon color={"#5A7BA2"} onPress={() => { }} label="Posição" icon={"compass-outline"}></ButtonWithIcon>
+                        <ButtonWithIcon
+                          color={inventoryType === 2 ? "#5A7BA2" : "#5a7aa223"}
+                          onPress={() => setInventoryType(2)}
+                          label="Posição"
+                          icon="compass-outline"
+                          disabled={inventoryType !== 2}
+                        />
                       </View>
                     </View>
 
-                    <ButtonWithIcon color={"#5A7BA2"} onPress={handleSubmit} label="Importar Inventário" icon={"save-outline"}></ButtonWithIcon>
+                    <ButtonWithIcon
+                      color={"#5A7BA2"}
+                      onPress={inventoryType !== 0 ? handleSubmit : undefined}
+                      label="Importar Inventário"
+                      icon={"save-outline"}
+                      disabled={inventoryType === 0}
+                    />
+
+
                   </View>
                 )
             )
@@ -279,6 +302,17 @@ const styles = StyleSheet.create({
   },
   inventoryTypeButton: {
     flex: 1
+  },
+  subTopicTitle: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignContent: "center",
+  },
+  subTopicFont: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "white"
   }
 
 })

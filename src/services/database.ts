@@ -47,7 +47,8 @@ const initDB = async (database: SQLiteDatabase) => {
       status INTEGER NOT NULL DEFAULT 0,
       totalItems INTEGER NOT NULL,
       countedItems INTEGER DEFAULT 0,
-      inventoryDocument TEXT
+      inventoryDocument TEXT,
+      countType INTEGER NOT NULL, -- 1: Codigo de barras, 2: Posição
     );
 
     CREATE TABLE IF NOT EXISTS inventory_items (

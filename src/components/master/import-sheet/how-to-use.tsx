@@ -5,7 +5,8 @@ export default function HowToUse() {
     const data = [
         { id: 1, title: "Selecione o arquivo CSV com os dados atuais do estoque" },
         { id: 2, title: "Confirme se os dados foram lidos corretamente" },
-        { id: 3, title: "Importe o Inventário" },
+        { id: 3, title: "Selecione um modelo de contagem para o inventário selecionado" },
+        { id: 4, title: "Importe o Inventário" },
     ]
 
     return (
