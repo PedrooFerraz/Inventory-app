@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
 import { fetchOperator } from '@/models/operators';
 import { Inventory, Item, Operator } from '@/types/types';
@@ -43,13 +43,17 @@ export async function exportInventoryToExcel(inventoryData: Item[]) {
 
         // 4 Salva o arquivo
         const fileName = `${inventoryData[0].inventoryDocument}.xlsx`;
-        const fileUri = FileSystem.documentDirectory + fileName;
-        await FileSystem.writeAsStringAsync(fileUri, wbout, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
+        const file = new File(Paths.document, fileName);
+        const byteCharacters = atob(wbout);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        await file.write(byteArray);
 
         // 5 Compartilha
-        await shareAsync(fileUri, {
+        await shareAsync(file.uri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             dialogTitle: 'Exportar Inventário',
             UTI: 'com.microsoft.excel.xlsx'
@@ -101,12 +105,16 @@ export async function exportSurplusMaterialToExcel(inventoryData: Item[]) {
 
         // 5 Compartilha
        const fileName = `excedente_inventario_${inventoryData[0].inventoryDocument}.xlsx`;
-        const fileUri = FileSystem.documentDirectory + fileName;
-        await FileSystem.writeAsStringAsync(fileUri, wbout, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
+       const file = new File(Paths.document, fileName);
+       const byteCharacters = atob(wbout);
+       const byteNumbers = new Array(byteCharacters.length);
+       for (let i = 0; i < byteCharacters.length; i++) {
+           byteNumbers[i] = byteCharacters.charCodeAt(i);
+       }
+       const byteArray = new Uint8Array(byteNumbers);
+       await file.write(byteArray);
 
-        await shareAsync(fileUri, {
+        await shareAsync(file.uri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             dialogTitle: 'Exportar Inventário',
             UTI: 'com.microsoft.excel.xlsx'
@@ -156,7 +164,7 @@ export async function exportModelSheet() {
         // 2 Cria a planilha
         const ws = XLSX.utils.json_to_sheet(modelSheet);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Planilha Modelo",);
+        XLSX.utils.book_append_sheet(wb, ws, "Planilha Modelo");
 
         // 3 Gera o arquivo
         const wbout = XLSX.write(wb, {
@@ -166,12 +174,16 @@ export async function exportModelSheet() {
 
         // 5 Compartilha
        const fileName = `planilha_modelo.xlsx`;
-        const fileUri = FileSystem.documentDirectory + fileName;
-        await FileSystem.writeAsStringAsync(fileUri, wbout, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
+       const file = new File(Paths.document, fileName);
+       const byteCharacters = atob(wbout);
+       const byteNumbers = new Array(byteCharacters.length);
+       for (let i = 0; i < byteCharacters.length; i++) {
+           byteNumbers[i] = byteCharacters.charCodeAt(i);
+       }
+       const byteArray = new Uint8Array(byteNumbers);
+       await file.write(byteArray);
 
-        await shareAsync(fileUri, {
+        await shareAsync(file.uri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             dialogTitle: 'Exportar Inventário',
             UTI: 'com.microsoft.excel.xlsx'

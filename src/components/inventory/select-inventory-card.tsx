@@ -19,6 +19,18 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
                 break;
         }
     }
+
+    const getType = (type: number) => {
+        switch (type) {
+            case 1:
+                return "Código de Barras"
+            case 2:
+                return "Posições"
+            default:
+                break;
+        }
+    }
+
     const getStatusColor = (status: number) => {
         switch (status) {
             case 0:
@@ -61,6 +73,13 @@ export default function SelectInventoryCard({ item, onPress }: { item: Inventory
                 <View style={styles.statusContainer}>
                     <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
                     <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatus(item.status)}</Text>
+                </View>
+
+                <View style={styles.detailsRow}>
+                    <View style={styles.detailItem}>
+                        <Ionicons name="chevron-forward-outline" color="rgba(255, 255, 255, 0.75)" size={12} />
+                        <Text style={styles.detailText}>Tipo de contagem: {getType(item.countType)}</Text>
+                    </View>
                 </View>
 
                 <View style={styles.detailsRow}>

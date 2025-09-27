@@ -41,7 +41,15 @@ export default function InventorySelectionScreen() {
     );
 
     const handleSelect = (id: number, countType: number) => {
-        router.navigate(`/inventory-positions-screen?id=${id}&operator=${params.operator}&countType=${countType}`)
+        //Se caso o countType for 1 ir para a tela de contagem por barras e se caso for 2 ir para tela de seleção de posição a contar
+        if(countType === 1){
+            router.navigate(`/inventory-by-code-screen?id=${id}&operator=${params.operator}`)
+            return
+        }
+        else if(countType === 2){
+            router.navigate(`/inventory-positions-screen?id=${id}&operator=${params.operator}`)
+        }
+        
     }
 
 
