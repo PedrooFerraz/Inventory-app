@@ -1,216 +1,219 @@
-import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemByCodeAndBatch, fetchItemById, fetchItemsByInventoryId, getBatchesForItem, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount } from "@/models/inventory";
-import { Item, Inventory } from "@/types/types";
+// InventoryService.ts (Service Layer: Business Logic and Validations)
+import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemByCodeAndBatch, fetchItemById, fetchItemsByInventoryId, getBatchesForItem, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount, checkItemExistsInOtherLocation, checkItemAlreadyCountedInOtherLocation, sumToPreviousCount } from "@/models/inventory";
+import { Item, Inventory, BatchOption } from "@/types/types";
 
 export const InventoryService = {
-    async getItemDescriptionByCode(inventoryId: number, code: string): Promise<Item> {
+  async getItemDescriptionByCode(inventoryId: number, code: string): Promise<Item> {
+    const res = await fetchDescriptionByCode(inventoryId, code);
+    if (!res || res.length === 0) throw new Error("Can't find any description for this code, try again later");
+    return res[0];
+  },
 
-        const res = await fetchDescriptionByCode(inventoryId, code)
+  async getInventory(inventoryId: number): Promise<Inventory> {
+    const res = await fetchInventoryById(inventoryId);
+    if (!res) throw new Error("Can't find any inventory with this ID, try again later");
+    return res;
+  },
 
-        if (!res)
-            throw new Error("Cant find any desciption for this code, try again later")
+  async getInventoryNumber(id: number): Promise<{ success: boolean, inventoryNumber: string }> {
+    try {
+      const res = await fetchItemsByInventoryId(id);
+      return { success: true, inventoryNumber: res[0].inventoryDocument };
+    } catch {
+      return { success: false, inventoryNumber: "Undefined" };
+    }
+  },
 
-        return res[0]
+  async getItemByCode(inventoryId: number, code: string): Promise<Item> {
+    let res = await fetchItemByCode(inventoryId, code);
+    if (!res || res.length === 0) res = [];
+    return res[0];
+  },
 
-    },
+  async getItemByCodeAndBatch(inventoryId: number, code: string, batch: string): Promise<Item> {
+    const res = await fetchItemByCodeAndBatch(inventoryId, code, batch);
+    if (!res || res.length === 0) throw new Error("Can't find any Item with this code and batch");
+    return res[0];
+  },
 
-    async getInventory(inventoryId: number): Promise<Inventory> {
-        const res = await fetchInventoryById(inventoryId);
+  async getBatchesForItem(inventoryId: number, materialCode: string): Promise<BatchOption[]> {
+    const batches = await getBatchesForItem(inventoryId, materialCode);
+    return batches;
+  },
 
-        if (!res)
-            throw new Error("Cant find any inventory with this ID, try again later")
+async updateItem(
+  itemId: number,
+  inventoryId: number,
+  data: {
+    reportedQuantity: number,
+    reportedLocation: string,
+    observation: string,
+    operator: string,
+    status?: number,
+  },
+  ignoreQuantity: boolean = false,
+  ignoreLocation: boolean = false
+): Promise<{ success: boolean, error?: string, errors?: string[], data?: any }> {
+  try {
+    const item = await fetchItemById(inventoryId, itemId);
+    if (!item || item.length === 0) return { success: false, error: 'item_not_found' };
 
-        return res
-    },
+    const inventory = await fetchInventoryById(inventoryId);
+    if (!inventory) return { success: false, error: 'inventory_not_found' };
+    if (inventory.status === 2) return { success: false, error: 'inventory_completed' };
 
-    async getInventoryNumber(id: number): Promise<{ success: boolean, inventoryNumber: string }> {
-        try {
-            const res = await fetchItemsByInventoryId(id)
-            return { success: true, inventoryNumber: res[0].inventoryDocument }
-        } catch {
-            return { success: false, inventoryNumber: "Undefined" }
-        }
-    },
+    if (item[0].reportedQuantity !== null) return { success: false, error: 'already_counted', data: {lastLoc: item[0].reportedLocation, lastCount: item[0].reportedQuantity} };
 
-    async getItemByCode(inventoryId: number, code: string): Promise<Item> {
+    // Validações de divergência
+    const quantityDivergent = data.reportedQuantity !== item[0].expectedQuantity;
+    const locationDivergent = data.reportedLocation !== item[0].expectedLocation;
 
-        const res = await fetchItemByCode(inventoryId, code)
-
-        if (!res)
-            throw new Error("Cant find any Item with this code, try again later")
-
-        return res[0];
-    },
-
-    
-    async getItemByCodeAndBatch(inventoryId: number, code: string, batch: string): Promise<Item> {
-
-        const res = await fetchItemByCodeAndBatch(inventoryId, code, batch)
-
-        if (!res)
-            throw new Error("Cant find any Item with this code, try again later")
-
-        return res[0];
-    },
-
-    async updateItem(
-        itemId: number,
-        inventoryId: number,
-        data: {
-            reportedQuantity: number,
-            reportedLocation: string,
-            observation: string,
-            operator: string,
-            status: number,
-        }
-
-    ): Promise<string> {
-
-        const item = await fetchItemById(inventoryId, itemId)
-
-        if (!item || item.length === 0) {
-            return "Item not found";
-        }
-
-        if (item[0].status !== 0) {
-            return "Item has already been accounted for"
-        }
-        const inventory = await fetchInventoryById(inventoryId)
-        if (!inventory) {
-            return "Inventory not found"
-        }
-        if (inventory.status === 2) {
-            return "Inventory has already been completed"
-        }
-
-        const updatedCount = inventory.countedItems + 1
-
-
-        const now = new Date()
-        const updateValues = {
-            reportedQuantity: data.reportedQuantity,
-            reportedLocation: data.reportedLocation,
-            observation: data.observation,
-            operator: data.operator,
-            status: data.status,
-            countTime: now.toLocaleDateString("pt-br")
-        }
-        try {
-            await updateInventoryCountedItems(inventoryId, updatedCount);
-            await updateItemCount(itemId, updateValues);
-            await updateInventoryStatus(inventoryId, 1);
-
-            return "Item accounted for successfully";
-        } catch (error) {
-            console.error("Error updating item:", error);
-            return "An error occurred while updating the item";
-        }
-    },
-
-    async addNewItem(inventoryId: number,
-        data: {
-            code: string
-            reportedQuantity: number,
-            reportedLocation: string,
-            observation: string,
-            operator: string
-        }) {
-
-        const inventory = await fetchInventoryById(inventoryId)
-        if (!inventory) {
-            return { success: false, message: "Inventory not found" }
-        }
-        if (inventory.status === 2) {
-            return { success: false, message: "Inventory has already been completed" }
-        }
-        const updatedCount = inventory.countedItems + 1
-        const updateTotal = inventory.totalItems + 1
-
-
-        const now = new Date()
-        const newValue = {
-            code: data.code,
-            reportedQuantity: data.reportedQuantity,
-            reportedLocation: data.reportedLocation,
-            observation: data.observation,
-            operator: data.operator,
-            status: 5,
-            countTime: now.toLocaleDateString("pt-br")
-        }
-
-
-        try {
-            await insertNewInventoryItem(inventoryId, newValue);
-            await updateInventoryTotalItems(inventoryId, updateTotal)
-            await updateInventoryCountedItems(inventoryId, updatedCount);
-            await updateInventoryStatus(inventoryId, 1);
-
-            return { success: true, message: "Item accounted for successfully" }
-        } catch {
-            return { success: false, message: "An error occurred while updating the item" }
-        }
-    },
-
-
-    async replaceItem(
-        inventoryId: number,
-        itemId: number,
-        data: {
-            reportedQuantity: number,
-            reportedLocation: string,
-            observation: string,
-            operator: string
-        }): Promise<{ success: boolean, message: string }> {
-
-        const inventory = await fetchInventoryById(inventoryId)
-        if (!inventory) {
-            return { success: false, message: "Inventory not found" }
-        }
-        if (inventory.status === 2) {
-            return { success: false, message: "Inventory has already been completed" }
-        }
-
-        const now = new Date()
-        const replaceValues = {
-            reportedQuantity: data.reportedQuantity,
-            reportedLocation: data.reportedLocation,
-            observation: data.observation,
-            operator: data.operator,
-            status: 1,
-            countTime: now.toLocaleDateString("pt-br")
-        }
-        try {
-            await updateItemCount(itemId, replaceValues);
-            return { success: true, message: "Item replaced successfully" }
-
-        } catch {
-            return { success: false, message: "An error occurred while trying to replace the item" }
-        }
-    },
-
-    async finalizeInventory(inventoryId: number) {
-        const inventory = await fetchInventoryById(inventoryId)
-
-        if (!inventory) {
-            return { success: false, message: "Inventory not found" }
-        }
-
-        if (inventory.status === 2) {
-            return { success: false, message: "Inventory has already been completed" }
-        }
-        try {
-            await updateInventoryStatus(inventoryId, 2);
-            return { success: true, message: "Inventory finalized with success" }
-        } catch {
-            return { success: false, message: "An error occurred while finalizing the inventory" }
-        }
-    },
-
-    async getBatchesForItem(
-        inventoryId: number,
-        materialCode: string
-    ) {
-        const batches = await getBatchesForItem(inventoryId, materialCode)
-        return batches
+    // Coleta todos os erros de divergência
+    const errors: string[] = [];
+    if (quantityDivergent && !ignoreQuantity) {
+      errors.push('quantity_mismatch');
+    }
+    if (locationDivergent && !ignoreLocation) {
+      errors.push('location_mismatch');
     }
 
-}
+    // Se houver erros, retorna todos de uma vez
+    if (errors.length > 0) {
+      return { success: false, errors };
+    }
+
+    // Calcula status baseado em divergências (mesmo se ignoradas)
+    let status = 1; // Ok
+    if (quantityDivergent && locationDivergent) status = 4; // Ambos divergentes
+    else if (quantityDivergent) status = 2; // Quantidade divergente
+    else if (locationDivergent) status = 3; // Localização divergente
+
+    const now = new Date();
+    const updateValues = {
+      reportedQuantity: data.reportedQuantity,
+      reportedLocation: data.reportedLocation,
+      observation: data.observation,
+      operator: data.operator,
+      status,
+      countTime: now.toLocaleDateString("pt-br")
+    };
+
+    await updateItemCount(itemId, updateValues);
+    await updateInventoryCountedItems(inventoryId, inventory.countedItems + 1);
+    await updateInventoryStatus(inventoryId, 1);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating item:", error);
+    return { success: false, error: 'update_failed' };
+  }
+},
+
+  async addNewItem(inventoryId: number,
+    data: {
+      code: string
+      reportedQuantity: number,
+      reportedLocation: string,
+      observation: string,
+      operator: string
+    },
+    ignoreExists: boolean = false,
+    ignoreAlreadyCounted: boolean = false
+  ): Promise<{ success: boolean, error?: string, data?: string }> {
+
+    try {
+      const inventory = await fetchInventoryById(inventoryId);
+      if (!inventory) return { success: false, error: 'inventory_not_found' };
+      if (inventory.status === 2) return { success: false, error: 'inventory_completed' };
+
+      // Validações específicas para countType == 2 (posição)
+      if (inventory.countType === 2) {
+        const existsInOther = await checkItemExistsInOtherLocation(inventoryId, data.code, data.reportedLocation);
+        if (existsInOther && !ignoreExists) return { success: false, error: 'exists_in_other_location' };
+
+        const alreadyCounted = await checkItemAlreadyCountedInOtherLocation(inventoryId, data.code, data.reportedLocation);
+        if (alreadyCounted.alreadyCounted && !ignoreAlreadyCounted) {
+          return { success: false, error: 'already_counted_in_other', data: alreadyCounted.previousLocation };
+        }
+      }
+
+      const now = new Date();
+      const newValue = {
+        code: data.code,
+        reportedQuantity: data.reportedQuantity,
+        reportedLocation: data.reportedLocation,
+        observation: data.observation,
+        operator: data.operator,
+        status: 5,
+        countTime: now.toLocaleDateString("pt-br")
+      };
+
+      await insertNewInventoryItem(inventoryId, newValue);
+      await updateInventoryTotalItems(inventoryId, inventory.totalItems + 1);
+      await updateInventoryCountedItems(inventoryId, inventory.countedItems + 1);
+      await updateInventoryStatus(inventoryId, 1);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error adding new item:", error);
+      return { success: false, error: 'add_failed' };
+    }
+  },
+
+  async replaceItem(
+    inventoryId: number,
+    itemId: number,
+    data: {
+      reportedQuantity: number,
+      reportedLocation: string,
+      observation: string,
+      operator: string
+    }
+  ): Promise<{ success: boolean, error?: string }> {
+    try {
+      const inventory = await fetchInventoryById(inventoryId);
+      if (!inventory) return { success: false, error: 'inventory_not_found' };
+      if (inventory.status === 2) return { success: false, error: 'inventory_completed' };
+
+      const now = new Date();
+      const replaceValues = {
+        reportedQuantity: data.reportedQuantity,
+        reportedLocation: data.reportedLocation,
+        observation: data.observation,
+        operator: data.operator,
+        status: 1,
+        countTime: now.toLocaleDateString("pt-br")
+      };
+
+      await updateItemCount(itemId, replaceValues);
+      return { success: true };
+    } catch (error) {
+      console.error("Error replacing item:", error);
+      return { success: false, error: 'replace_failed' };
+    }
+  },
+
+  async sumToPreviousCount(inventoryId: number, code: string, previousLocation: string, additionalQuantity: number): Promise<{ success: boolean, error?: string }> {
+    try {
+      await sumToPreviousCount(inventoryId, code, previousLocation, additionalQuantity);
+      return { success: true };
+    } catch (error) {
+      console.error("Error summing to previous count:", error);
+      return { success: false, error: 'sum_failed' };
+    }
+  },
+
+  async finalizeInventory(inventoryId: number): Promise<{ success: boolean, error?: string }> {
+    try {
+      const inventory = await fetchInventoryById(inventoryId);
+      if (!inventory) return { success: false, error: 'inventory_not_found' };
+      if (inventory.status === 2) return { success: false, error: 'inventory_already_completed' };
+
+      await updateInventoryStatus(inventoryId, 2);
+      return { success: true };
+    } catch (error) {
+      console.error("Error finalizing inventory:", error);
+      return { success: false, error: 'finalize_failed' };
+    }
+  }
+};

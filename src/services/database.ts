@@ -31,6 +31,8 @@ export const fetchAll = async <T>(
 //countType: -- 1: Codigo de barras, 2: Posição
 const initDB = async (database: SQLiteDatabase) => {
   await database.execAsync(`
+    CREATE INDEX IF NOT EXISTS idx_inventory_items_code ON inventory_items(code);
+    CREATE INDEX IF NOT EXISTS idx_inventory_items_location ON inventory_items(reportedLocation, expectedLocation);
   
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

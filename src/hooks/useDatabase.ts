@@ -1,22 +1,21 @@
-// useDatabase.ts
 import { useEffect, useState } from 'react';
-import { Operator, Inventory, InventoryLocation } from '@/types/types';
-import { fetchAllLocationsFromInventory, fetchInventories, fetchOpenInventories } from '@/models/inventory';
+import { Operator, Inventory, InventoryLocation, InventoryItem } from '@/types/types';
+import { fetchAllLocationsFromInventory, fetchInventories, fetchOpenInventories, fetchInventoryItemsForLocation } from '@/models/inventory';
 import { fetchOperator } from '@/models/operators';
 
-export const useDatabase = ({ inventoryId }: { inventoryId?: number }) => {
+export const useDatabase = ({ inventoryId, location }: { inventoryId?: number; location?: string }) => {
   const [operators, setOperators] = useState<Operator[]>([]);
   const [inventories, setInventories] = useState<Inventory[]>([]);
   const [openInventories, setOpenInventories] = useState<Inventory[]>([]);
   const [locations, setLocations] = useState<InventoryLocation[]>([]);
+  const [items, setItems] = useState<InventoryItem[]>([]); // Novo estado para itens
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      
-      // Carrega apenas os dados que não dependem de inventoryId
+
       const [operatorData, inventoriesData, openInventoriesData] = await Promise.all([
         fetchOperator(),
         fetchInventories(),
@@ -27,12 +26,19 @@ export const useDatabase = ({ inventoryId }: { inventoryId?: number }) => {
       setInventories(inventoriesData);
       setOpenInventories(openInventoriesData);
 
-      // Carrega localizações apenas se inventoryId for fornecido e válido
       if (inventoryId !== undefined && inventoryId > 0) {
         const locationsData = await fetchAllLocationsFromInventory(inventoryId);
         setLocations(locationsData);
       } else {
-        setLocations([]); // Limpa as localizações se inventoryId não for fornecido
+        setLocations([]);
+      }
+
+      // Carrega itens se location for fornecido
+      if (location && inventoryId !== undefined && inventoryId > 0) {
+        const itemsData = await fetchInventoryItemsForLocation(inventoryId, location);
+        setItems(itemsData);
+      } else {
+        setItems([]);
       }
 
       setError(null);
@@ -44,16 +50,16 @@ export const useDatabase = ({ inventoryId }: { inventoryId?: number }) => {
     }
   };
 
-  // Executa loadData quando o hook é montado ou quando inventoryId muda
   useEffect(() => {
     loadData();
-  }, [inventoryId]); // Adiciona inventoryId como dependência
+  }, [inventoryId, location]); // Dependência em location também
 
   return {
     operators,
     inventories,
     openInventories,
-    locations, // Inclui locations no retorno
+    locations,
+    items, // Novo retorno
     loading,
     error,
     refresh: loadData,

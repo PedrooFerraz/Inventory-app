@@ -13,7 +13,7 @@ import {
   TextInput,
 } from 'react-native';
 
-export default function InventorySelectionScreen() {
+export default function InventoryPositionScreen() {
   const params = useLocalSearchParams();
   const { locations } = useDatabase(params.id ? { inventoryId: Number(params.id) } : {});
   const [filter, setFilter] = useState<0 | 1 | 2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
@@ -44,16 +44,16 @@ export default function InventorySelectionScreen() {
     </TouchableOpacity>
   );
 
-  const handleSelect = (id: number, locationId: number) => {
+  const handleSelect = (inventoryId: number, location: string) => {
     router.navigate(
-      `/inventory-positions-screen?id=${id}&operator=${params.operator}&location=${locationId}`,
+      `/inventory-positions-screen?id=${inventoryId}&operator=${params.operator}&location=${location}`,
     );
   };
 
   const renderInventarioItem = ({ item }: { item: InventoryLocation }) => (
     <SelectPositionCard
       item={item}
-      onPress={handleSelect}
+      onPress={() => handleSelect(item.inventory_id, item.location)}
       key={item.id}
     ></SelectPositionCard>
   );

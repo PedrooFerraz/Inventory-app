@@ -93,3 +93,26 @@ export interface BatchOption {
 }
 
 export type scanTypes = "C" | "P" //C- Código Material; P- Posição
+
+export type InventoryItem = {
+  id: number;
+  inventory_id: number;
+  inventoryDocument: string | null;
+  year: string | null;
+  center: string | null;
+  storage: string | null;
+  batch: string | null;
+  inventoryItem: string | null;
+  code: string;
+  description: string | null;
+  expectedQuantity: number | null;
+  unit: string | null;
+  averagePrice: string | null;
+  expectedLocation: string | null;
+  reportedLocation: string | null;
+  reportedQuantity: number | null;
+  status: number;
+  observation: string | null;
+  operator: string | null;
+  countTime: string | null;
+};

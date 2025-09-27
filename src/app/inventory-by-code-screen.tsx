@@ -6,16 +6,14 @@ import ItemDescription from "@/components/item-description";
 import { CustomModal } from "@/components/master/custom-modal";
 import NumericInput from "@/components/numeric-input";
 import QRCodeInput from "@/components/qrcode-input";
-import { BatchOption, ErrorModalProps, Inventory, Item, scanTypes } from "@/types/types";
+import { BatchOption, Inventory, Item, scanTypes } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, DrawerLayoutAndroid, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { InventoryService } from "@/services/inventoryService";
 
-
 export default function InventoryByCodeScreen() {
-
     const navigationView = () => (
         <DrawerMenu drawer={drawer} finalizeInventoryFunction={handleFinalizeInventory}></DrawerMenu>
     );
@@ -27,81 +25,71 @@ export default function InventoryByCodeScreen() {
     const qrCodeInputRefCode = useRef<{ clearInput: () => void, setValue: (value: string) => void }>(null);
 
     const [progress, setProgress] = useState(0);
-    const [success, setSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [observation, setObservation] = useState("");
     const [showCamera, setShowCamera] = useState(false);
-    const [currentItem, setCurrentItem] = useState<Item>();
-    const [itemNotFound, setItemNotFound] = useState(false);
-    const [errorModal, setErrorModal] = useState<ErrorModalProps>({
-        visible: false,
-        title: "",
-        message: "",
-        onConfirm: () => { },
-        onCancel: () => { },
-    })
-    const [wrongQuantity, setWrongQuantity] = useState(false);
-    const [wrongLocation, setWrongLocation] = useState(false);
+    const [currentItem, setCurrentItem] = useState<Item | null>(null);
+    const [errorModalVisible, setErrorModalVisible] = useState(false);
+    const [alreadyCountModalVisible, setAlreadyCountModalVisible] = useState(false);
+    const [errorTitle, setErrorTitle] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const [modalAction, setModalAction] = useState<() => void>(() => { });
+    const [modalCancelAction, setModalCancelAction] = useState<() => void>(() => { });
     const [currentQuantity, setCurrentQuantity] = useState(0);
+    const [zeroQuantityError, setZeroQuantityError] = useState(false);
     const [emptyCodeError, setEmptyCodeError] = useState(false);
     const [emptyLocError, setEmptyLocError] = useState(false);
-    const [zeroQuantityError, setZeroQuantityError] = useState(false);
-    const [pendingSubmit, setPendingSubmit] = useState(false);
-    const [scanInputTarget, setScanInputTarget] = useState<scanTypes>() //C - Código Material; P - Posição
+    const [scanInputTarget, setScanInputTarget] = useState<scanTypes>();
     const [currentLocation, setCurrentLocation] = useState("");
     const [currentCode, setCurrentCode] = useState("");
     const [showDescription, setShowDescription] = useState(false);
-    const [currentInventory, setCurrentInventory] = useState<Inventory | null>();
     const [description, setDescription] = useState<{ item: Partial<Item> | string, status: boolean }>({ item: "", status: false });
-    const [userChoices, setUserChoices] = useState<{
-        ignoreLocation?: boolean;
-        ignoreQuantity?: boolean;
-    }>({});
+    const [currentInventory, setCurrentInventory] = useState<Inventory | null>(null);
     const [showBatchSelection, setShowBatchSelection] = useState(false);
     const [batchOptions, setBatchOptions] = useState<BatchOption[]>([]);
     const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
+    const [successVisible, setSuccessVisible] = useState(false);
+    const [ignoreQuantity, setIgnoreQuantity] = useState(false);
+    const [ignoreLocation, setIgnoreLocation] = useState(false);
 
     useEffect(() => {
-        getInventoryData()
-        setIsLoading(false)
-        restartForm()
-    }, [])
+        loadInventoryData();
+        setIsLoading(false);
+    }, []);
 
-    useEffect(() => {
-        if (pendingSubmit) {
-            handleSubmit()
-            setPendingSubmit(false)
+    const loadInventoryData = async () => {
+        try {
+            const inventory = await InventoryService.getInventory(Number(params.id));
+            setCurrentInventory(inventory);
+            setProgress(inventory ? inventory.countedItems / inventory.totalItems : 0);
+        } catch (error) {
+            console.error('Error loading inventory:', error);
         }
-    }, [userChoices])
+    };
 
     const handleCamView = (input?: scanTypes) => {
-        if (input)
-            setScanInputTarget(input)
-
-        setShowCamera(!showCamera)
-    }
+        if (input) setScanInputTarget(input);
+        setShowCamera(!showCamera);
+    };
 
     const onScan = (e: any) => {
         if (scanInputTarget === "C" && e.data !== undefined) {
-            handleEndEditingCode(e.data)
+            handleEndEditingCode(e.data);
             qrCodeInputRefCode.current?.setValue(e.data);
         }
 
-
         if (scanInputTarget === "P" && e.data !== undefined) {
-            handleEndEditingLoc(e.data)
+            handleEndEditingLoc(e.data);
             qrCodeInputRefLoc.current?.setValue(e.data);
         }
 
-        if (showCamera)
-            handleCamView()
-
-    }
+        if (showCamera) handleCamView();
+    };
 
     const handleEditCode = (code: string) => {
-        const upperCaseCode = code.toUpperCase()
-        setCurrentCode(upperCaseCode)
-    }
+        const upperCaseCode = code.toUpperCase();
+        setCurrentCode(upperCaseCode);
+    };
 
     const handleEndEditingCode = async (code: string) => {
         setEmptyCodeError(false);
@@ -109,129 +97,124 @@ export default function InventoryByCodeScreen() {
         setSelectedBatch(null);
 
         if (code.trim() === "") {
-            setCurrentCode("")
-            setEmptyCodeError(true)
-            return
+            setCurrentCode("");
+            setEmptyCodeError(true);
+            return;
         }
 
-        const upperCaseCode = code.toUpperCase()
-        setCurrentCode(upperCaseCode)
+        const upperCaseCode = code.toUpperCase();
+        setCurrentCode(upperCaseCode);
 
-        if (currentInventory) {
-            const batches = await InventoryService.getBatchesForItem(
-                currentInventory.id,
-                upperCaseCode
-            );
+        const batches = await InventoryService.getBatchesForItem(Number(params.id), upperCaseCode);
 
-            let batchQty = 0;
+        let batchQty = 0;
+        batches.forEach(batch => {
+            if (batch.batch !== "") batchQty++;
+        });
 
-            batches.forEach(batch => {
-                if (batch.batch !== "") {
-                    batchQty++;
-                }
-            });
-
-            if (batchQty > 1) {
-                getBatch(batches)
-                return
-            }
+        if (batchQty > 1) {
+            setBatchOptions(batches);
+            setShowBatchSelection(true);
+            return;
         }
-        defineCurrentItem(upperCaseCode, false)
-    }
 
-    const getBatch = (batches: BatchOption[]) => {
-        setBatchOptions(batches);
-        setShowBatchSelection(true);
-    }
+        await defineCurrentItem(upperCaseCode, false);
+    };
 
     const defineCurrentItem = async (code: string, hasManyBatch: boolean) => {
-        let res
+        let res: Item | undefined;
         if (selectedBatch && hasManyBatch) {
-            res = await InventoryService.getItemByCodeAndBatch(Number(params.id), code, selectedBatch)
-        }
-        else {
-            res = await InventoryService.getItemByCode(Number(params.id), code)
+            res = await InventoryService.getItemByCodeAndBatch(Number(params.id), code, selectedBatch);
+        } else {
+            res = await InventoryService.getItemByCode(Number(params.id), code);
         }
 
         if (!res) {
             setDescription({ item: "Item não encontrado", status: false });
             setShowDescription(true);
-            setCurrentItem(undefined);
+            setCurrentItem(null);
             return;
         }
 
         setCurrentItem(res);
-        setDescription({ item: res, status: true })
-        setShowDescription(true)
-    }
+        setDescription({ item: res, status: true });
+        setShowDescription(true);
+    };
 
     const handleEditLoc = (loc: string) => {
-        const locToUpperCase = loc.toUpperCase()
+        const locToUpperCase = loc.toUpperCase();
         setCurrentLocation(locToUpperCase);
-    }
+    };
 
     const handleEndEditingLoc = async (loc: string) => {
-        setEmptyLocError(false)
+        setEmptyLocError(false);
         if (loc.trim() === "") {
-            setCurrentLocation("")
-            setEmptyLocError(true)
-            return
+            setCurrentLocation("");
+            setEmptyLocError(true);
+            return;
         }
-        const locToUpperCase = loc.toUpperCase()
+        const locToUpperCase = loc.toUpperCase();
         setCurrentLocation(locToUpperCase);
-    }
+    };
 
     const handleOnQuantityChange = (e: any) => {
-        if (zeroQuantityError)
-            setZeroQuantityError(false)
+        if (zeroQuantityError) setZeroQuantityError(false);
+        setCurrentQuantity(Number(e));
+    };
 
-        setCurrentQuantity(Number(e))
-    }
-    const handleWrongQuantity = () => {
-        setWrongQuantity(!wrongQuantity)
-    }
-    const handleWrongLocation = () => {
-        setWrongLocation(!wrongLocation)
-    }
-    const handleConfirmWrongLocation = async () => {
-        setUserChoices(prev => ({ ...prev, ignoreLocation: true }));
-        handleWrongLocation()
-    }
-    const handleItemNotFound = () => {
-        setItemNotFound(!itemNotFound)
-    }
-    const handleCustomModal = ({
-        title,
-        message,
-        onConfirm,
-        onCancel,
-        visible,
-    }: {
-        title: string;
-        message: string;
-        onConfirm: () => void;
-        onCancel: () => void;
-        visible: boolean;
-    }) => {
-        setErrorModal({
-            visible,
-            title,
-            message,
-            onConfirm,
-            onCancel,
-        });
-    }
-    const handleSuccess = () => {
-        setSuccess(!success)
-    }
+    const handleFinalizeInventory = () => {
+        if (!currentInventory) return;
+
+        const diff = currentInventory.totalItems - currentInventory.countedItems;
+
+        let message = "";
+        if (diff === 0) {
+            message = "Realmente deseja finalizar o inventário? Após finalizar você não poderá mais adicionar novos registros";
+        } else {
+            message = `Ainda restam itens a serem contados, realmente deseja finalizar o inventário? Após finalizar você não poderá adicionar novas contagens. Os materiais não contados serão considerados sem estoque.`;
+        }
+
+        showErrorModal("Atenção", message, async () => {
+            const res = await InventoryService.finalizeInventory(currentInventory.id);
+            if (res.success) {
+                Alert.alert("Sucesso", "Contagem Concluída");
+                router.navigate("/");
+            } else {
+                Alert.alert("Erro", "Ocorreu algum erro ao finalizar o inventário, tente novamente");
+            }
+        }, () => { });
+    };
+
+    const restartForm = () => {
+        setCurrentItem(null);
+        setShowDescription(false);
+        setSelectedBatch(null);
+        setCurrentCode("");
+        setCurrentLocation("");
+        setObservation("");
+        setZeroQuantityError(false);
+        setEmptyCodeError(false);
+        setEmptyLocError(false);
+        setIgnoreQuantity(false);
+        setIgnoreLocation(false);
+        qrCodeInputRefCode.current?.clearInput();
+        qrCodeInputRefLoc.current?.clearInput();
+        numericInputRef.current?.clearInput();
+        loadInventoryData();
+        setProgress(prev => prev + 1);
+        setBatchOptions([]);
+    };
+
     const handleSubmit = async () => {
-
         if (currentCode.trim() === "" || currentLocation.trim() === "") {
-            if (!emptyCodeError && currentCode.trim() === "")
-                setEmptyCodeError(true)
-            if (!emptyLocError && currentLocation.trim() === "")
-                setEmptyLocError(true)
-            return
+            if (currentCode.trim() === "") setEmptyCodeError(true);
+            if (currentLocation.trim() === "") setEmptyLocError(true);
+            return;
+        }
+
+        if (currentQuantity === 0) {
+            setZeroQuantityError(true);
+            return;
         }
 
         if (batchOptions.length > 1 && !selectedBatch) {
@@ -239,168 +222,190 @@ export default function InventoryByCodeScreen() {
             return;
         }
 
-        if (currentQuantity === 0) {
-            setZeroQuantityError(true)
-            return
-        }
-
-        if (!currentItem) {
-            setItemNotFound(true);
-            return;
-        }
-
-        if (currentItem.expectedLocation !== currentLocation && !userChoices.ignoreLocation) {
-            setWrongLocation(true);
-        }
-
-        if (currentQuantity !== currentItem.expectedQuantity && !userChoices.ignoreQuantity) {
-            setWrongQuantity(true);
-            return;
-        }
-
-        await confirmItem();
-    }
-    const handleFinalizeInventory = () => {
-
-        let diff
-        if (currentInventory) {
-            diff = currentInventory?.totalItems - currentInventory?.countedItems;
-
-            if (diff === 0) {
-                handleCustomModal({
-                    title: "Atenção",
-                    message: "Realmente deseja finalizar o inventário? Após finalizar você não poderá mais adicionar novos registros",
-                    onConfirm: () => { finalizeInventory() },
-                    onCancel: () => { },
-                    visible: true,
-                })
-            }
-            if (diff > 0) {
-                handleCustomModal({
-                    title: "Atenção",
-                    message: `Ainda restam itens a serem contados, realmente deseja finalizar o inventário? Após finalizar você não poderá adicionar novas contagens. Os materiais não contados serão considerados sem estoque.`,
-                    onConfirm: () => { finalizeInventory() },
-                    onCancel: () => { },
-                    visible: true,
-                })
-            }
-        }
-    }
-    const finalizeInventory = async () => {
-
-        if (!currentInventory)
-            return
-        const res = await InventoryService.finalizeInventory(currentInventory?.id)
-        if (res.success) {
-            router.navigate("/")
-            Alert.alert("Sucesso", "Contagem Concluída")
-            return
-        }
-        Alert.alert("Error", "Ocorreu algum erro ao finalizar o inventário tente novamente")
-    }
-
-    const restartForm = () => {
-        setCurrentItem(undefined);
-        setShowDescription(false);
-        setSelectedBatch(null)
-        setCurrentCode("")
-        setCurrentLocation("")
-        setUserChoices({});
-        setObservation("")
-        qrCodeInputRefCode.current?.clearInput();
-        qrCodeInputRefLoc.current?.clearInput();
-        numericInputRef.current?.clearInput();
-        getInventoryData();
-        setProgress(prev => prev + 1)
-    }
-    const confirmItem = async () => {
-        if (!currentItem || !currentInventory)
-            return;
-        let status = 1
-        if (currentItem.expectedQuantity !== currentQuantity) {
-            status = 2
-        }
-        if (currentItem.expectedLocation !== currentLocation) {
-            status = 3
-        }
-        if (currentItem.expectedLocation !== currentLocation && currentItem.expectedQuantity !== currentQuantity) {
-            status = 4
-        }
-        const updatedItem = {
+        const itemData = {
             reportedQuantity: currentQuantity,
             reportedLocation: currentLocation,
-            observation: observation,
+            observation,
             operator: Array.isArray(params.operator) ? params.operator[0] : params.operator as string,
-            status: status
-        }
-        const res = await InventoryService.updateItem(currentItem.id, currentInventory.id, updatedItem)
+            status: 1, // Default status; service will adjust based on divergences
+        };
 
-        if (res === "Item has already been accounted for") {
-            handleCustomModal(
-                {
-                    title: "Error",
-                    message: "Este item já foi contabilizado, deseja substituir?",
-                    onConfirm: () => { replaceItem() },
-                    onCancel: () => { },
-                    visible: true,
+        let response;
+        if (currentItem) {
+            response = await InventoryService.updateItem(currentItem.id, Number(params.id), itemData, ignoreQuantity, ignoreLocation);
+        } else {
+            response = await InventoryService.addNewItem(Number(params.id), { code: currentCode, ...itemData });
+        }
+
+        handleServiceResponse(response, itemData);
+    };
+
+    const handleServiceResponse = (
+        response: { success: boolean; error?: string; errors?: string[]; data?: any },
+        itemData: { reportedQuantity: number, reportedLocation: string, observation: string, operator: string, status: number },
+        ignoreErrors: { quantity?: boolean; location?: boolean } = { quantity: false, location: false }
+    ) => {
+        if (response.success) {
+            setSuccessVisible(true);
+            restartForm();
+            return;
+        }
+
+        // Handle multiple errors if present
+        if (response.errors && response.errors.length > 0) {
+            const handleNextError = (remainingErrors: string[], currentIgnoreErrors: { quantity?: boolean; location?: boolean }) => {
+                if (remainingErrors.length === 0) return;
+
+                const error = remainingErrors[0];
+                const nextErrors = remainingErrors.slice(1);
+
+                switch (error) {
+                    case 'quantity_mismatch':
+                        showErrorModal("Quantidade Divergente", "Aprovar mesmo assim?", async () => {
+                            const updatedIgnoreErrors = { ...currentIgnoreErrors, quantity: true };
+                            setIgnoreQuantity(true); // Update state for UI consistency
+                            setErrorModalVisible(false); // Ensure modal closes
+                            if (currentItem) {
+                                const res = await InventoryService.updateItem(currentItem.id, Number(params.id), itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
+                                handleServiceResponse(res, itemData, updatedIgnoreErrors);
+                            }
+                        }, () => {
+                            setErrorModalVisible(false);
+                            restartForm();
+                        });
+                        break;
+                    case 'location_mismatch':
+                        showErrorModal("Posição Divergente", "Continuar mesmo assim?", async () => {
+                            const updatedIgnoreErrors = { ...currentIgnoreErrors, location: true };
+                            setIgnoreLocation(true); // Update state for UI consistency
+                            setErrorModalVisible(false); // Ensure modal closes
+                            if (currentItem) {
+                                const res = await InventoryService.updateItem(currentItem.id, Number(params.id), itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
+                                handleServiceResponse(res, itemData, updatedIgnoreErrors);
+                            }
+                        }, () => {
+                            setErrorModalVisible(false);
+                            restartForm();
+                        });
+                        break;
+                    default:
+                        showErrorModal("Erro", "Operação falhou.", () => {
+                            setErrorModalVisible(false);
+                        }, () => {
+                            setErrorModalVisible(false);
+                            restartForm();
+                        });
                 }
-            )
-            restartForm()
-            return
+            };
 
-        }
-
-        handleSuccess()
-        restartForm();
-    }
-    const addNewItem = async () => {
-
-        if (!currentInventory)
+            handleNextError(response.errors, ignoreErrors);
             return;
-
-        const newItem = {
-            code: currentCode,
-            reportedQuantity: currentQuantity,
-            reportedLocation: currentLocation,
-            observation: observation,
-            operator: Array.isArray(params.operator) ? params.operator[0] : params.operator as string,
         }
 
-        const res = await InventoryService.addNewItem(currentInventory.id, newItem)
-
-        if (res.success) {
-            handleSuccess()
-            restartForm();
+        // Handle single errors
+        switch (response.error) {
+            case 'already_counted':
+                showAlreadyCountModal(
+                    'Item Já Contabilizado',
+                    `Já foram contabilizadas ${response.data.lastCount} unidades na posição ${response.data.lastLoc}\n\nEscolha:`,
+                    async () => {
+                        if (currentItem) {
+                            setAlreadyCountModalVisible(false);
+                            const replaceRes = await InventoryService.replaceItem(Number(params.id), currentItem.id, {
+                                reportedQuantity: itemData.reportedQuantity,
+                                reportedLocation: itemData.reportedLocation,
+                                observation: itemData.observation,
+                                operator: itemData.operator,
+                            });
+                            handleServiceResponse(replaceRes, itemData, ignoreErrors);
+                        }
+                    },
+                    async () => {
+                        setAlreadyCountModalVisible(false);
+                        const newCount = await InventoryService.addNewItem(Number(params.id), { code: currentCode, ...itemData });
+                        console.log(newCount);
+                        handleServiceResponse(newCount, itemData, ignoreErrors);
+                    },
+                    () => {
+                        setAlreadyCountModalVisible(false);
+                        restartForm();
+                    }
+                );
+                break;
+            case 'quantity_mismatch':
+                showErrorModal("Quantidade Divergente", "Aprovar mesmo assim?", async () => {
+                    const updatedIgnoreErrors = { ...ignoreErrors, quantity: true };
+                    setIgnoreQuantity(true); // Update state for UI consistency
+                    setErrorModalVisible(false);
+                    if (currentItem) {
+                        const res = await InventoryService.updateItem(currentItem.id, Number(params.id), itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
+                        handleServiceResponse(res, itemData, updatedIgnoreErrors);
+                    }
+                }, () => {
+                    setErrorModalVisible(false);
+                    restartForm();
+                });
+                break;
+            case 'location_mismatch':
+                showErrorModal("Posição Divergente", "Continuar mesmo assim?", async () => {
+                    const updatedIgnoreErrors = { ...ignoreErrors, location: true };
+                    setIgnoreLocation(true); // Update state for UI consistency
+                    setErrorModalVisible(false); // Ensure modal closes
+                    if (currentItem) {
+                        const res = await InventoryService.updateItem(currentItem.id, Number(params.id), itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
+                        handleServiceResponse(res, itemData, updatedIgnoreErrors);
+                    }
+                }, () => {
+                    setErrorModalVisible(false);
+                    restartForm();
+                });
+                break;
+            case 'exists_in_other_location':
+                showErrorModal("Item Existe em Outra Posição", "Adicionar mesmo assim?", async () => {
+                    setErrorModalVisible(false); // Ensure modal closes
+                    const res = await InventoryService.addNewItem(Number(params.id), { code: currentCode, ...itemData }, true);
+                    handleServiceResponse(res, itemData, ignoreErrors);
+                }, () => {
+                    setErrorModalVisible(false);
+                    restartForm();
+                });
+                break;
+            case 'already_counted_in_other':
+                showErrorModal("Item Contado em Outra Posição", `Já contado na posição ${response.data}. Escolha: Nova contagem, Somar à anterior ou Cancelar.`, async () => {
+                    setErrorModalVisible(false); // Ensure modal closes
+                    const res = await InventoryService.addNewItem(Number(params.id), { code: currentCode, ...itemData }, false, true);
+                    handleServiceResponse(res, itemData, ignoreErrors);
+                }, async () => {
+                    setErrorModalVisible(false); // Ensure modal closes
+                    await InventoryService.sumToPreviousCount(Number(params.id), currentCode, response.data, currentQuantity);
+                    restartForm();
+                });
+                break;
+            default:
+                showErrorModal("Erro", "Operação falhou.", () => {
+                    setErrorModalVisible(false);
+                }, () => {
+                    setErrorModalVisible(false);
+                    restartForm();
+                });
         }
-    }
+    };
 
-    const replaceItem = async () => {
-        if (!currentItem || !currentInventory)
-            return;
+    const showErrorModal = (title: string, message: string, onConfirm: () => void, onCancel: () => void) => {
+        setErrorTitle(title);
+        setErrorMessage(message);
+        setModalAction(() => onConfirm);
+        setModalCancelAction(() => onCancel);
+        setErrorModalVisible(true);
+    };
 
-        const dataToReplace = {
-            code: currentCode,
-            reportedQuantity: currentQuantity,
-            reportedLocation: currentLocation,
-            observation: observation,
-            operator: Array.isArray(params.operator) ? params.operator[0] : params.operator as string,
-        }
-
-        const res = await InventoryService.replaceItem(currentInventory.id, currentItem.id, dataToReplace)
-
-        if (res.success) {
-            handleSuccess()
-            restartForm();
-        }
-
-
-    }
-
-    const getInventoryData = async () => {
-        const res = await InventoryService.getInventory(Number(params.id))
-        setCurrentInventory(res)
-    }
-
+    const showAlreadyCountModal = (title: string, message: string, onReplace: () => void, onAdd: () => void, onCancel: () => void) => {
+        setErrorTitle(title);
+        setErrorMessage(message);
+        setModalAction(() => onReplace);
+        setModalCancelAction(() => onAdd);
+        setAlreadyCountModalVisible(true);
+    };
 
     return (
         <DrawerLayoutAndroid style={styles.container}
@@ -414,9 +419,8 @@ export default function InventoryByCodeScreen() {
                     <ActivityIndicator size={"large"} color={"#60A5FA"} style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
                 </View>
             }
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex:1}}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 <ScrollView>
-
                     <View style={styles.header} >
                         <Text style={styles.headerTitle}>Inventário - {currentInventory?.inventoryDocument} | {currentInventory?.inventoryYear}</Text>
                         <TouchableOpacity onPress={() => drawer.current?.openDrawer()}>
@@ -424,23 +428,19 @@ export default function InventoryByCodeScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    {
-                        currentInventory &&
+                    {currentInventory &&
                         <InventoryProgress key={progress} totalItems={currentInventory.totalItems} countedItems={currentInventory.countedItems}></InventoryProgress>
                     }
 
                     <View style={styles.content}>
-
                         <View style={styles.form}>
-
-
-                            <QRCodeInput onEditing={handleEditCode} error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={handleCamView} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
+                            <QRCodeInput onEditing={handleEditCode} error={emptyCodeError} ref={qrCodeInputRefCode} onEndEditing={handleEndEditingCode} onScanPress={() => handleCamView("C")} label="Código Material *" placeholder="0000000000" iconName={"qr-code-outline"}></QRCodeInput>
 
                             {showDescription &&
                                 <ItemDescription status={description.status} data={description.item} ></ItemDescription>
                             }
 
-                            <QRCodeInput onEditing={handleEditLoc} error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={handleCamView} label="Posição *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
+                            <QRCodeInput onEditing={handleEditLoc} error={emptyLocError} ref={qrCodeInputRefLoc} onEndEditing={handleEndEditingLoc} onScanPress={() => handleCamView("P")} label="Posição *" placeholder="123a" iconName={"qr-code-outline"}></QRCodeInput>
 
                             <NumericInput error={zeroQuantityError} ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
 
@@ -453,99 +453,72 @@ export default function InventoryByCodeScreen() {
                                 >
                                 </TextInput>
                             </View>
-
                         </View>
 
                         <TouchableOpacity style={styles.nextButton} activeOpacity={0.5} onPress={handleSubmit}>
                             <Ionicons name="checkmark-circle-outline" size={20} color={"white"} />
                             <Text style={styles.buttonName}>Confirmar & Próximo</Text>
                         </TouchableOpacity>
-
                     </View>
                 </ScrollView>
 
-                {
-                    showCamera &&
+                {showCamera &&
                     <CameraScanner onButtonPress={handleCamView} onScan={onScan}></CameraScanner>
                 }
 
-                <CustomModal onClose={handleWrongQuantity} title="Atenção" visible={wrongQuantity}>
+                <CustomModal visible={errorModalVisible} title={errorTitle} onClose={() => setErrorModalVisible(false)}>
                     <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                        A quantidade contada não confere. Deseja aprovar?
+                        {errorMessage}
                     </Text>
                     <View style={{ gap: 20 }}>
-                        <ButtonWithIcon
-                            color="#7F95B9"
-                            icon="close-outline"
-                            label="Reavaliar"
-                            onPress={() => handleWrongQuantity()}
-                        />
-                        <ButtonWithIcon
-                            color="#5A7BA1"
-                            icon="checkmark-outline"
-                            label="Aprovar"
-                            onPress={async () => {
-                                setUserChoices(prev => ({ ...prev, ignoreQuantity: true }));
-                                handleWrongQuantity();
-                                await confirmItem();
-                            }}
-                        />
-                    </View>
-                </CustomModal>
-
-                <CustomModal onClose={handleWrongLocation} title="Atenção" visible={wrongLocation}>
-                    <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                        A Posição não confere. Deseja continuar?
-                    </Text>
-                    <View style={{ gap: 20 }}>
-                        <ButtonWithIcon
-                            color="#7F95B9"
-                            icon="close-outline"
-                            label="Reavaliar"
-                            onPress={() => {
-                                handleWrongLocation();
-                                setWrongQuantity(false)
-                                // Foca no campo de Posição para correção
-                            }}
-                        />
                         <ButtonWithIcon
                             color="#5A7BA1"
                             icon="checkmark-outline"
                             label="Confirmar"
-                            onPress={async () => {
-                                await handleConfirmWrongLocation()
-                            }}
+                            onPress={modalAction}
+                        />
+                        <ButtonWithIcon
+                            color="#7F95B9"
+                            icon="close-outline"
+                            label="Cancelar"
+                            onPress={modalCancelAction}
                         />
                     </View>
                 </CustomModal>
 
-                <CustomModal onClose={handleItemNotFound} title="Atenção" visible={itemNotFound}>
+                <CustomModal visible={alreadyCountModalVisible} title={errorTitle} onClose={() => setAlreadyCountModalVisible(false)}>
                     <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                        Este item não consta na lista, deseja adicionar?
+                        {errorMessage}
                     </Text>
                     <View style={{ gap: 20 }}>
+                        <ButtonWithIcon
+                            color="#5A7BA1"
+                            icon="checkmark-outline"
+                            label="Substituir"
+                            onPress={modalAction}
+                        />
+                        <ButtonWithIcon
+                            color="#5A7BA1"
+                            icon="add-outline"
+                            label="Adicionar nova Contagem"
+                            onPress={modalCancelAction}
+                        />
                         <ButtonWithIcon
                             color="#7F95B9"
                             icon="close-outline"
                             label="Cancelar"
                             onPress={() => {
-                                handleItemNotFound()
-                                restartForm()
-                            }}
-                        />
-                        <ButtonWithIcon
-                            color="#5A7BA1"
-                            icon="add-outline"
-                            label="Adicionar"
-                            onPress={async () => {
-                                await addNewItem();
-                                handleItemNotFound();
+                                setAlreadyCountModalVisible(false);
+                                restartForm();
                             }}
                         />
                     </View>
                 </CustomModal>
 
-                <CustomModal onClose={handleSuccess} title="Sucesso" visible={success}>
+                <CustomModal onClose={() => {
+                    setSuccessVisible(false);
+                    restartForm();
+                }} title="Sucesso" visible={successVisible}>
                     <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
                         Item inserido com sucesso!
                     </Text>
@@ -554,57 +527,23 @@ export default function InventoryByCodeScreen() {
                             color="#5A7BA1"
                             icon="checkmark-outline"
                             label="Ok"
-                            onPress={handleSuccess}
+                            onPress={() => {
+                                setSuccessVisible(false);
+                                restartForm();
+                            }}
                         />
-
                     </View>
                 </CustomModal>
-                {
-                    errorModal.visible &&
-                    <CustomModal
-                        onClose={() => handleCustomModal({ ...errorModal, visible: false })}
-                        title={errorModal.title}
-                        visible={errorModal.visible}
-                    >
-                        <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
-                            {errorModal.message}
-                        </Text>
-                        <View style={{ gap: 20 }}>
-                            <ButtonWithIcon
-                                color="#5A7BA1"
-                                icon="checkmark-outline"
-                                label="Confirmar"
-                                onPress={() => {
-                                    errorModal.onConfirm();
-                                    handleCustomModal({ ...errorModal, visible: false });
-                                }}
-                            />
-                            <ButtonWithIcon
-                                color="#7F95B9"
-                                icon="close-outline"
-                                label="Cancelar"
-                                onPress={() => {
-                                    errorModal.onCancel();
-                                    restartForm()
-                                    handleCustomModal({ ...errorModal, visible: false });
-                                }}
-                            />
-                        </View>
-                    </CustomModal>
-
-
-                }
 
                 <CustomModal
                     onClose={() => setShowBatchSelection(false)}
                     title="Selecione o Lote"
                     visible={showBatchSelection}
                 >
-
                     <ScrollView style={{ maxHeight: 300 }}>
-                        {batchOptions.map((batch) => (
+                        {batchOptions.map((batch, i) => (
                             <TouchableOpacity
-                                key={batch.batch}
+                                key={i}
                                 style={[
                                     styles.batchOption,
                                     selectedBatch === batch.batch && styles.selectedBatchOption
@@ -615,8 +554,6 @@ export default function InventoryByCodeScreen() {
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
-
-
                     <View style={{ marginTop: 20 }}>
                         <ButtonWithIcon
                             color="#5A7BA1"
@@ -627,21 +564,18 @@ export default function InventoryByCodeScreen() {
                                     Alert.alert("Atenção", "Por favor, selecione um lote");
                                     return;
                                 }
-                                defineCurrentItem(currentCode, true)
+                                defineCurrentItem(currentCode, true);
                                 setShowBatchSelection(false);
                             }}
                         />
                     </View>
                 </CustomModal>
             </KeyboardAvoidingView>
-
         </DrawerLayoutAndroid>
-    )
+    );
 }
 
-
 const styles = StyleSheet.create({
-
     header: {
         height: 70,
         width: "100%",
@@ -750,5 +684,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#CBD5E1',
     },
-
 });

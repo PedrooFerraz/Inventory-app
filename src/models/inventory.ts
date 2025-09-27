@@ -1,10 +1,11 @@
+// Inventory.ts (Model Layer: Database Interactions)
 import * as FileSystem from 'expo-file-system';
 import * as Papa from 'papaparse';
 import { executeQuery, fetchAll, getDatabase } from '@/services/database';
-import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption, InventoryLocation } from '@/types/types';
+import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption, InventoryLocation, InventoryItem } from '@/types/types';
 import { SQLiteDatabase } from 'expo-sqlite';
 
-export const insertInventory = async (fileUri: string, fileName: string, coutType: 1 | 2): Promise<{
+export const insertInventory = async (fileUri: string, fileName: string, countType: 1 | 2): Promise<{
   success: boolean;
   inventories: Array<{
     inventoryId: number;
@@ -110,7 +111,7 @@ export const insertInventory = async (fileUri: string, fileName: string, coutTyp
         `INSERT INTO inventories 
         (fileName, fileUri, importDate, inventoryYear, totalItems, inventoryDocument, countType) 
         VALUES (?, ?, ?, ?, ?, ?, ?);`,
-        [fileName, fileUri, new Date().toLocaleDateString('pt-BR'), year, documentItems.length, inventoryDocument, coutType]
+        [fileName, fileUri, new Date().toLocaleDateString('pt-BR'), year, documentItems.length, inventoryDocument, countType]
       );
 
       const inventoryId = result.lastInsertRowId!;
@@ -198,6 +199,49 @@ export const fetchAllLocationsFromInventory = async (inventoryId: number): Promi
     console.error('Erro ao buscar localizações do inventário:', error);
     throw error;
   }
+};
+
+export const fetchInventoryItemsForLocation = async (inventoryId: number, location: string): Promise<InventoryItem[]> => {
+  try {
+    const database: SQLiteDatabase = await getDatabase();
+    const sql = `
+      SELECT * FROM inventory_items
+      WHERE inventory_id = ? AND COALESCE(reportedLocation, expectedLocation) = ?
+    `;
+    const result = await database.getAllAsync(sql, [inventoryId, location]);
+    return result as InventoryItem[];
+  } catch (error) {
+    console.error('Erro ao buscar itens da localização:', error);
+    throw error;
+  }
+};
+
+export const checkItemExistsInOtherLocation = async (inventoryId: number, code: string, location: string): Promise<boolean> => {
+  const sql = `
+    SELECT COUNT(*) as count FROM inventory_items
+    WHERE inventory_id = ? AND code = ? AND COALESCE(reportedLocation, expectedLocation) != ?
+  `;
+  const results = await fetchAll<{ count: number }>(sql, [inventoryId, code, location]);
+  return results[0].count > 0;
+};
+
+export const checkItemAlreadyCountedInOtherLocation = async (inventoryId: number, code: string, location: string): Promise<{ alreadyCounted: boolean, previousLocation?: string }> => {
+  const sql = `
+    SELECT COALESCE(reportedLocation, expectedLocation) as location FROM inventory_items
+    WHERE inventory_id = ? AND code = ? AND reportedQuantity IS NOT NULL AND COALESCE(reportedLocation, expectedLocation) != ?
+    LIMIT 1
+  `;
+  const results = await fetchAll<{ location: string }>(sql, [inventoryId, code, location]);
+  return { alreadyCounted: results.length > 0, previousLocation: results[0]?.location };
+};
+
+export const sumToPreviousCount = async (inventoryId: number, code: string, previousLocation: string, additionalQuantity: number): Promise<void> => {
+  const sql = `
+    UPDATE inventory_items SET
+      reportedQuantity = reportedQuantity + ?
+    WHERE inventory_id = ? AND code = ? AND COALESCE(reportedLocation, expectedLocation) = ?
+  `;
+  await executeQuery(sql, [additionalQuantity, inventoryId, code, previousLocation]);
 };
 
 const BATCH_SIZE = 50; // Processa 50 itens por vez
@@ -366,7 +410,8 @@ export const getBatchesForItem = async (inventoryId: number, materialCode: strin
       FROM inventory_items 
       WHERE 
         inventory_id = ? AND 
-        code = ?
+        code = ? AND
+        status != 5
       ORDER BY batch
     `;
     return await fetchAll<BatchOption>(query, [inventoryId, materialCode]);
