@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ProgressBar from "../progress-bar";
-import { InventoryLocation } from "@/types/types";
+import { InventoryItem } from "@/types/types";
 
-export default function SelectPositionCard({ item, onPress }: { item: InventoryLocation, onPress: (id: number, locationId: number) => any }) {
+export default function SelectItemCard({ item, onPress }: { item: InventoryItem, onPress: (id: number, locationId: number) => any }) {
 
 
     const getStatus = (status: number) => {
@@ -45,42 +45,33 @@ export default function SelectPositionCard({ item, onPress }: { item: InventoryL
                         colors={['#4f6a92', '#6b8ab5']}
                         style={styles.iconContainer}
                     >
-                        <Ionicons name="location-outline" size={28} color="#FFFFFF" />
+                        <Ionicons name="grid-outline" size={28} color="#FFFFFF" />
                     </LinearGradient>
                 </View>
                 <View style={styles.cardContent}>
-                    {
-                        item.location === "" ?
-                            <Text style={styles.posicaoNome}>Itens sem posição {item.location}</Text>
-                            :
-
-                            <Text style={styles.posicaoNome}>Posição: {item.location}</Text>
-                    }
+                    <Text style={styles.posicaoNome}>Código: {item.code}</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
+
             </View>
 
             <View style={styles.cardDetails}>
+                <View style={styles.statusContainer}>
+                    <Text style={styles.detailText}>Descrição: {item.description}</Text>
+                </View>
+                <View style={styles.statusContainer}>
+                    <Text style={styles.detailText}>Unidade: {item.unit}</Text>
+                </View>
+                {
+                    item.batch &&
+                    <View style={styles.statusContainer}>
+                        <Text style={styles.detailText}>Lote: {item.batch}</Text>
+                    </View>
 
-
+                }
                 <View style={styles.statusContainer}>
                     <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
                     <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatus(item.status)}</Text>
                 </View>
-
-                <View style={styles.progressContainer}>
-                    <View style={styles.progressHeader}>
-                        <Text style={styles.progressLabel}>Progresso</Text>
-                        <Text style={styles.progressPercentage}>
-                            {`${Math.floor((item.countedItems / item.totalItems) * 100)}%`}
-                        </Text>
-                    </View>
-                    <ProgressBar color={"#758CAC"} percentage={`${(item.countedItems / item.totalItems) * 100}%`}></ProgressBar>
-                    <Text style={styles.progressText}>
-                        {item.countedItems} de {item.totalItems} itens
-                    </Text>
-                </View>
-
             </View>
 
         </TouchableOpacity>

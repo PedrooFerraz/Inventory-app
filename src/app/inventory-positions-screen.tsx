@@ -46,7 +46,7 @@ export default function InventoryPositionScreen() {
 
   const handleSelect = (inventoryId: number, location: string) => {
     router.navigate(
-      `/inventory-positions-screen?id=${inventoryId}&operator=${params.operator}&location=${location}`,
+      `/inventory-by-positions-screen?id=${inventoryId}&operator=${params.operator}&location=${location}`,
     );
   };
 
