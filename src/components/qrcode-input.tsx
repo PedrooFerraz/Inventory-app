@@ -1,7 +1,7 @@
 import { scanTypes } from "@/types/types";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState, useImperativeHandle, useEffect } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Animated, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function QRCodeInput({ error, label, placeholder, iconName, onScanPress, onEditing, onEndEditing, ref }: { error: boolean, label: string, placeholder: string, iconName: any, onScanPress: (label: scanTypes) => any, onEditing: (e: any) => any, onEndEditing: (e: any) => any, ref: any }) {
 
@@ -47,7 +47,12 @@ export default function QRCodeInput({ error, label, placeholder, iconName, onSca
             </View>
             {
                 error &&
-                <Text style={{ color: "#fa6060" }}>Esse campo precisa ser preenchido</Text>
+
+                <Animated.View style={styles.errorContainer}>
+                    <Ionicons name="alert-circle" size={16} color="#EF4444" />
+
+                    <Text style={{ color: "#fa6060" }}>Esse campo precisa ser preenchido</Text>
+                </Animated.View>
             }
         </View>
     )
@@ -72,5 +77,11 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         flexDirection: "row",
         paddingHorizontal: 10
-    }
+    },
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 8,
+        gap: 8,
+    },
 })

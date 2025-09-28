@@ -1,5 +1,5 @@
 // InventoryService.ts (Service Layer: Business Logic and Validations)
-import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemByCodeAndBatch, fetchItemById, fetchItemsByInventoryId, getBatchesForItem, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount, checkItemExistsInOtherLocation, checkItemAlreadyCountedInOtherLocation, sumToPreviousCount } from "@/models/inventory";
+import { fetchDescriptionByCode, fetchInventoryById, fetchItemByCode, fetchItemByCodeAndBatch, fetchItemById, fetchItemsByInventoryId, getBatchesForItem, insertNewInventoryItem, updateInventoryCountedItems, updateInventoryStatus, updateInventoryTotalItems, updateItemCount, checkItemExistsInOtherLocation, checkItemAlreadyCountedInOtherLocation, sumPreviousCount } from "@/models/inventory";
 import { Item, Inventory, BatchOption } from "@/types/types";
 
 export const InventoryService = {
@@ -41,73 +41,73 @@ export const InventoryService = {
     return batches;
   },
 
-async updateItem(
-  itemId: number,
-  inventoryId: number,
-  data: {
-    reportedQuantity: number,
-    reportedLocation: string,
-    observation: string,
-    operator: string,
-    status?: number,
+  async updateItem(
+    itemId: number,
+    inventoryId: number,
+    data: {
+      reportedQuantity: number,
+      reportedLocation: string,
+      observation: string,
+      operator: string,
+      status?: number,
+    },
+    ignoreQuantity: boolean = false,
+    ignoreLocation: boolean = false
+  ): Promise<{ success: boolean, error?: string, errors?: string[], data?: any }> {
+    try {
+      const item = await fetchItemById(inventoryId, itemId);
+      if (!item || item.length === 0) return { success: false, error: 'item_not_found' };
+
+      const inventory = await fetchInventoryById(inventoryId);
+      if (!inventory) return { success: false, error: 'inventory_not_found' };
+      if (inventory.status === 2) return { success: false, error: 'inventory_completed' };
+
+      if (item[0].reportedQuantity !== null) return { success: false, error: 'already_counted', data: { lastLoc: item[0].reportedLocation, lastCount: item[0].reportedQuantity } };
+
+      // Validações de divergência
+      const quantityDivergent = data.reportedQuantity !== item[0].expectedQuantity;
+      const locationDivergent = data.reportedLocation !== item[0].expectedLocation;
+
+      // Coleta todos os erros de divergência
+      const errors: string[] = [];
+      if (quantityDivergent && !ignoreQuantity) {
+        errors.push('quantity_mismatch');
+      }
+      if (locationDivergent && !ignoreLocation) {
+        errors.push('location_mismatch');
+      }
+
+      // Se houver erros, retorna todos de uma vez
+      if (errors.length > 0) {
+        return { success: false, errors };
+      }
+
+      // Calcula status baseado em divergências (mesmo se ignoradas)
+      let status = 1; // Ok
+      if (quantityDivergent && locationDivergent) status = 4; // Ambos divergentes
+      else if (quantityDivergent) status = 2; // Quantidade divergente
+      else if (locationDivergent) status = 3; // Localização divergente
+
+      const now = new Date();
+      const updateValues = {
+        reportedQuantity: data.reportedQuantity,
+        reportedLocation: data.reportedLocation,
+        observation: data.observation,
+        operator: data.operator,
+        status,
+        countTime: now.toLocaleDateString("pt-br")
+      };
+
+      await updateItemCount(itemId, updateValues);
+      await updateInventoryCountedItems(inventoryId, inventory.countedItems + 1);
+      await updateInventoryStatus(inventoryId, 1);
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error updating item:", error);
+      return { success: false, error: 'update_failed' };
+    }
   },
-  ignoreQuantity: boolean = false,
-  ignoreLocation: boolean = false
-): Promise<{ success: boolean, error?: string, errors?: string[], data?: any }> {
-  try {
-    const item = await fetchItemById(inventoryId, itemId);
-    if (!item || item.length === 0) return { success: false, error: 'item_not_found' };
-
-    const inventory = await fetchInventoryById(inventoryId);
-    if (!inventory) return { success: false, error: 'inventory_not_found' };
-    if (inventory.status === 2) return { success: false, error: 'inventory_completed' };
-
-    if (item[0].reportedQuantity !== null) return { success: false, error: 'already_counted', data: {lastLoc: item[0].reportedLocation, lastCount: item[0].reportedQuantity} };
-
-    // Validações de divergência
-    const quantityDivergent = data.reportedQuantity !== item[0].expectedQuantity;
-    const locationDivergent = data.reportedLocation !== item[0].expectedLocation;
-
-    // Coleta todos os erros de divergência
-    const errors: string[] = [];
-    if (quantityDivergent && !ignoreQuantity) {
-      errors.push('quantity_mismatch');
-    }
-    if (locationDivergent && !ignoreLocation) {
-      errors.push('location_mismatch');
-    }
-
-    // Se houver erros, retorna todos de uma vez
-    if (errors.length > 0) {
-      return { success: false, errors };
-    }
-
-    // Calcula status baseado em divergências (mesmo se ignoradas)
-    let status = 1; // Ok
-    if (quantityDivergent && locationDivergent) status = 4; // Ambos divergentes
-    else if (quantityDivergent) status = 2; // Quantidade divergente
-    else if (locationDivergent) status = 3; // Localização divergente
-
-    const now = new Date();
-    const updateValues = {
-      reportedQuantity: data.reportedQuantity,
-      reportedLocation: data.reportedLocation,
-      observation: data.observation,
-      operator: data.operator,
-      status,
-      countTime: now.toLocaleDateString("pt-br")
-    };
-
-    await updateItemCount(itemId, updateValues);
-    await updateInventoryCountedItems(inventoryId, inventory.countedItems + 1);
-    await updateInventoryStatus(inventoryId, 1);
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error updating item:", error);
-    return { success: false, error: 'update_failed' };
-  }
-},
 
   async addNewItem(inventoryId: number,
     data: {
@@ -119,7 +119,7 @@ async updateItem(
     },
     ignoreExists: boolean = false,
     ignoreAlreadyCounted: boolean = false
-  ): Promise<{ success: boolean, error?: string, data?: string }> {
+  ): Promise<{ success: boolean, error?: string, data?: any }> {
 
     try {
       const inventory = await fetchInventoryById(inventoryId);
@@ -128,13 +128,19 @@ async updateItem(
 
       // Validações específicas para countType == 2 (posição)
       if (inventory.countType === 2) {
-        const existsInOther = await checkItemExistsInOtherLocation(inventoryId, data.code, data.reportedLocation);
-        if (existsInOther && !ignoreExists) return { success: false, error: 'exists_in_other_location' };
-
         const alreadyCounted = await checkItemAlreadyCountedInOtherLocation(inventoryId, data.code, data.reportedLocation);
         if (alreadyCounted.alreadyCounted && !ignoreAlreadyCounted) {
-          return { success: false, error: 'already_counted_in_other', data: alreadyCounted.previousLocation };
+          return {
+            success: false,
+            error: 'already_counted_in_other',
+            data: alreadyCounted.previousData
+              ? { local: alreadyCounted.previousData.local, id: alreadyCounted.previousData.id, reportedQuantity: alreadyCounted.previousData.reportedQuantity }
+              : undefined
+          };
         }
+        const existsInOther = await checkItemExistsInOtherLocation(inventoryId, data.code, data.reportedLocation);
+        if (existsInOther.exist && !ignoreExists) return { success: false, error: 'exists_in_other_location', data: existsInOther.expectedLocation };
+
       }
 
       const now = new Date();
@@ -193,9 +199,17 @@ async updateItem(
     }
   },
 
-  async sumToPreviousCount(inventoryId: number, code: string, previousLocation: string, additionalQuantity: number): Promise<{ success: boolean, error?: string }> {
+  async sumToPreviousCount(
+    inventoryId: number,
+    code: string,
+    previousLocation: { local: string , id: string, reportedQuantity: number },
+    additionalQuantity: number
+  ): Promise<{ success: boolean, error?: string }> {
     try {
-      await sumToPreviousCount(inventoryId, code, previousLocation, additionalQuantity);
+      const result = await sumPreviousCount(inventoryId, code, previousLocation, additionalQuantity);
+      if (result.rowsAffected === 0) {
+        return { success: false, error: 'item_not_found_or_not_updated' };
+      }
       return { success: true };
     } catch (error) {
       console.error("Error summing to previous count:", error);

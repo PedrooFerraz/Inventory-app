@@ -6,30 +6,28 @@ import { InventoryItem } from "@/types/types";
 
 export default function SelectItemCard({ item, onPress }: { item: InventoryItem, onPress: (id: number, locationId: number) => any }) {
 
+    const getStatus = (countedItens?: number | null) => {
 
-    const getStatus = (status: number) => {
-        switch (status) {
-            case 0:
-                return "Pendente"
-            case 1:
-                return "Em Andamento"
-            case 2:
-                return "Finalizado"
-            default:
-                break;
+        if (!countedItens) {
+            return "Pendente"
         }
+
+        if (countedItens !== null) {
+            return "Contabilizado"
+        }
+        return "Pendente"
+
     }
-    const getStatusColor = (status: number) => {
-        switch (status) {
-            case 0:
-                return "#EF5350"
-            case 1:
-                return "#E5B51F"
-            case 2:
-                return "#4CAF50"
-            default:
-                break;
+    const getStatusColor = (countedItens?: number | null) => {
+
+        if (!countedItens) {
+            return "#EF5350"
         }
+
+        if (countedItens !== null) {
+            return "#4CAF50"
+        }
+        return "#EF5350"
     }
 
     return (
@@ -56,10 +54,18 @@ export default function SelectItemCard({ item, onPress }: { item: InventoryItem,
 
             <View style={styles.cardDetails}>
                 <View style={styles.statusContainer}>
-                    <Text style={styles.detailText}>Descrição: {item.description}</Text>
+                    {
+                        item.status == 5 ?
+                            <Text style={styles.detailText}>Item inserido pelo usuário</Text>
+                            :
+                            <Text style={styles.detailText}>Descrição: {item.description}</Text>
+                    }
                 </View>
                 <View style={styles.statusContainer}>
-                    <Text style={styles.detailText}>Unidade: {item.unit}</Text>
+                    {
+                        item.status !== 5 &&
+                        <Text style={styles.detailText}>Unidade: {item.unit}</Text>
+                    }
                 </View>
                 {
                     item.batch &&
@@ -69,8 +75,8 @@ export default function SelectItemCard({ item, onPress }: { item: InventoryItem,
 
                 }
                 <View style={styles.statusContainer}>
-                    <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-                    <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatus(item.status)}</Text>
+                    <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.reportedQuantity) }]} />
+                    <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatus(item.reportedQuantity)}</Text>
                 </View>
             </View>
 

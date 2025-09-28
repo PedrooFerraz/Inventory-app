@@ -59,7 +59,7 @@ export const useDatabase = ({ inventoryId, location }: { inventoryId?: number; l
     inventories,
     openInventories,
     locations,
-    items, // Novo retorno
+    items,
     loading,
     error,
     refresh: loadData,

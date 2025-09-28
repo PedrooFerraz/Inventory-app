@@ -216,32 +216,39 @@ export const fetchInventoryItemsForLocation = async (inventoryId: number, locati
   }
 };
 
-export const checkItemExistsInOtherLocation = async (inventoryId: number, code: string, location: string): Promise<boolean> => {
+export const checkItemExistsInOtherLocation = async (inventoryId: number, code: string, location: string): Promise<{ exist: boolean, expectedLocation: string }> => {
   const sql = `
-    SELECT COUNT(*) as count FROM inventory_items
+    SELECT COUNT(*) as count, COALESCE(reportedLocation, expectedLocation) as location FROM inventory_items
     WHERE inventory_id = ? AND code = ? AND COALESCE(reportedLocation, expectedLocation) != ?
   `;
-  const results = await fetchAll<{ count: number }>(sql, [inventoryId, code, location]);
-  return results[0].count > 0;
+  const results = await fetchAll<{ count: number, location: string }>(sql, [inventoryId, code, location]);
+  if (results[0].location == "") return { exist: false, expectedLocation: '' };
+  return { exist: results[0].count > 0, expectedLocation: results[0].location };
 };
 
-export const checkItemAlreadyCountedInOtherLocation = async (inventoryId: number, code: string, location: string): Promise<{ alreadyCounted: boolean, previousLocation?: string }> => {
+export const checkItemAlreadyCountedInOtherLocation = async (inventoryId: number, code: string, location: string): Promise<{ alreadyCounted: boolean, previousData?: { local: string, id: string, reportedQuantity: number } }> => {
   const sql = `
-    SELECT COALESCE(reportedLocation, expectedLocation) as location FROM inventory_items
+    SELECT COALESCE(reportedLocation, expectedLocation) as location, id, reportedQuantity FROM inventory_items
     WHERE inventory_id = ? AND code = ? AND reportedQuantity IS NOT NULL AND COALESCE(reportedLocation, expectedLocation) != ?
     LIMIT 1
   `;
-  const results = await fetchAll<{ location: string }>(sql, [inventoryId, code, location]);
-  return { alreadyCounted: results.length > 0, previousLocation: results[0]?.location };
+  const results = await fetchAll<{ location: string, id: string, reportedQuantity: number }>(sql, [inventoryId, code, location]);
+  return { alreadyCounted: results.length > 0, previousData: { local: results[0]?.location, id: results[0]?.id, reportedQuantity: results[0]?.reportedQuantity } };
 };
 
-export const sumToPreviousCount = async (inventoryId: number, code: string, previousLocation: string, additionalQuantity: number): Promise<void> => {
+export const sumPreviousCount = async (
+  inventoryId: number,
+  code: string,
+  previousLocation: { local: string , id: string, reportedQuantity: number },
+  additionalQuantity: number
+): Promise<{ rowsAffected: number }> => {
   const sql = `
     UPDATE inventory_items SET
-      reportedQuantity = reportedQuantity + ?
+      reportedQuantity = COALESCE(reportedQuantity, 0) + ?
     WHERE inventory_id = ? AND code = ? AND COALESCE(reportedLocation, expectedLocation) = ?
   `;
-  await executeQuery(sql, [additionalQuantity, inventoryId, code, previousLocation]);
+  const result = await executeQuery(sql, [additionalQuantity, inventoryId, code, previousLocation.local]);
+  return { rowsAffected: result.changes || 0 };
 };
 
 const BATCH_SIZE = 50; // Processa 50 itens por vez

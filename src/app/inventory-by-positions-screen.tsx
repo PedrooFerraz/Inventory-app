@@ -26,17 +26,19 @@ export default function InventoryByPosition() {
     const operator = params.operator as string;
     const numericInputRef = useRef<{ clearInput: () => void }>(null);
 
-    const { items, loading, error, refresh } = useDatabase({ inventoryId, location });
+    const { items, refresh } = useDatabase({ inventoryId, location });
 
     const [filter, setFilter] = useState<0 | 2 | 3>(3); // 0-Não Contados, 2-Contados, 3-Todos
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [modalVisible, setModalVisible] = useState(false);
     const [errorModalVisible, setErrorModalVisible] = useState(false);
     const [alreadyCountModalVisible, setAlreadyCountModalVisible] = useState(false);
+    const [alreadyCountInOtherModalVisible, setAlreadyCountInOtherModalVisible] = useState(false);
     const [successModalVisible, setSuccessModalVisible] = useState(false);
     const [errorTitle, setErrorTitle] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [modalAction, setModalAction] = useState<() => void>(() => { });
+    const [modalActionTwo, setModalActionTwo] = useState<() => void>(() => { });
     const [modalCancelAction, setModalCancelAction] = useState<() => void>(() => { });
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [code, setCode] = useState('');
@@ -44,6 +46,7 @@ export default function InventoryByPosition() {
     const [observation, setObservation] = useState('');
     const [ignoreErrors, setIgnoreErrors] = useState<{ quantity?: boolean; location?: boolean }>({ quantity: false, location: false });
     const [zeroQuantityError, setZeroQuantityError] = useState(false);
+    const [codeError, setCodeError] = useState(false);
 
     // Preenche os inputs quando um item é selecionado para edição
     useEffect(() => {
@@ -51,10 +54,14 @@ export default function InventoryByPosition() {
             setQuantity(selectedItem.reportedQuantity || 0);
             setObservation(selectedItem.observation || '');
             setCode(selectedItem.code || '');
+            setCodeError(false);
+            setZeroQuantityError(false);
         } else {
             setCode('');
             setQuantity(0);
             setObservation('');
+            setCodeError(false);
+            setZeroQuantityError(false);
         }
     }, [selectedItem]);
 
@@ -122,8 +129,16 @@ export default function InventoryByPosition() {
         setErrorTitle(title);
         setErrorMessage(message);
         setModalAction(() => onReplace);
-        setModalCancelAction(() => onCancel);
+        setModalCancelAction(() => onAdd);
         setAlreadyCountModalVisible(true);
+    };
+    const showAlreadyCountInOtherModal = (title: string, message: string, onReplace: () => void, onSum: () => void, onAdd: () => void, onCancel: () => void) => {
+        setErrorTitle(title);
+        setErrorMessage(message);
+        setModalAction(() => onReplace);
+        setModalActionTwo(() => onAdd);
+        setModalCancelAction(() => onSum);
+        setAlreadyCountInOtherModalVisible(true);
     };
 
     const handleServiceResponse = (
@@ -193,7 +208,7 @@ export default function InventoryByPosition() {
             case 'already_counted':
                 showAlreadyCountModal(
                     'Item Já Contabilizado',
-                    `Já foram contabilizadas ${response.data.lastCount} unidades na posição ${response.data.lastLoc}. Escolha: Substituir, Adicionar nova contagem ou Cancelar.`,
+                    `Já foram contabilizadas ${response.data.lastCount} unidades na posição ${response.data.lastLoc}\n\nEscolha:`,
                     async () => {
                         if (selectedItem) {
                             setAlreadyCountModalVisible(false); // Ensure modal closes
@@ -226,8 +241,8 @@ export default function InventoryByPosition() {
             case 'quantity_mismatch':
                 showErrorModal("Quantidade Divergente", "Aprovar mesmo assim?", async () => {
                     const updatedIgnoreErrors = { ...currentIgnoreErrors, quantity: true };
-                    setIgnoreErrors(updatedIgnoreErrors); // Update state for UI consistency
-                    setErrorModalVisible(false); // Ensure modal closes
+                    setIgnoreErrors(updatedIgnoreErrors);
+                    setErrorModalVisible(false);
                     if (selectedItem) {
                         const res = await InventoryService.updateItem(selectedItem.id, inventoryId, itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
                         handleServiceResponse(res, itemData, updatedIgnoreErrors);
@@ -240,8 +255,8 @@ export default function InventoryByPosition() {
             case 'location_mismatch':
                 showErrorModal("Posição Divergente", "Continuar mesmo assim?", async () => {
                     const updatedIgnoreErrors = { ...currentIgnoreErrors, location: true };
-                    setIgnoreErrors(updatedIgnoreErrors); // Update state for UI consistency
-                    setErrorModalVisible(false); // Ensure modal closes
+                    setIgnoreErrors(updatedIgnoreErrors);
+                    setErrorModalVisible(false);
                     if (selectedItem) {
                         const res = await InventoryService.updateItem(selectedItem.id, inventoryId, itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
                         handleServiceResponse(res, itemData, updatedIgnoreErrors);
@@ -252,8 +267,8 @@ export default function InventoryByPosition() {
                 });
                 break;
             case 'exists_in_other_location':
-                showErrorModal("Item Existe em Outra Posição", "Adicionar mesmo assim?", async () => {
-                    setErrorModalVisible(false); // Ensure modal closes
+                showErrorModal("Item Existe em Outra Posição", `Esse item já existe na posição ${response.data}\n\nAdicionar mesmo assim?`, async () => {
+                    setErrorModalVisible(false);
                     const res = await InventoryService.addNewItem(inventoryId, {
                         code: code,
                         reportedQuantity: itemData.reportedQuantity,
@@ -268,41 +283,47 @@ export default function InventoryByPosition() {
                 });
                 break;
             case 'already_counted_in_other':
-                showErrorModal("Item Contado em Outra Posição", `Já contado na posição ${response.data}. Escolha: Nova contagem, Somar à anterior ou Cancelar.`, async () => {
-                    setErrorModalVisible(false); // Ensure modal closes
-                    const res = await InventoryService.addNewItem(inventoryId, {
-                        code: code,
-                        reportedQuantity: itemData.reportedQuantity,
-                        reportedLocation: itemData.reportedLocation,
-                        observation: itemData.observation,
-                        operator: itemData.operator,
-                    }, false, true);
-                    handleServiceResponse(res, itemData, currentIgnoreErrors);
-                }, async () => {
-                    setErrorModalVisible(false); // Ensure modal closes
-                    await InventoryService.sumToPreviousCount(inventoryId, code, response.data, Number(quantity));
-                    restartForm();
-                });
+                showAlreadyCountInOtherModal("Item Contado em Outra Posição", `Já foram contabilizados ${response.data.reportedQuantity} unidades na posição ${response.data.local}\n\nEscolha:`,
+                    async () => {
+                        setAlreadyCountInOtherModalVisible(false); // Ensure modal closes
+                        const replaceRes = await InventoryService.replaceItem(inventoryId, response.data.id, {
+                            reportedQuantity: itemData.reportedQuantity,
+                            reportedLocation: itemData.reportedLocation,
+                            observation: itemData.observation,
+                            operator: itemData.operator,
+                        });
+                        handleServiceResponse(replaceRes, itemData, currentIgnoreErrors);
+                    }, async () => {
+                        setAlreadyCountInOtherModalVisible(false);
+                        const res = await InventoryService.sumToPreviousCount(inventoryId, code, response.data, Number(quantity));
+                        handleServiceResponse(res, itemData, currentIgnoreErrors);
+                    }, async () => {
+                        setAlreadyCountInOtherModalVisible(false);
+                        const res = await InventoryService.addNewItem(inventoryId, {
+                            code: code,
+                            reportedQuantity: itemData.reportedQuantity,
+                            reportedLocation: itemData.reportedLocation,
+                            observation: itemData.observation,
+                            operator: itemData.operator,
+                        }, false, true);
+                        handleServiceResponse(res, itemData, currentIgnoreErrors);
+                    }, () => {
+                        setAlreadyCountInOtherModalVisible(false);
+                        restartForm();
+                    });
                 break;
-            default:
-                showErrorModal("Erro", "Operação falhou.", () => {
-                    setErrorModalVisible(false);
-                }, () => {
-                    setErrorModalVisible(false);
-                    restartForm();
-                });
         }
     };
 
     const handleSave = async () => {
         const qty = Number(quantity);
-        if (isNaN(qty)) {
-            showErrorModal('Erro', 'Quantidade deve ser um número válido.', () => { }, () => { });
+        if (isNaN(qty) || qty === 0) {
+            setZeroQuantityError(true);
             return;
         }
 
-        if (!selectedItem && !code) {
-            showErrorModal('Erro', 'Código do item é obrigatório.', () => { }, () => { });
+        if (!selectedItem && !code.trim()) {
+            setCodeError(true);
             return;
         }
 
@@ -324,7 +345,10 @@ export default function InventoryByPosition() {
             handleServiceResponse(response, itemData, ignoreErrors);
         } catch (err) {
             console.error('Erro ao salvar item:', err);
-            showErrorModal('Erro', 'Erro ao salvar. Tente novamente.', () => { }, () => { });
+            showErrorModal('Erro', 'Erro ao salvar. Tente novamente.', () => { }, () => {
+                setErrorModalVisible(false);
+                restartForm();
+            });
         }
     };
 
@@ -390,30 +414,69 @@ export default function InventoryByPosition() {
             </View>
 
             {/* Modal para Adicionar/Editar */}
-            <CustomModal visible={modalVisible} title={selectedItem ? 'Editar Item' : 'Adicionar Novo Item'} onClose={() => setModalVisible(false)}>
+            <CustomModal
+                visible={modalVisible}
+                title={selectedItem ? 'Contabilizar Item' : 'Adicionar Novo Item'}
+                onClose={() => setModalVisible(false)}
+            >
                 <View style={styles.modalContent}>
-                    {!selectedItem && (
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Código do item"
-                            placeholderTextColor={"#94A3B8"}
-                            value={code}
-                            onChangeText={setCode}
-                        />
+                    {selectedItem && (
+                        <View style={styles.productInfo}>
+                            <Text style={styles.productCode}>
+                                Código: {selectedItem.code}
+                            </Text>
+                            <Text style={styles.productName}>
+                                {selectedItem.description}
+                            </Text>
+                        </View>
                     )}
-                    <View style={styles.numericInput}>
-                        <NumericInput error={zeroQuantityError} ref={numericInputRef} onChange={handleOnQuantityChange}></NumericInput>
+
+                    {!selectedItem && (
+                        <View>
+                            <TextInput
+                                style={[styles.input, codeError && styles.inputError]}
+                                placeholder="Código do item"
+                                placeholderTextColor="#94A3B8"
+                                value={code}
+                                onChangeText={(text) => {
+                                    setCode(text);
+                                    if (codeError) setCodeError(false);
+                                }}
+                                onBlur={() => {
+                                    if (!code.trim()) {
+                                        setCodeError(true);
+                                    }
+                                }}
+                            />
+                            {
+                                codeError &&
+                                <Text style={{ color: "#fa6060" }}>Esse campo precisa ser preenchido</Text>
+                            }
+                        </View>
+                    )}
+
+                    <View>
+                        <NumericInput
+                            error={zeroQuantityError}
+                            ref={numericInputRef}
+                            onChange={handleOnQuantityChange}
+                        />
                     </View>
 
                     <TextInput
-                        style={styles.input}
-                        placeholder="Observação"
-                        placeholderTextColor={"#94A3B8"}
+                        style={[
+                            styles.input,
+                            styles.inputMultiline
+                        ]}
+                        placeholder="Adicione uma observação (opcional)..."
+                        placeholderTextColor="#94A3B8"
                         value={observation}
                         onChangeText={setObservation}
                         multiline
+                        numberOfLines={4}
                     />
-                    <View style={{ gap: 20 }}>
+
+                    <View style={styles.buttonGroup}>
                         <ButtonWithIcon
                             color="#5A7BA1"
                             icon="checkmark-outline"
@@ -473,6 +536,41 @@ export default function InventoryByPosition() {
                         label="Cancelar"
                         onPress={() => {
                             setAlreadyCountModalVisible(false);
+                            restartForm();
+                        }}
+                    />
+                </View>
+            </CustomModal>
+
+            <CustomModal visible={alreadyCountInOtherModalVisible} title={errorTitle} onClose={() => setAlreadyCountInOtherModalVisible(false)}>
+                <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+                    {errorMessage}
+                </Text>
+                <View style={{ gap: 20 }}>
+                    <ButtonWithIcon
+                        color="#5A7BA1"
+                        icon="checkmark-outline"
+                        label="Substituir"
+                        onPress={modalAction}
+                    />
+                    <ButtonWithIcon
+                        color="#5A7BA1"
+                        icon="add-circle-outline"
+                        label="Somar na contagem anterior"
+                        onPress={modalCancelAction}
+                    />
+                    <ButtonWithIcon
+                        color="#5A7BA1"
+                        icon="add-outline"
+                        label="Adicionar nova contagem"
+                        onPress={modalActionTwo}
+                    />
+                    <ButtonWithIcon
+                        color="#7F95B9"
+                        icon="close-outline"
+                        label="Cancelar"
+                        onPress={() => {
+                            setAlreadyCountInOtherModalVisible(false);
                             restartForm();
                         }}
                     />
@@ -593,28 +691,54 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     modalContent: {
-        flexDirection: 'column',
-        gap: 16,
-        justifyContent: 'center',
-        margin: "auto",
-        flex: 1,
-        borderRadius: 10,
-        width: '80%',
+        gap: 24,
+        paddingBottom: 8,
     },
     input: {
-        backgroundColor: '#3A5074',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
         color: '#FFFFFF',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        paddingRight: 48,
+        borderRadius: 16,
+        paddingHorizontal: 20,
+        paddingVertical: 16,
         fontSize: 16,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
-    numericInput: {
-        backgroundColor: '#3A5074',
+    inputError: {
+        borderColor: '#FF6B6B', // Red border for error
+    },
+    inputFocused: {
+        borderColor: '#607EA8',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    },
+    inputMultiline: {
+        minHeight: 100,
+        textAlignVertical: 'top',
+    },
+    buttonGroup: {
+        gap: 16,
+        marginTop: 16,
+    },
+    productInfo: {
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    productCode: {
+        fontSize: 12,
         color: '#94A3B8',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        marginBottom: 4,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        fontWeight: '600',
+    },
+    productName: {
+        fontSize: 14,
+        color: '#FFFFFF',
+        fontWeight: '500',
+        lineHeight: 20,
     }
 });

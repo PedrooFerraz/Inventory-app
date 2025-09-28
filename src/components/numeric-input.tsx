@@ -1,121 +1,183 @@
 import { useEffect, useImperativeHandle, useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Animated } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 
-export default function NumericInput({ error, onChange, ref }: { error: boolean, onChange: (e: string) => any, ref: any }) {
-
+export default function NumericInput({
+    error,
+    onChange,
+    ref
+}: {
+    error: boolean,
+    onChange: (e: string) => any,
+    ref: any
+}) {
     const [qtyInput, onChangeQty] = useState('0');
-    const [disabled, setDisabled] = useState(false)
-    const [color, setColor] = useState<"#fa6060" | "#79859B">()
+    const [disabled, setDisabled] = useState(false);
+    const [shakeAnim] = useState(new Animated.Value(0));
 
     useImperativeHandle(ref, () => ({
         clearInput: () => {
-            onChangeQty("0")
+            onChangeQty("0");
         }
     }));
 
     useEffect(() => {
-        onChange(qtyInput)
-        if (qtyInput === "0")
-            setDisabled(true)
-        else
-            setDisabled(false)
-
-    }, [qtyInput])
+        onChange(qtyInput);
+        setDisabled(qtyInput === "0");
+    }, [qtyInput]);
 
     useEffect(() => {
         if (error) {
-            setColor("#fa6060")
+            // Animação de shake quando há erro
+            Animated.sequence([
+                Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+                Animated.timing(shakeAnim, { toValue: -10, duration: 100, useNativeDriver: true }),
+                Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+                Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+            ]).start();
         }
-        else {
-            setColor("#79859B")
-        }
-    }, [error])
-
+    }, [error]);
 
     const onChanged = (text: string) => {
         const sanitized = text.replace(/[^0-9]/g, '');
         onChangeQty(sanitized === '' ? '' : sanitized);
-    }
+    };
 
     const add = () => {
         onChangeQty((parseInt(qtyInput) + 1).toString());
-    }
+    };
+
     const subtract = () => {
         const newValue = Math.max(0, parseInt(qtyInput) - 1);
         onChangeQty(newValue.toString());
-    }
-
+    };
 
     return (
         <View style={styles.inputGroup}>
-            <Text style={styles.label}>Quantidade</Text>
-            <View style={{ justifyContent: "center", flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Text style={styles.label}>Quantidade*</Text>
+            <Animated.View
+                style={[
+                    styles.quantityContainer,
+                    { transform: [{ translateX: shakeAnim }] }
+                ]}
+            >
                 <TouchableOpacity
-                    style={styles.inputButton}
+                    style={[
+                        styles.inputButton,
+                        disabled && styles.inputButtonDisabled
+                    ]}
                     onPress={subtract}
-                    disabled={disabled}>
-
-
-                    <Text style={{ fontSize: 26, color: "#DDDFE3", fontWeight: "400" }}>-</Text>
+                    disabled={disabled}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons
+                        name="remove"
+                        size={20}
+                        color={disabled ? "#64748B" : "#FFFFFF"}
+                    />
                 </TouchableOpacity>
+
                 <TextInput
                     keyboardType="numeric"
-                    style={[styles.input, styles.numericInput, { borderColor: color }]}
-                    onChangeText={(text) => { onChanged(text) }}
+                    style={[
+                        styles.input,
+                        styles.numericInput,
+                        error && styles.inputError
+                    ]}
+                    onChangeText={onChanged}
                     value={qtyInput}
                     onEndEditing={() => {
                         if (qtyInput === "")
-                            onChangeQty("0")
+                            onChangeQty("0");
                     }}
                     onFocus={() => {
                         if (qtyInput === "0") {
-                            onChangeQty("")
+                            onChangeQty("");
                         }
                     }}
+                    selectionColor="#64B5F6"
                 />
 
                 <TouchableOpacity
                     style={styles.inputButton}
-                    onPress={add}>
-
-                    <Text style={{ fontSize: 26, color: "#DDDFE3", fontWeight: "400" }}>+</Text>
+                    onPress={add}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="add" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
-            </View>
-            {
-                error &&
-                <Text style={{ color: "#fa6060" }}>A Quantidade Precisa ser diferente de 0</Text>
-            }
+            </Animated.View>
+
+            {error && (
+                <Animated.View style={styles.errorContainer}>
+                    <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                    <Text style={styles.errorText}>
+                        A quantidade precisa ser diferente de 0
+                    </Text>
+                </Animated.View>
+            )}
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
+    inputGroup: {
+        flex: 1
+    },
     label: {
-        color: "#BDC7D3",
+        color: "rgba(255, 255, 255, 0.75)",
         fontWeight: "500",
-        fontSize: 14
+        fontSize: 14,
+        marginBottom: 12,
+        
+    },
+    quantityContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+        justifyContent: "center",
     },
     input: {
         borderWidth: 1,
         borderRadius: 8,
         color: "white",
-        padding: 10,
-        height: 50,
-        fontSize: 16,
+        padding: 16,
+        height: 56,
+        fontSize: 18,
+        fontWeight: "600",
+        borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     numericInput: {
         textAlign: "center",
-        flex: 1
+        flex: 1,
+        
     },
-    inputGroup: {
-        gap: 4
+    inputError: {
+        borderColor: "#EF4444",
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
     },
     inputButton: {
-        height: 50,
-        width: 50,
+        height: 56,
+        width: 56,
         backgroundColor: "#5A7BA2",
         justifyContent: "center",
         alignItems: "center",
-        borderRadius: 10
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)',
     },
-})
+    inputButtonDisabled: {
+        backgroundColor: "#41597cff",
+        opacity: 0.5,
+    },
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 8,
+        gap: 8,
+    },
+    errorText: {
+        color: "#EF4444",
+        fontSize: 14,
+        fontWeight: "500",
+    },
+});
