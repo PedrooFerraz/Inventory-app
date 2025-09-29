@@ -34,8 +34,15 @@ export const useDatabase = ({ inventoryId, location }: { inventoryId?: number; l
       }
 
       // Carrega itens se location for fornecido
-      if (location && inventoryId !== undefined && inventoryId > 0) {
-        const itemsData = await fetchInventoryItemsForLocation(inventoryId, location);
+      if (location != undefined && inventoryId !== undefined && inventoryId > 0) {
+        
+        let itemsData 
+        if(location == ""){
+            itemsData = await fetchInventoryItemsForLocation(inventoryId, "");
+        }else{
+          itemsData = await fetchInventoryItemsForLocation(inventoryId, location);
+        }
+
         setItems(itemsData);
       } else {
         setItems([]);

@@ -43,10 +43,12 @@ export default function InventoryByPosition() {
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [code, setCode] = useState('');
     const [quantity, setQuantity] = useState(0);
+    const [reportedLocation, setReportedLocation] = useState(location);
     const [observation, setObservation] = useState('');
     const [ignoreErrors, setIgnoreErrors] = useState<{ quantity?: boolean; location?: boolean }>({ quantity: false, location: false });
     const [zeroQuantityError, setZeroQuantityError] = useState(false);
     const [codeError, setCodeError] = useState(false);
+    const [locationError, setLocationError] = useState(false);
 
     // Preenche os inputs quando um item é selecionado para edição
     useEffect(() => {
@@ -54,16 +56,20 @@ export default function InventoryByPosition() {
             setQuantity(selectedItem.reportedQuantity || 0);
             setObservation(selectedItem.observation || '');
             setCode(selectedItem.code || '');
+            setReportedLocation(selectedItem.reportedLocation || selectedItem.expectedLocation || location); // Preenche localização
             setCodeError(false);
             setZeroQuantityError(false);
+            setLocationError(false);
         } else {
             setCode('');
             setQuantity(0);
+            setReportedLocation(location); // Inicializa com a localização padrão
             setObservation('');
             setCodeError(false);
             setZeroQuantityError(false);
+            setLocationError(false);
         }
-    }, [selectedItem]);
+    }, [selectedItem, location]);
 
     // Filtra itens com base no status e na pesquisa por código
     const filteredItems = items.filter((item) => {
@@ -89,11 +95,11 @@ export default function InventoryByPosition() {
             </Text>
         </TouchableOpacity>
     );
+
     const handleOnQuantityChange = (e: any) => {
         if (zeroQuantityError) setZeroQuantityError(false);
         setQuantity(Number(e));
     };
-
 
     const handleItemPress = (item: InventoryItem) => {
         setSelectedItem(item);
@@ -109,11 +115,17 @@ export default function InventoryByPosition() {
         setSelectedItem(null);
         setCode('');
         setQuantity(0);
+        setReportedLocation(location); // Reseta localização
         setObservation('');
         setIgnoreErrors({ quantity: false, location: false });
         setModalVisible(false);
         setErrorModalVisible(false);
         setAlreadyCountModalVisible(false);
+        setAlreadyCountInOtherModalVisible(false);
+        setSuccessModalVisible(false);
+        setCodeError(false);
+        setZeroQuantityError(false);
+        setLocationError(false);
         refresh();
     };
 
@@ -132,6 +144,7 @@ export default function InventoryByPosition() {
         setModalCancelAction(() => onAdd);
         setAlreadyCountModalVisible(true);
     };
+
     const showAlreadyCountInOtherModal = (title: string, message: string, onReplace: () => void, onSum: () => void, onAdd: () => void, onCancel: () => void) => {
         setErrorTitle(title);
         setErrorMessage(message);
@@ -164,8 +177,8 @@ export default function InventoryByPosition() {
                     case 'quantity_mismatch':
                         showErrorModal("Quantidade Divergente", "Aprovar mesmo assim?", async () => {
                             const updatedIgnoreErrors = { ...localIgnoreErrors, quantity: true };
-                            setIgnoreErrors(updatedIgnoreErrors); // Update state for UI consistency
-                            setErrorModalVisible(false); // Ensure modal closes
+                            setIgnoreErrors(updatedIgnoreErrors);
+                            setErrorModalVisible(false);
                             if (selectedItem) {
                                 const res = await InventoryService.updateItem(selectedItem.id, inventoryId, itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
                                 handleServiceResponse(res, itemData, updatedIgnoreErrors);
@@ -178,8 +191,8 @@ export default function InventoryByPosition() {
                     case 'location_mismatch':
                         showErrorModal("Posição Divergente", "Continuar mesmo assim?", async () => {
                             const updatedIgnoreErrors = { ...localIgnoreErrors, location: true };
-                            setIgnoreErrors(updatedIgnoreErrors); // Update state for UI consistency
-                            setErrorModalVisible(false); // Ensure modal closes
+                            setIgnoreErrors(updatedIgnoreErrors);
+                            setErrorModalVisible(false);
                             if (selectedItem) {
                                 const res = await InventoryService.updateItem(selectedItem.id, inventoryId, itemData, updatedIgnoreErrors.quantity, updatedIgnoreErrors.location);
                                 handleServiceResponse(res, itemData, updatedIgnoreErrors);
@@ -211,7 +224,7 @@ export default function InventoryByPosition() {
                     `Já foram contabilizadas ${response.data.lastCount} unidades na posição ${response.data.lastLoc}\n\nEscolha:`,
                     async () => {
                         if (selectedItem) {
-                            setAlreadyCountModalVisible(false); // Ensure modal closes
+                            setAlreadyCountModalVisible(false);
                             const replaceRes = await InventoryService.replaceItem(inventoryId, selectedItem.id, {
                                 reportedQuantity: itemData.reportedQuantity,
                                 reportedLocation: itemData.reportedLocation,
@@ -222,7 +235,7 @@ export default function InventoryByPosition() {
                         }
                     },
                     async () => {
-                        setAlreadyCountModalVisible(false); // Ensure modal closes
+                        setAlreadyCountModalVisible(false);
                         const newCount = await InventoryService.addNewItem(inventoryId, {
                             code: code,
                             reportedQuantity: itemData.reportedQuantity,
@@ -283,9 +296,11 @@ export default function InventoryByPosition() {
                 });
                 break;
             case 'already_counted_in_other':
-                showAlreadyCountInOtherModal("Item Contado em Outra Posição", `Já foram contabilizados ${response.data.reportedQuantity} unidades na posição ${response.data.local}\n\nEscolha:`,
+                showAlreadyCountInOtherModal(
+                    "Item Contado em Outra Posição",
+                    `Já foram contabilizados ${response.data.reportedQuantity} unidades na posição ${response.data.local}\n\nEscolha:`,
                     async () => {
-                        setAlreadyCountInOtherModalVisible(false); // Ensure modal closes
+                        setAlreadyCountInOtherModalVisible(false);
                         const replaceRes = await InventoryService.replaceItem(inventoryId, response.data.id, {
                             reportedQuantity: itemData.reportedQuantity,
                             reportedLocation: itemData.reportedLocation,
@@ -293,11 +308,13 @@ export default function InventoryByPosition() {
                             operator: itemData.operator,
                         });
                         handleServiceResponse(replaceRes, itemData, currentIgnoreErrors);
-                    }, async () => {
+                    },
+                    async () => {
                         setAlreadyCountInOtherModalVisible(false);
-                        const res = await InventoryService.sumToPreviousCount(inventoryId, code, response.data, Number(quantity));
+                        const res = await InventoryService.sumToPreviousCount(inventoryId, code, response.data.local, Number(quantity));
                         handleServiceResponse(res, itemData, currentIgnoreErrors);
-                    }, async () => {
+                    },
+                    async () => {
                         setAlreadyCountInOtherModalVisible(false);
                         const res = await InventoryService.addNewItem(inventoryId, {
                             code: code,
@@ -307,11 +324,20 @@ export default function InventoryByPosition() {
                             operator: itemData.operator,
                         }, false, true);
                         handleServiceResponse(res, itemData, currentIgnoreErrors);
-                    }, () => {
+                    },
+                    () => {
                         setAlreadyCountInOtherModalVisible(false);
                         restartForm();
-                    });
+                    }
+                );
                 break;
+            default:
+                showErrorModal("Erro", "Operação falhou.", () => {
+                    setErrorModalVisible(false);
+                }, () => {
+                    setErrorModalVisible(false);
+                    restartForm();
+                });
         }
     };
 
@@ -327,12 +353,17 @@ export default function InventoryByPosition() {
             return;
         }
 
+        if (!reportedLocation.trim()) {
+            setLocationError(true);
+            return;
+        }
+
         const itemData = {
             reportedQuantity: qty,
-            reportedLocation: location,
+            reportedLocation: reportedLocation,
             observation,
             operator,
-            status: 1, // Default status; service will adjust based on divergences
+            status: 1,
         };
 
         try {
@@ -448,10 +479,32 @@ export default function InventoryByPosition() {
                                     }
                                 }}
                             />
-                            {
-                                codeError &&
+                            {codeError && (
                                 <Text style={{ color: "#fa6060" }}>Esse campo precisa ser preenchido</Text>
-                            }
+                            )}
+                        </View>
+                    )}
+
+                    {(!selectedItem || (!selectedItem.reportedLocation && !selectedItem.expectedLocation)) && (
+                        <View>
+                            <TextInput
+                                style={[styles.input, locationError && styles.inputError]}
+                                placeholder="Localização do item"
+                                placeholderTextColor="#94A3B8"
+                                value={reportedLocation}
+                                onChangeText={(text) => {
+                                    setReportedLocation(text);
+                                    if (locationError) setLocationError(false);
+                                }}
+                                onBlur={() => {
+                                    if (!reportedLocation.trim()) {
+                                        setLocationError(true);
+                                    }
+                                }}
+                            />
+                            {locationError && (
+                                <Text style={{ color: "#fa6060" }}>Esse campo precisa ser preenchido</Text>
+                            )}
                         </View>
                     )}
 
@@ -464,10 +517,7 @@ export default function InventoryByPosition() {
                     </View>
 
                     <TextInput
-                        style={[
-                            styles.input,
-                            styles.inputMultiline
-                        ]}
+                        style={[styles.input, styles.inputMultiline]}
                         placeholder="Adicione uma observação (opcional)..."
                         placeholderTextColor="#94A3B8"
                         value={observation}
@@ -705,7 +755,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255, 255, 255, 0.2)',
     },
     inputError: {
-        borderColor: '#FF6B6B', // Red border for error
+        borderColor: '#FF6B6B',
     },
     inputFocused: {
         borderColor: '#607EA8',
