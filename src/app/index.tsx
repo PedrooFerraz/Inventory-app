@@ -159,7 +159,7 @@ export default function GMIHomeScreen() {
             />
 
             <View style={styles.infoCard}>
-              <Text style={FONTS.version}>Versão 1.0.2</Text>
+              <Text style={FONTS.version}>Versão 2.0.0</Text>
               <Text style={FONTS.copyright}>
                 © 2025 GMI Consultoria • Todos os direitos reservados
               </Text>
