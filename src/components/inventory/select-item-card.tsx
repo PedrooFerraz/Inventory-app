@@ -55,7 +55,7 @@ export default function SelectItemCard({ item, onPress }: { item: InventoryItem,
             <View style={styles.cardDetails}>
                 <View style={styles.statusContainer}>
                     {
-                        item.status == 5 ?
+                        item.description == undefined || item.status == 5 ?
                             <Text style={styles.detailText}>Item inserido pelo usuário</Text>
                             :
                             <Text style={styles.detailText}>Descrição: {item.description}</Text>
@@ -63,7 +63,7 @@ export default function SelectItemCard({ item, onPress }: { item: InventoryItem,
                 </View>
                 <View style={styles.statusContainer}>
                     {
-                        item.status !== 5 &&
+                        item.unit !== null &&
                         <Text style={styles.detailText}>Unidade: {item.unit}</Text>
                     }
                 </View>

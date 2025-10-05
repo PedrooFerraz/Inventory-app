@@ -10,20 +10,21 @@ import {
     StyleSheet,
     FlatList,
     TouchableOpacity,
+    Alert,
 } from 'react-native';
 
 export default function InventorySelectionScreen() {
 
     const { inventories } = useDatabase({})
     const params = useLocalSearchParams();
-    const [filter, setFilter] = useState<0 | 1 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
+    const [filter, setFilter] = useState<0 | 1 |2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
 
     const filteredInventories = inventories.filter(inventories => {
         if (filter === 3) return true;
         return inventories.status === filter;
     });
 
-    const FilterButton = ({ status, label }: { status: 0 | 1 | 3, label: string }) => (
+    const FilterButton = ({ status, label }: { status: 0 | 1 | 2 | 3, label: string }) => (
         <TouchableOpacity
             style={[
                 styles.filterButton,
@@ -42,6 +43,12 @@ export default function InventorySelectionScreen() {
 
     const handleSelect = (id: number, countType: number) => {
         //Se caso o countType for 1 ir para a tela de contagem por barras e se caso for 2 ir para tela de seleção de posição a contar
+
+        if(inventories.filter(item => item.id === id)[0].status === 2){
+            Alert.alert("Atenção", "Inventários finalizados não podem ser editados.");
+            return
+        }
+
         if(countType === 1){
             router.navigate(`/inventory-by-code-screen?id=${id}&operator=${params.operator}`)
             return
@@ -76,6 +83,7 @@ export default function InventorySelectionScreen() {
                 <FilterButton status={3} label="Todos" />
                 <FilterButton status={0} label="Abertos" />
                 <FilterButton status={1} label="Em Andamento" />
+                 <FilterButton status={2} label="Finalizados" />
             </View>
 
             <View style={styles.content}>

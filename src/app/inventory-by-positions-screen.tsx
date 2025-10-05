@@ -311,7 +311,7 @@ export default function InventoryByPosition() {
                     },
                     async () => {
                         setAlreadyCountInOtherModalVisible(false);
-                        const res = await InventoryService.sumToPreviousCount(inventoryId, code, response.data.local, Number(quantity));
+                        const res = await InventoryService.sumToPreviousCount(inventoryId, code, response.data, Number(quantity));
                         handleServiceResponse(res, itemData, currentIgnoreErrors);
                     },
                     async () => {
@@ -322,7 +322,7 @@ export default function InventoryByPosition() {
                             reportedLocation: itemData.reportedLocation,
                             observation: itemData.observation,
                             operator: itemData.operator,
-                        }, false, true);
+                        }, true, true);
                         handleServiceResponse(res, itemData, currentIgnoreErrors);
                     },
                     () => {

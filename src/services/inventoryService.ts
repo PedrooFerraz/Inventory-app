@@ -128,7 +128,7 @@ export const InventoryService = {
 
       // Validações específicas para countType == 2 (posição)
       if (inventory.countType === 2) {
-        const alreadyCounted = await checkItemAlreadyCountedInOtherLocation(inventoryId, data.code, data.reportedLocation);
+        const alreadyCounted = await checkItemAlreadyCountedInOtherLocation(inventoryId, data.code.toUpperCase(), data.reportedLocation);
         if (alreadyCounted.alreadyCounted && !ignoreAlreadyCounted) {
           return {
             success: false,
@@ -138,14 +138,14 @@ export const InventoryService = {
               : undefined
           };
         }
-        const existsInOther = await checkItemExistsInOtherLocation(inventoryId, data.code, data.reportedLocation);
+        const existsInOther = await checkItemExistsInOtherLocation(inventoryId, data.code.toUpperCase(), data.reportedLocation);
         if (existsInOther.exist && !ignoreExists) return { success: false, error: 'exists_in_other_location', data: existsInOther.expectedLocation };
 
       }
 
       const now = new Date();
       const newValue = {
-        code: data.code,
+        code: data.code.toUpperCase(),
         reportedQuantity: data.reportedQuantity,
         reportedLocation: data.reportedLocation,
         observation: data.observation,
@@ -206,7 +206,8 @@ export const InventoryService = {
     additionalQuantity: number
   ): Promise<{ success: boolean, error?: string }> {
     try {
-      const result = await sumPreviousCount(inventoryId, code, previousLocation, additionalQuantity);
+      const result = await sumPreviousCount(inventoryId, code.toUpperCase(), previousLocation, additionalQuantity);
+      console.log(result)
       if (result.rowsAffected === 0) {
         return { success: false, error: 'item_not_found_or_not_updated' };
       }

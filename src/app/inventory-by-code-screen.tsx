@@ -182,7 +182,13 @@ export default function InventoryByCodeScreen() {
             } else {
                 Alert.alert("Erro", "Ocorreu algum erro ao finalizar o inventário, tente novamente");
             }
-        }, () => { });
+        }, () => {
+            setErrorTitle("");
+            setErrorMessage("");
+            setModalAction(() => { });
+            setModalCancelAction(() => { });
+            setErrorModalVisible(false)
+        });
     };
 
     const restartForm = () => {

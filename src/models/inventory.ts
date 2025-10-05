@@ -242,12 +242,14 @@ export const sumPreviousCount = async (
   previousLocation: { local: string , id: string, reportedQuantity: number },
   additionalQuantity: number
 ): Promise<{ rowsAffected: number }> => {
+  console.log(inventoryId, code, previousLocation, additionalQuantity)
   const sql = `
     UPDATE inventory_items SET
       reportedQuantity = COALESCE(reportedQuantity, 0) + ?
     WHERE inventory_id = ? AND code = ? AND COALESCE(reportedLocation, expectedLocation) = ?
   `;
   const result = await executeQuery(sql, [additionalQuantity, inventoryId, code, previousLocation.local]);
+  console.log(result)
   return { rowsAffected: result.changes || 0 };
 };
 

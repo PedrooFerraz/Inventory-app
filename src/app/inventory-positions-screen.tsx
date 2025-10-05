@@ -1,9 +1,13 @@
+import ButtonWithIcon from '@/components/button-with-icon';
+import DrawerMenu from '@/components/drawer-menu';
 import SelectPositionCard from '@/components/inventory/select-inventory-position-card';
+import { CustomModal } from '@/components/master/custom-modal';
 import { useDatabase } from '@/hooks/useDatabase';
-import { InventoryLocation } from '@/types/types';
+import { InventoryService } from '@/services/inventoryService';
+import { Inventory, InventoryLocation } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,13 +15,41 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
+  DrawerLayoutAndroid,
+  Alert,
 } from 'react-native';
 
 export default function InventoryPositionScreen() {
+  const navigationView = () => (
+    <DrawerMenu drawer={drawer} finalizeInventoryFunction={handleFinalizeInventory}></DrawerMenu>
+  );
+
+  const drawer = useRef<DrawerLayoutAndroid>(null);
   const params = useLocalSearchParams();
   const { locations } = useDatabase(params.id ? { inventoryId: Number(params.id) } : {});
   const [filter, setFilter] = useState<0 | 1 | 2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
   const [searchQuery, setSearchQuery] = useState<string>(''); // Estado para o texto de pesquisa
+  const [currentInventory, setCurrentInventory] = useState<Inventory | null>(null);
+  const [errorTitle, setErrorTitle] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [modalAction, setModalAction] = useState<() => void>(() => { });
+  const [modalCancelAction, setModalCancelAction] = useState<() => void>(() => { });
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+
+  useEffect(() => {
+    loadInventoryData();
+  }, []);
+
+  const loadInventoryData = async () => {
+    try {
+      const inventory = await InventoryService.getInventory(Number(params.id));
+      setCurrentInventory(inventory);
+    } catch (error) {
+      console.error('Error loading inventory:', error);
+    }
+  };
+
+
 
   // Filtra localizações com base no status e na pesquisa por localização
   const filteredLocations = locations.filter((location) => {
@@ -50,6 +82,43 @@ export default function InventoryPositionScreen() {
     );
   };
 
+  const handleFinalizeInventory = () => {
+    if (!currentInventory) return;
+
+    const diff = currentInventory.totalItems - currentInventory.countedItems;
+
+    let message = "";
+    if (diff === 0) {
+      message = "Realmente deseja finalizar o inventário? Após finalizar você não poderá mais adicionar novos registros";
+    } else {
+      message = `Ainda restam itens a serem contados, realmente deseja finalizar o inventário? Após finalizar você não poderá adicionar novas contagens. Os materiais não contados serão considerados sem estoque.`;
+    }
+
+    showErrorModal("Atenção", message, async () => {
+      const res = await InventoryService.finalizeInventory(currentInventory.id);
+      if (res.success) {
+        Alert.alert("Sucesso", "Inventário finalizado com sucesso!");
+        router.navigate("/");
+      } else {
+        Alert.alert("Erro", "Ocorreu algum erro ao finalizar o inventário, tente novamente");
+      }
+    }, () => {
+      setErrorTitle("");
+      setErrorMessage("");
+      setModalAction(() => { });
+      setModalCancelAction(() => {});
+      setErrorModalVisible(false)
+    });
+  };
+
+  const showErrorModal = (title: string, message: string, onConfirm: () => void, onCancel: () => void) => {
+    setErrorTitle(title);
+    setErrorMessage(message);
+    setModalAction(() => onConfirm);
+    setModalCancelAction(() => onCancel);
+    setErrorModalVisible(true);
+  };
+
   const renderInventarioItem = ({ item }: { item: InventoryLocation }) => (
     <SelectPositionCard
       item={item}
@@ -59,54 +128,87 @@ export default function InventoryPositionScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.headerTitle}>Selecionar posição</Text>
+    <DrawerLayoutAndroid style={styles.container}
+      ref={drawer}
+      drawerWidth={300}
+      drawerPosition={"left"}
+      renderNavigationView={navigationView}>
+
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color="#FFF" />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.headerTitle}>Selecionar posição</Text>
+            </View>
+          </View>
+          <TouchableOpacity onPress={() => drawer.current?.openDrawer()}>
+            <Ionicons name="menu" size={32} color={"#FFF"} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#CBD5E1"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Pesquisar por localização..."
+            placeholderTextColor="#CBD5E1"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        <View style={styles.filterContainer}>
+          <FilterButton status={3} label="Todos" />
+          <FilterButton status={0} label="Abertos" />
+          <FilterButton status={1} label="Em Andamento" />
+          <FilterButton status={2} label="Finalizados" />
+        </View>
+
+        <View style={styles.content}>
+          <FlatList
+            data={filteredLocations}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderInventarioItem}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                Nenhuma localização encontrada.
+              </Text>
+            }
+          />
         </View>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Ionicons
-          name="search"
-          size={20}
-          color="#CBD5E1"
-          style={styles.searchIcon}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Pesquisar por localização..."
-          placeholderTextColor="#CBD5E1"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+      <CustomModal visible={errorModalVisible} title={errorTitle} onClose={() => setErrorModalVisible(false)}>
+        <Text style={{ fontSize: 16, color: "white", marginBottom: 22 }}>
+          {errorMessage}
+        </Text>
+        <View style={{ gap: 20 }}>
+          <ButtonWithIcon
+            color="#5A7BA1"
+            icon="checkmark-outline"
+            label="Confirmar"
+            onPress={modalAction}
+          />
+          <ButtonWithIcon
+            color="#7F95B9"
+            icon="close-outline"
+            label="Cancelar"
+            onPress={modalCancelAction}
+          />
+        </View>
+      </CustomModal>
 
-      <View style={styles.filterContainer}>
-        <FilterButton status={3} label="Todos" />
-        <FilterButton status={0} label="Abertos" />
-        <FilterButton status={1} label="Em Andamento" />
-        <FilterButton status={2} label="Finalizados" />
-      </View>
-
-      <View style={styles.content}>
-        <FlatList
-          data={filteredLocations}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderInventarioItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>
-              Nenhuma localização encontrada.
-            </Text>
-          }
-        />
-      </View>
-    </View>
+    </DrawerLayoutAndroid>
   );
 }
 
@@ -118,6 +220,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: '#4f6a92',
