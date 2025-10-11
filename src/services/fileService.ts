@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Papa from 'papaparse';
 import { DocumentPickerAsset } from 'expo-document-picker';
@@ -33,7 +33,7 @@ export const getSelectedFileInfo = async (): Promise<FileInfo | null> => {
   }
 };
 
-// Clears file cache from AsyncStorage
+// Limpa o cache de arquivos do AsyncStorage
 export const clearFileCache = async (): Promise<void> => {
   try {
     await AsyncStorage.removeItem('selectedFile');
@@ -42,7 +42,7 @@ export const clearFileCache = async (): Promise<void> => {
   }
 };
 
-// Gera 
+// Gera a pré-visualização de um arquivo CSV
 export const generateCSVPreview = async (selectedDocument: DocumentPickerAsset): Promise<CSVPreviewResult> => {
   // Valida URI e tipo do arquivo
   if (!selectedDocument.uri) {
@@ -58,8 +58,11 @@ export const generateCSVPreview = async (selectedDocument: DocumentPickerAsset):
   // Lê o conteúdo do arquivo CSV
   let fileContent: string;
   try {
-    const file = new FileSystem.File(selectedDocument.uri);
-    fileContent = await file.text(); // Troca o readAsStringAsync
+    const file = new File(selectedDocument.uri);
+    if (!file.exists) {
+      throw new Error('Arquivo não encontrado ou inacessível');
+    }
+    fileContent = await file.text();
   } catch (error) {
     throw new Error(`Erro ao ler o arquivo CSV: ${error}`);
   }
@@ -86,6 +89,7 @@ export const generateCSVPreview = async (selectedDocument: DocumentPickerAsset):
       },
       complete: async () => {
         try {
+          console.log(`CSV processado: ${totalRows} linhas, ${locationSet.size} localizações únicas.`);
           // Salva informações do arquivo processado
           await saveSelectedFileInfo(
             selectedDocument.uri,
@@ -120,7 +124,7 @@ export const loadCSVPreview = async (assets: DocumentPickerAsset[]): Promise<{
   }
 };
 
-// Forma o tamanho do arquivo em unidades legíveis
+// Formata o tamanho do arquivo em unidades legíveis
 export const formatSizeUnits = (bytes: number): string => {
   if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(2)} GB`;
   if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(2)} MB`;

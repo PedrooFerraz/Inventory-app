@@ -1,5 +1,4 @@
-// Inventory.ts (Model Layer: Database Interactions)
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import * as Papa from 'papaparse';
 import { executeQuery, fetchAll, getDatabase } from '@/services/database';
 import { Inventory, CSVParseResult, Item, ImportedInventoryItem, BatchOption, InventoryLocation, InventoryItem } from '@/types/types';
@@ -17,10 +16,10 @@ export const insertInventory = async (fileUri: string, fileName: string, countTy
 }> => {
   try {
     // Valida se o arquivo existe e seu tamanho
-    const file = new FileSystem.File(fileUri);
-    let fileInfo: FileSystem.FileInfo;
+    const file = new File(fileUri);
+    let fileInfo;
     try {
-      fileInfo = await file.info(); // Troca do getInfoAsync
+      fileInfo = await file.info();
     } catch (error) {
       throw new Error(`Erro ao obter informações do arquivo: ${error}`);
     }
@@ -32,7 +31,7 @@ export const insertInventory = async (fileUri: string, fileName: string, countTy
     // Lendo arquivo CSV
     let fileContent: string;
     try {
-      fileContent = await file.text(); // Troca readAsStringAsync
+      fileContent = await file.text();
     } catch (error) {
       throw new Error(`Erro ao ler o arquivo CSV: ${error}`);
     }
@@ -92,7 +91,7 @@ export const insertInventory = async (fileUri: string, fileName: string, countTy
 
     // Processa cada inventário separadamente
     for (const [inventoryDocument, documentItems] of Object.entries(itemsByInventory)) {
-      // Checha se o inventario já existe com base no mesmo numero e ano
+      // Checa se o inventário já existe com base no mesmo número e ano
       const year = documentItems[0].year;
       const existingInventory = await fetchAll<Inventory>(
         `SELECT i.* FROM inventories i
@@ -106,7 +105,7 @@ export const insertInventory = async (fileUri: string, fileName: string, countTy
         throw new Error(`Inventário com o documento ${inventoryDocument} no ano ${year} já foi inserido`);
       }
 
-      // Cria um novo inventario
+      // Cria um novo inventário
       const result = await executeQuery(
         `INSERT INTO inventories 
         (fileName, fileUri, importDate, inventoryYear, totalItems, inventoryDocument, countType) 
