@@ -34,29 +34,21 @@ export default function GMIHomeScreen() {
   const [showConfigurationModal, setShowConfigurationModal] = useState<boolean>(false);
 
   useEffect(() => {
-    const initDatabase = async () => {
+    const initializeApp = async () => {
       try {
-        await getDatabase();
-      } catch (error) {
-        console.error('Erro ao inicializar o banco de dados:', error);
-        // TODO: Consider adding user-facing error feedback (e.g., toast)
-      }
-    };
-
-    const checkPasswordExists = async () => {
-      try {
-        const passwordExists = await hasMasterPassword();
+        setIsLoading(true);
+        await getDatabase(); // Inicializa o banco
+        const passwordExists = await hasMasterPassword(); // Verifica senha
         setShowFirstTimeSetup(!passwordExists);
       } catch (error) {
-        console.error('Erro ao verificar senha:', error);
-        // TODO: Consider fallback UI (e.g., retry button)
+        console.error('Erro ao inicializar a aplicação:', error);
+        // TODO: Exibir feedback ao usuário (ex.: toast ou modal de erro)
       } finally {
         setIsLoading(false);
       }
     };
 
-    initDatabase();
-    checkPasswordExists();
+    initializeApp();
   }, []);
 
   const handleFirstTimeSetup = async (password: string) => {

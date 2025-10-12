@@ -4,7 +4,7 @@ let dbInstance: SQLiteDatabase | null = null;
 
 export const getDatabase = async (): Promise<SQLiteDatabase> => {
   if (!dbInstance) {
-    dbInstance = await openDatabaseAsync('gmiinventorypro.db', { useNewConnection: true });
+    dbInstance = await openDatabaseAsync('GMI.db', { useNewConnection: true });
     await initDB(dbInstance);
   }
   return dbInstance;
@@ -31,9 +31,7 @@ export const fetchAll = async <T>(
 //countType: -- 1: Codigo de barras, 2: Posição
 const initDB = async (database: SQLiteDatabase) => {
   await database.execAsync(`
-    CREATE INDEX IF NOT EXISTS idx_inventory_items_code ON inventory_items(code);
-    CREATE INDEX IF NOT EXISTS idx_inventory_items_location ON inventory_items(reportedLocation, expectedLocation);
-  
+    
     CREATE TABLE IF NOT EXISTS operators (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -81,7 +79,9 @@ const initDB = async (database: SQLiteDatabase) => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       master_password TEXT NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
-
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_inventory_items_code ON inventory_items(code);
+      CREATE INDEX IF NOT EXISTS idx_inventory_items_location ON inventory_items(reportedLocation, expectedLocation);
   `);
 };
