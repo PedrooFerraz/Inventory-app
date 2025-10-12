@@ -2,7 +2,7 @@
   "expo": {
     "name": "GMI Inventory Pro",
     "slug": "gmiinventariopro",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "scheme": "myapp",
@@ -26,7 +26,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.anonymous.myapp"
+      "package": "com.gmi.gmiinventorypro"
     },
     "web": {
       "bundler": "metro",
