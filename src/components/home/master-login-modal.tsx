@@ -52,7 +52,10 @@ export default function MasterLoginModal(
                                 placeholder="Senha master"
                                 placeholderTextColor="#94A3B8"
                                 secureTextEntry={!showPassword}
-                                onSubmitEditing={handleMasterLogin}
+                                onSubmitEditing={(event) => {
+                                    const submittedText = event.nativeEvent.text;
+                                    handleMasterLogin(submittedText);
+                                }}
                             />
                             <TouchableOpacity
                                 style={styles.eyeButton}
