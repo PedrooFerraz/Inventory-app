@@ -17,7 +17,7 @@ export default function InventorySelectionScreen() {
 
     const { inventories } = useDatabase({})
     const params = useLocalSearchParams();
-    const [filter, setFilter] = useState<0 | 1 |2 | 3>(0); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
+    const [filter, setFilter] = useState<0 | 1 |2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
 
     const filteredInventories = inventories.filter(inventories => {
         if (filter === 3) return true;

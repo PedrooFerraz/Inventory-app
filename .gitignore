@@ -8,6 +8,11 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+/coverage
+/.expo
+/.expo-shared
+node_modules
+
 
 # Native
 .kotlin/

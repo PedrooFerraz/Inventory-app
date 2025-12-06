@@ -42,7 +42,6 @@ export default function InventoryByPosition() {
     const [modalCancelAction, setModalCancelAction] = useState<() => void>(() => { });
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [code, setCode] = useState('');
-    const [unit, setUnit] = useState('');
     const [quantity, setQuantity] = useState(0);
     const [reportedLocation, setReportedLocation] = useState(location);
     const [observation, setObservation] = useState('');
@@ -244,7 +243,6 @@ export default function InventoryByPosition() {
                             code: code,
                             reportedQuantity: itemData.reportedQuantity,
                             reportedLocation: itemData.reportedLocation,
-                            unit: unit,
                             batch: batch,
                             observation: itemData.observation,
                             operator: itemData.operator,
@@ -292,7 +290,6 @@ export default function InventoryByPosition() {
                         code: code,
                         reportedQuantity: itemData.reportedQuantity,
                         reportedLocation: itemData.reportedLocation,
-                        unit: unit,
                         batch: batch,
                         observation: itemData.observation,
                         operator: itemData.operator,
@@ -329,7 +326,6 @@ export default function InventoryByPosition() {
                             code: code,
                             reportedQuantity: itemData.reportedQuantity,
                             reportedLocation: itemData.reportedLocation,
-                            unit: unit,
                             batch: batch,
                             observation: itemData.observation,
                             operator: itemData.operator,
@@ -368,7 +364,6 @@ export default function InventoryByPosition() {
             reportedQuantity: qty,
             reportedLocation: reportedLocation,
             batch: batch,
-            unit: unit,
             observation,
             operator,
             status: 1,
@@ -502,26 +497,7 @@ export default function InventoryByPosition() {
                     )}
 
                     {!selectedItem && (
-                        <View>
-                            <TextInput
-                                style={[styles.input, codeError && styles.inputError]}
-                                placeholder="Unidade"
-                                placeholderTextColor="#94A3B8"
-                                value={unit}
-                                onChangeText={(text) => {
-                                    setUnit(text);
-                                    if (codeError) setCodeError(false);
-                                }}
-                                onBlur={() => {
-                                    if (!code.trim()) {
-                                        setCodeError(true);
-                                    }
-                                }}
-                            />
-                            {codeError && (
-                                <Text style={{ color: "#fa6060" }}>Esse campo precisa ser preenchido</Text>
-                            )}
-                        </View>
+                        null
                     )}
 
 

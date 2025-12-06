@@ -117,7 +117,6 @@ export const InventoryService = {
       reportedQuantity: number,
       reportedLocation: string | '',
       batch?: string,
-      unit: string,
       observation: string,
       operator: string
       status?: number
@@ -154,7 +153,6 @@ export const InventoryService = {
         reportedQuantity: data.reportedQuantity,
         reportedLocation: data.reportedLocation ||'',
         batch: data.batch || '',
-        unit: data.unit,
         observation: data.observation,
         operator: data.operator,
         status: 5,

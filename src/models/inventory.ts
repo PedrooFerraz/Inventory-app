@@ -333,7 +333,6 @@ export const insertNewInventoryItem = async (
     reportedQuantity: number;
     reportedLocation: string;
     batch?: string | "";
-    unit: string,
     observation: string;
     operator: string;
     status: number;
@@ -344,7 +343,7 @@ export const insertNewInventoryItem = async (
   const lastItem = Math.max(...inventoryItems.map((i: any) => Number(i.inventoryItem)));
 
   await executeQuery(
-    `INSERT INTO inventory_items (inventory_id, inventoryItem, code, reportedQuantity, reportedLocation, batch, observation, operator, status, countTime, unit) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO inventory_items (inventory_id, inventoryItem, code, reportedQuantity, reportedLocation, batch, observation, operator, status, countTime) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       inventoryId,
       Number(lastItem) + 1,
@@ -355,8 +354,7 @@ export const insertNewInventoryItem = async (
       data.observation,
       data.operator,
       data.status,
-      data.countTime,
-      data.unit
+      data.countTime
     ]
   );
 };

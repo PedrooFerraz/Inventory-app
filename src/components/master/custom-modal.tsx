@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -25,14 +25,14 @@ export const CustomModal = ({
     visible: boolean,
     onClose: any,
     title: string,
-    children: React.ReactNode,
+    children: ReactNode,
     showCloseButton?: boolean
 }) => {
 
-    const [fadeAnim] = React.useState(new Animated.Value(0));
-    const [scaleAnim] = React.useState(new Animated.Value(0.9));
+    const [fadeAnim] = useState(new Animated.Value(0));
+    const [scaleAnim] = useState(new Animated.Value(0.9));
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (visible) {
             Animated.parallel([
                 Animated.timing(fadeAnim, {
@@ -83,36 +83,36 @@ export const CustomModal = ({
                         styles.modalContent,
                         {
                             transform: [{ scale: scaleAnim }],
-                            opacity: fadeAnim
+                            opacity: fadeAnim,
+
                         }
                     ]}
                 >
-                    <View style={{ flex: 1 }}>
+                    {/* HEADER FIXO */}
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.title}>{title}</Text>
 
-                        {/* HEADER FIXO */}
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.title}>{title}</Text>
+                        {showCloseButton && (
+                            <TouchableOpacity
+                                onPress={onClose}
+                                style={styles.closeButton}
+                            >
+                                <Ionicons name="close" size={24} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                    <View>
 
-                            {showCloseButton && (
-                                <TouchableOpacity
-                                    onPress={onClose}
-                                    style={styles.closeButton}
-                                >
-                                    <Ionicons name="close" size={24} color="#FFFFFF" />
-                                </TouchableOpacity>
-                            )}
-                        </View>
 
                         {/* SOMENTE O CORPO SOBE */}
                         <KeyboardAvoidingView
-                            style={{ flex: 1 }}
                             behavior={Platform.OS === "ios" ? "padding" : "height"}
                             keyboardVerticalOffset={Platform.OS === "ios" ? 70 : 0}
                         >
                             <ScrollView
                                 contentContainerStyle={{
                                     padding: 24,
-                                    paddingBottom: 120, // espaço suficiente para teclado
+                                    paddingBottom: 80,
                                 }}
                                 keyboardShouldPersistTaps="handled"
                                 showsVerticalScrollIndicator={false}
@@ -149,7 +149,6 @@ const styles = StyleSheet.create({
         width: width * 0.9,
         maxWidth: 400,
         maxHeight: height * 0.87,
-        flex: 1,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },

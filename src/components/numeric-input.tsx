@@ -39,16 +39,26 @@ export default function NumericInput({
     }, [error]);
 
     const onChanged = (text: string) => {
-        const sanitized = text.replace(/[^0-9]/g, '');
-        onChangeQty(sanitized === '' ? '' : sanitized);
+        let normalized = text.replace(',', '.');
+        normalized = normalized.replace(/[^0-9.]/g, '');
+
+        if ((normalized.match(/\./g) || []).length > 1) {
+            // evita 10.4.5
+            normalized = normalized.substring(0, normalized.length - 1);
+        }
+
+        onChangeQty(normalized === '' ? '' : normalized);
     };
 
     const add = () => {
-        onChangeQty((parseInt(qtyInput) + 1).toString());
+        const current = parseFloat(qtyInput || "0");
+        const newValue = current + 1;
+        onChangeQty(newValue.toString());
     };
 
     const subtract = () => {
-        const newValue = Math.max(0, parseInt(qtyInput) - 1);
+        const current = parseFloat(qtyInput || "0");
+        const newValue = Math.max(0, current - 1);
         onChangeQty(newValue.toString());
     };
 
@@ -128,7 +138,7 @@ const styles = StyleSheet.create({
         fontWeight: "500",
         fontSize: 14,
         marginBottom: 12,
-        
+
     },
     quantityContainer: {
         flexDirection: "row",
@@ -149,7 +159,7 @@ const styles = StyleSheet.create({
     numericInput: {
         textAlign: "center",
         flex: 1,
-        
+
     },
     inputError: {
         borderColor: "#EF4444",
