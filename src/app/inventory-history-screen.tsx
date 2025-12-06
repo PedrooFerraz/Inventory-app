@@ -2,7 +2,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { Inventory } from '@/types/types';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import SelectInventoryCard from '@/components/inventory/select-inventory-card';
 import { CustomModal } from '@/components/master/custom-modal';
 import ButtonWithIcon from '@/components/button-with-icon';
-import { deleteInventory, fetchItemsByInventoryId } from '@/models/inventory';
+import { deleteInventory, fetchInventoryById, fetchItemsByInventoryId } from '@/models/inventory';
 import { exportInventoryToExcel, exportSurplusMaterialToExcel } from '@/services/xlsxService';
 import { COLORS, FONTS, SPACING, buttonStyles } from '@/assets/style/theme';
 
@@ -31,6 +31,17 @@ const InventorySelectionScreen = () => {
   const [selectedInventory, setSelectedInventory] = useState<number | undefined>(undefined);
   const [filter, setFilter] = useState<0 | 1 | 2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [hasSurplusMaterial, setHasSurplusMaterial] = useState(false);
+
+  useEffect(() => {
+    if (!selectedInventory) {
+      setHasSurplusMaterial(false);
+      return;
+    }
+
+    const inventory = inventories.find(inv => inv.id === selectedInventory);
+    setHasSurplusMaterial(inventory?.hasSurplusMaterial ?? false);
+  }, [selectedInventory, inventories]);
 
   const filteredInventories = useMemo(() => {
     return inventories.filter((inventory) => {
@@ -48,6 +59,7 @@ const InventorySelectionScreen = () => {
     setShowModal(false);
     setSelectedInventory(undefined); // Clear selection for safety
   };
+
 
   const handleExport = async () => {
     if (!selectedInventory) {
@@ -74,8 +86,12 @@ const InventorySelectionScreen = () => {
     }
     setIsLoading(true);
     try {
+      const inv = await fetchInventoryById(selectedInventory);
+      if(!inv){
+        throw new Error('Inventário não encontrado');
+      }
       const items = await fetchItemsByInventoryId(selectedInventory);
-      await exportSurplusMaterialToExcel(items);
+      await exportSurplusMaterialToExcel(items, inv.inventoryDocument);
       Alert.alert('Sucesso', 'Materiais excedentes exportados com sucesso!');
     } catch (error) {
       console.error('Erro ao exportar materiais excedentes:', error);
@@ -185,18 +201,25 @@ const InventorySelectionScreen = () => {
         title="Gerenciar Inventário"
       >
         <View style={{ gap: 20 }}>
+          
           <ButtonWithIcon
             color={COLORS.primary}
             icon="download-outline"
             onPress={handleExport}
             label="Exportar Inventário"
           />
-          <ButtonWithIcon
-            color={COLORS.primary}
-            icon="download-outline"
-            onPress={handleExportSurplusMaterial}
-            label="Exportar Materiais Excedentes"
-          />
+
+          {
+            hasSurplusMaterial ?
+            <ButtonWithIcon
+              color={COLORS.primary}
+              icon="download-outline"
+              onPress={handleExportSurplusMaterial}
+              label="Exportar Materiais Excedentes"
+            />
+            : null
+          }
+
           <ButtonWithIcon
             color={COLORS.accent}
             icon="trash-outline"

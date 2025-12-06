@@ -49,25 +49,24 @@ export async function exportInventoryToExcel(inventoryData: Item[]) {
         
         // Verifica se o arquivo existe e o deleta para evitar conflitos
         if (file.exists) {
-            await file.delete();
+            file.delete();
         }
         
         // Cria o arquivo com opção de sobrescrever
-        await file.create({ overwrite: true });
+        file.create({ overwrite: true });
         // Escreve o conteúdo binário no arquivo
-        await file.write(binaryData);
+        file.write(binaryData);
 
         // 6 Verifica se o arquivo foi criado corretamente
-        const fileInfo = await file.info();
+        const fileInfo = file.info();
         if (!fileInfo.exists || fileInfo.size === 0) {
             throw new Error('Falha ao criar o arquivo: arquivo vazio ou não criado');
         }
 
         // 7 Compartilha o arquivo
         await shareAsync(file.uri, {
-            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'Exportar Inventário',
-            UTI: 'com.microsoft.excel.xlsx'
+            mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"',
+            dialogTitle: 'Exportar Inventário'
         });
 
         return true;
@@ -77,7 +76,7 @@ export async function exportInventoryToExcel(inventoryData: Item[]) {
     }
 }
 
-export async function exportSurplusMaterialToExcel(inventoryData: Item[]) {
+export async function exportSurplusMaterialToExcel(inventoryData: Item[], inventoryDocument: string) {
     try {
         const operators = await fetchOperator();
 
@@ -122,16 +121,16 @@ export async function exportSurplusMaterialToExcel(inventoryData: Item[]) {
         
         // Verifica se o arquivo existe e o deleta para evitar conflitos
         if (file.exists) {
-            await file.delete();
+            file.delete();
         }
         
         // Cria o arquivo com opção de sobrescrever
-        await file.create({ overwrite: true });
+        file.create({ overwrite: true });
         // Escreve o conteúdo binário no arquivo
-        await file.write(binaryData);
+        file.write(binaryData);
 
         // 6 Verifica se o arquivo foi criado corretamente
-        const fileInfo = await file.info();
+        const fileInfo = file.info();
         if (!fileInfo.exists || fileInfo.size === 0) {
             throw new Error('Falha ao criar o arquivo: arquivo vazio ou não criado');
         }
@@ -139,8 +138,7 @@ export async function exportSurplusMaterialToExcel(inventoryData: Item[]) {
         // 7 Compartilha o arquivo
         await shareAsync(file.uri, {
             mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            dialogTitle: 'Exportar Inventário',
-            UTI: 'com.microsoft.excel.xlsx'
+            dialogTitle: 'Exportar Inventário'
         });
 
         return true;

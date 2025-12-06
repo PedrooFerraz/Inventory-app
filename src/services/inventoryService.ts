@@ -46,7 +46,8 @@ export const InventoryService = {
     inventoryId: number,
     data: {
       reportedQuantity: number,
-      reportedLocation: string,
+      reportedLocation?: string,
+      batch?: string,
       observation: string,
       operator: string,
       status?: number,
@@ -91,7 +92,8 @@ export const InventoryService = {
       const now = new Date();
       const updateValues = {
         reportedQuantity: data.reportedQuantity,
-        reportedLocation: data.reportedLocation,
+        reportedLocation: data.reportedLocation || '',
+        batch: data.batch || '',
         observation: data.observation,
         operator: data.operator,
         status,
@@ -100,7 +102,7 @@ export const InventoryService = {
 
       await updateItemCount(itemId, updateValues);
       await updateInventoryCountedItems(inventoryId, inventory.countedItems + 1);
-      await updateInventoryStatus(inventoryId, 1);
+      await updateInventoryStatus(inventoryId, 1, "Update");
 
       return { success: true };
     } catch (error) {
@@ -113,9 +115,12 @@ export const InventoryService = {
     data: {
       code: string
       reportedQuantity: number,
-      reportedLocation: string,
+      reportedLocation: string | '',
+      batch?: string,
+      unit: string,
       observation: string,
       operator: string
+      status?: number
     },
     ignoreExists: boolean = false,
     ignoreAlreadyCounted: boolean = false
@@ -147,7 +152,9 @@ export const InventoryService = {
       const newValue = {
         code: data.code.toUpperCase(),
         reportedQuantity: data.reportedQuantity,
-        reportedLocation: data.reportedLocation,
+        reportedLocation: data.reportedLocation ||'',
+        batch: data.batch || '',
+        unit: data.unit,
         observation: data.observation,
         operator: data.operator,
         status: 5,
@@ -157,7 +164,7 @@ export const InventoryService = {
       await insertNewInventoryItem(inventoryId, newValue);
       await updateInventoryTotalItems(inventoryId, inventory.totalItems + 1);
       await updateInventoryCountedItems(inventoryId, inventory.countedItems + 1);
-      await updateInventoryStatus(inventoryId, 1);
+      await updateInventoryStatus(inventoryId, 1, "Add");
 
       return { success: true };
     } catch (error) {
@@ -172,6 +179,7 @@ export const InventoryService = {
     data: {
       reportedQuantity: number,
       reportedLocation: string,
+      batch?: string,
       observation: string,
       operator: string
     }
@@ -185,6 +193,7 @@ export const InventoryService = {
       const replaceValues = {
         reportedQuantity: data.reportedQuantity,
         reportedLocation: data.reportedLocation,
+        batch: data.batch || '',
         observation: data.observation,
         operator: data.operator,
         status: 1,
@@ -224,7 +233,7 @@ export const InventoryService = {
       if (!inventory) return { success: false, error: 'inventory_not_found' };
       if (inventory.status === 2) return { success: false, error: 'inventory_already_completed' };
 
-      await updateInventoryStatus(inventoryId, 2);
+      await updateInventoryStatus(inventoryId, 2, "Finalize");
       return { success: true };
     } catch (error) {
       console.error("Error finalizing inventory:", error);

@@ -225,7 +225,7 @@ export const checkItemExistsInOtherLocation = async (inventoryId: number, code: 
   return { exist: results[0].count > 0, expectedLocation: results[0].location };
 };
 
-export const checkItemAlreadyCountedInOtherLocation = async (inventoryId: number, code: string, location: string): Promise<{ alreadyCounted: boolean, previousData?: { local: string, id: string, reportedQuantity: number } }> => {
+export const checkItemAlreadyCountedInOtherLocation = async (inventoryId: number, code: string, location: string ): Promise<{ alreadyCounted: boolean, previousData?: { local: string, id: string, reportedQuantity: number } }> => {
   const sql = `
     SELECT COALESCE(reportedLocation, expectedLocation) as location, id, reportedQuantity FROM inventory_items
     WHERE inventory_id = ? AND code = ? AND reportedQuantity IS NOT NULL AND COALESCE(reportedLocation, expectedLocation) != ?
@@ -266,6 +266,7 @@ export const updateItemCount = async (
   item: {
     reportedQuantity: number;
     reportedLocation: string;
+    batch?: string;
     observation: string;
     operator: string;
     status: number;
@@ -273,12 +274,17 @@ export const updateItemCount = async (
   }
 ): Promise<void> => {
   await executeQuery(
-    `UPDATE inventory_items SET reportedQuantity = ?, reportedLocation = ?, observation = ?, operator = ?, status = ?, countTime = ? WHERE id = ?;`,
-    [item.reportedQuantity, item.reportedLocation, item.observation, item.operator, item.status, item.countTime, itemId]
+    `UPDATE inventory_items SET reportedQuantity = ?, reportedLocation = ?, batch = ?, observation = ?, operator = ?, status = ?, countTime = ? WHERE id = ?;`,
+    [item.reportedQuantity, item.reportedLocation, item.batch, item.observation, item.operator, item.status, item.countTime, itemId]
   );
 };
 
-export const updateInventoryStatus = async (id: number, status: number): Promise<void> => {
+export const updateInventoryStatus = async (id: number, status: number, operation: "Add" | "Update" | "Finalize"): Promise<void> => {
+  if(operation == "Add"){
+    await executeQuery('UPDATE inventories SET status = ?, hasSurplusMaterial = ? WHERE id = ?;', [status, true, id]);
+    return;
+  }
+
   await executeQuery('UPDATE inventories SET status = ? WHERE id = ?;', [status, id]);
 };
 
@@ -326,6 +332,8 @@ export const insertNewInventoryItem = async (
     code: string;
     reportedQuantity: number;
     reportedLocation: string;
+    batch?: string | "";
+    unit: string,
     observation: string;
     operator: string;
     status: number;
@@ -336,17 +344,19 @@ export const insertNewInventoryItem = async (
   const lastItem = Math.max(...inventoryItems.map((i: any) => Number(i.inventoryItem)));
 
   await executeQuery(
-    `INSERT INTO inventory_items (inventory_id, inventoryItem, code, reportedQuantity, reportedLocation, observation, operator, status, countTime) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO inventory_items (inventory_id, inventoryItem, code, reportedQuantity, reportedLocation, batch, observation, operator, status, countTime, unit) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       inventoryId,
       Number(lastItem) + 1,
       data.code,
       data.reportedQuantity,
       data.reportedLocation,
+      data.batch,
       data.observation,
       data.operator,
       data.status,
       data.countTime,
+      data.unit
     ]
   );
 };

@@ -27,7 +27,7 @@ export default function InventoryPositionScreen() {
   const drawer = useRef<DrawerLayoutAndroid>(null);
   const params = useLocalSearchParams();
   const { locations } = useDatabase(params.id ? { inventoryId: Number(params.id) } : {});
-  const [filter, setFilter] = useState<0 | 1 | 2 | 3>(3); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
+  const [filter, setFilter] = useState<0 | 1 | 2 | 3>(0); // 0-Aberto, 1-Em Andamento, 2-Finalizado, 3-Todos
   const [searchQuery, setSearchQuery] = useState<string>(''); // Estado para o texto de pesquisa
   const [currentInventory, setCurrentInventory] = useState<Inventory | null>(null);
   const [errorTitle, setErrorTitle] = useState("");
@@ -106,7 +106,7 @@ export default function InventoryPositionScreen() {
       setErrorTitle("");
       setErrorMessage("");
       setModalAction(() => { });
-      setModalCancelAction(() => {});
+      setModalCancelAction(() => { });
       setErrorModalVisible(false)
     });
   };
@@ -148,6 +148,41 @@ export default function InventoryPositionScreen() {
             <Ionicons name="menu" size={32} color={"#FFF"} />
           </TouchableOpacity>
         </View>
+
+        <View
+          style={{
+            backgroundColor: '#3a5073',
+            paddingVertical: 8,
+            paddingHorizontal: 14,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            elevation: 4,
+            shadowColor: '#000',
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 2 },
+            zIndex: 999,
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>
+            Inventário: {currentInventory?.inventoryDocument}
+          </Text>
+
+          <View
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              paddingVertical: 3,
+              paddingHorizontal: 10,
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+              {currentInventory?.countedItems} / {currentInventory?.totalItems}
+            </Text>
+          </View>
+        </View>
+
 
         <View style={styles.searchContainer}>
           <Ionicons

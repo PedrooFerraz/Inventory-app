@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function UserCard({ username, id, onPress }: { username: string, id: string, onPress: any}) {
+export default function UserCard({ username, id, onPress }: { username: string, id: string, onPress: any }) {
 
     return (
         <TouchableOpacity
@@ -10,7 +10,7 @@ export default function UserCard({ username, id, onPress }: { username: string, 
             activeOpacity={0.7}
         >
             <View style={styles.cardContent}>
-                <Ionicons name="person" size={20} color="#94A3B8"/>
+                <Ionicons name="person" size={20} color="#94A3B8" />
                 <Text style={styles.operatorName}>{username}</Text>
             </View>
             <Text style={styles.operatorName}>{id}</Text>
@@ -20,14 +20,14 @@ export default function UserCard({ username, id, onPress }: { username: string, 
 
 
 const styles = StyleSheet.create({
-        cardContent: {
+    cardContent: {
         flex: 1,
         flexDirection: "row",
         gap: 12
     },
     operatorCard: {
         borderRadius: 12,
-        padding: 20,
+        padding: 18,
         marginBottom: 16,
         borderWidth: 1,
         borderColor: '#FFF',
@@ -38,10 +38,13 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.1,
         shadowRadius: 3.84,
-        flexDirection: "row"
+        flexDirection: "row",
+        justifyContent: "space-between",
     },
     operatorName: {
-        fontSize: 16,
+        display: 'flex',
+        flexShrink:1,
+        flexWrap: 'wrap',
         fontWeight: 'bold',
         color: '#FFF',
         marginBottom: 4,

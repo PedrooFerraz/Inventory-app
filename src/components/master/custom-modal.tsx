@@ -1,5 +1,16 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, Animated, Dimensions } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Animated,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
@@ -12,11 +23,12 @@ export const CustomModal = ({
     showCloseButton = true
 }: {
     visible: boolean,
-    onClose: any
+    onClose: any,
     title: string,
     children: React.ReactNode,
     showCloseButton?: boolean
 }) => {
+
     const [fadeAnim] = React.useState(new Animated.Value(0));
     const [scaleAnim] = React.useState(new Animated.Value(0.9));
 
@@ -54,48 +66,63 @@ export const CustomModal = ({
     return (
         <Modal
             animationType="none"
-            transparent={true}
+            transparent
             visible={visible}
             onRequestClose={onClose}
             statusBarTranslucent
         >
             <Animated.View style={[styles.modalBackdrop, { opacity: fadeAnim }]}>
-                <TouchableOpacity 
-                    style={styles.backdropTouchable} 
+                <TouchableOpacity
+                    style={styles.backdropTouchable}
                     activeOpacity={1}
                     onPress={onClose}
                 />
-                <Animated.View 
+
+                <Animated.View
                     style={[
-                        styles.modalContent, 
-                        { 
+                        styles.modalContent,
+                        {
                             transform: [{ scale: scaleAnim }],
-                            opacity: fadeAnim 
+                            opacity: fadeAnim
                         }
                     ]}
                 >
-                    {/* Cabeçalho do modal */}
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.title}>{title}</Text>
-                        {showCloseButton && (
-                            <TouchableOpacity
-                                onPress={onClose}
-                                style={styles.closeButton}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    <View style={{ flex: 1 }}>
+
+                        {/* HEADER FIXO */}
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.title}>{title}</Text>
+
+                            {showCloseButton && (
+                                <TouchableOpacity
+                                    onPress={onClose}
+                                    style={styles.closeButton}
+                                >
+                                    <Ionicons name="close" size={24} color="#FFFFFF" />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        {/* SOMENTE O CORPO SOBE */}
+                        <KeyboardAvoidingView
+                            style={{ flex: 1 }}
+                            behavior={Platform.OS === "ios" ? "padding" : "height"}
+                            keyboardVerticalOffset={Platform.OS === "ios" ? 70 : 0}
+                        >
+                            <ScrollView
+                                contentContainerStyle={{
+                                    padding: 24,
+                                    paddingBottom: 120, // espaço suficiente para teclado
+                                }}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
                             >
-                                <Ionicons name="close" size={24} color="#FFFFFF" />
-                            </TouchableOpacity>
-                        )}
+                                {children}
+                            </ScrollView>
+                        </KeyboardAvoidingView>
                     </View>
 
-                    {/* Corpo do modal com scroll */}
-                    <ScrollView 
-                        style={styles.scrollView}
-                        showsVerticalScrollIndicator={false}
-                        bounces={false}
-                    >
-                        {children}
-                    </ScrollView>
+
                 </Animated.View>
             </Animated.View>
         </Modal>
@@ -121,12 +148,11 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         width: width * 0.9,
         maxWidth: 400,
-        maxHeight: height * 0.85,
+        maxHeight: height * 0.87,
+        flex: 1,
+        overflow: 'hidden',
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 10,
-        },
+        shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.5,
         shadowRadius: 20,
         elevation: 20,
@@ -135,7 +161,8 @@ const styles = StyleSheet.create({
     },
     modalHeader: {
         backgroundColor: '#3B4C66',
-        padding: 24,
+        padding: 20,
+        paddingBottom: 10,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         flexDirection: 'row',
@@ -159,8 +186,5 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 16,
-    },
-    scrollView: {
-        padding: 24,
     },
 });

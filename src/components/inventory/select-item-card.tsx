@@ -5,25 +5,25 @@ import { InventoryItem } from "@/types/types";
 
 export default function SelectItemCard({ item, onPress }: { item: InventoryItem, onPress: (id: number, locationId: number) => any }) {
 
-    const getStatus = (countedItens?: number | null) => {
+    const getStatus = (status?: number | null) => {
 
-        if (!countedItens) {
+        if (status == 0 || !status) {
             return "Pendente"
         }
 
-        if (countedItens !== null) {
+        if (status !== 0) {
             return "Contabilizado"
         }
         return "Pendente"
 
     }
-    const getStatusColor = (countedItens?: number | null) => {
+    const getStatusColor = (status?: number | null) => {
 
-        if (!countedItens) {
+        if (status == 0 || !status) {
             return "#EF5350"
         }
 
-        if (countedItens !== null) {
+        if (status !== 0) {
             return "#4CAF50"
         }
         return "#EF5350"
@@ -66,16 +66,15 @@ export default function SelectItemCard({ item, onPress }: { item: InventoryItem,
                         <Text style={styles.detailText}>Unidade: {item.unit}</Text>
                     }
                 </View>
-                {
-                    item.batch &&
-                    <View style={styles.statusContainer}>
-                        <Text style={styles.detailText}>Lote: {item.batch}</Text>
-                    </View>
 
-                }
                 <View style={styles.statusContainer}>
-                    <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.reportedQuantity) }]} />
-                    <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatus(item.reportedQuantity)}</Text>
+                    <Text style={styles.detailText}>Lote: {item.batch}</Text>
+                </View>
+
+
+                <View style={styles.statusContainer}>
+                    <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+                    <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatus(item.status)}</Text>
                 </View>
             </View>
 
@@ -122,7 +121,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     posicaoNome: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#FFF',
         marginBottom: 4,
@@ -145,7 +144,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     statusText: {
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '500',
     },
     detailsRow: {
@@ -157,8 +156,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     detailText: {
-        fontSize: 12,
-        color: 'rgba(255, 255, 255, 0.75)',
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.85)',
         marginLeft: 4,
     },
     progressContainer: {
