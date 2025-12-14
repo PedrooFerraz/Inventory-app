@@ -3,6 +3,7 @@ import { File, Paths } from 'expo-file-system';
 import { shareAsync } from 'expo-sharing';
 import { fetchOperator } from '@/models/operators';
 import { Item, Operator } from '@/types/types';
+import { fetchInventoryById } from '@/models/inventory';
 
 export async function exportInventoryToExcel(inventoryData: Item[]) {
     try {
@@ -44,7 +45,11 @@ export async function exportInventoryToExcel(inventoryData: Item[]) {
         const binaryData = new Uint8Array(wbout);
 
         // 5 Salva o arquivo no diretório de documentos
-        const fileName = `${inventoryData[0].inventoryDocument}.xlsx`;
+        const inventory = await fetchInventoryById(inventoryData[inventoryData.length - 1].inventory_id);
+        const inventoryName = inventory?.inventoryDocument;
+        console.log(inventoryName);
+        
+        const fileName = `${inventoryName}.xlsx`;
         const file = new File(Paths.document, fileName);
         
         // Verifica se o arquivo existe e o deleta para evitar conflitos
@@ -116,7 +121,11 @@ export async function exportSurplusMaterialToExcel(inventoryData: Item[], invent
         const binaryData = new Uint8Array(wbout);
 
         // 5 Salva o arquivo no diretório de documentos
-        const fileName = `excedente_inventario_${inventoryData[0].inventoryDocument}.xlsx`;
+        const inventory = await fetchInventoryById(inventoryData[inventoryData.length - 1].inventory_id);
+        const inventoryName = inventory?.inventoryDocument;
+        console.log(inventoryName);
+        
+        const fileName = `${inventoryName}.xlsx`;
         const file = new File(Paths.document, fileName);
         
         // Verifica se o arquivo existe e o deleta para evitar conflitos
