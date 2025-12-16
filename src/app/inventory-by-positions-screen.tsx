@@ -451,7 +451,10 @@ export default function InventoryByPosition() {
             <CustomModal
                 visible={modalVisible}
                 title={selectedItem ? 'Contabilizar Item' : 'Adicionar Novo Item'}
-                onClose={() => setModalVisible(false)}
+                onClose={() => {
+                    setBatch('');
+                    setModalVisible(false)
+                }}
             >
                 <View style={styles.modalContent}>
                     {selectedItem && (
@@ -535,16 +538,11 @@ export default function InventoryByPosition() {
                             :
 
                             <View>
-                                <TextInput
-                                    style={[styles.input]}
-                                    editable={false}
-                                    placeholder="Lote"
-                                    placeholderTextColor="#94A3B8"
-                                    value={batch}
-                                    onChangeText={(text) => {
-                                        setBatch(text);
-                                    }}
-                                />
+                        <View style={styles.productInfo}>
+                            <Text style={styles.productCode}>
+                                Lote: {selectedItem.batch}
+                            </Text>
+                        </View>
                             </View>
 
                     }
