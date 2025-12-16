@@ -562,7 +562,7 @@ export default function InventoryByPosition() {
                         value={observation}
                         onChangeText={setObservation}
                         multiline
-                        numberOfLines={4}
+                        numberOfLines={2}
                     />
 
                     <View style={styles.buttonGroup}>
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     modalContent: {
-        gap: 24,
+        gap: 12,
         paddingBottom: 8,
     },
     input: {
@@ -801,23 +801,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.15)',
     },
     inputMultiline: {
-        minHeight: 100,
+        minHeight: 80,
         textAlignVertical: 'top',
     },
     buttonGroup: {
-        gap: 16,
-        marginTop: 16,
+        gap: 10,
+        marginTop: 8,
     },
     productInfo: {
         backgroundColor: 'rgba(255, 255, 255, 0.08)',
         borderRadius: 16,
-        padding: 16,
-        marginBottom: 8,
+        padding: 14,
+        marginBottom: 4,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.1)',
     },
     productCode: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#b3c0d3ff',
         marginBottom: 4,
         textTransform: 'uppercase',
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     productName: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#FFFFFF',
         fontWeight: '500',
         lineHeight: 20,

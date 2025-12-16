@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     },
     modalHeader: {
         backgroundColor: '#3B4C66',
-        padding: 20,
+        padding: 16,
         paddingBottom: 10,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
